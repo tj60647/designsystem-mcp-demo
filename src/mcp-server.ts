@@ -19,14 +19,18 @@
  * componentName="button" and then read the tokens from the response.
  *
  * ── Tools in this file ───────────────────────────────────────────────────
- *   list_token_categories    — what token groups exist (color, spacing…)
- *   get_tokens               — full token tree for a category
- *   get_token                — single token looked up by dot-path
- *   list_components          — all components with names + descriptions
- *   get_component            — full spec for one component
- *   get_component_tokens     — all token references a component uses
- *   validate_color           — does a hex/rgb value match a named token?
- *   get_component_constraints— usage rules for a component
+ *   list_token_categories      — what token groups exist (color, spacing…)
+ *   get_tokens                 — full token tree for a category
+ *   get_token                  — single token looked up by dot-path
+ *   list_components            — all components with names + descriptions
+ *   get_component              — full spec for one component
+ *   get_component_tokens       — all token references a component uses
+ *   validate_color             — does a hex/rgb value match a named token?
+ *   get_component_constraints  — usage rules for a component
+ *   validate_component_usage   — validate props/config against component rules
+ *   suggest_token              — suggest best token for a described intent
+ *   diff_against_system        — compare CSS props to design tokens
+ *   search                     — full-text search across tokens, components, icons
  * ──────────────────────────────────────────────────────────────────────────
  */
 
@@ -57,6 +61,14 @@ const components = JSON.parse(
   readFileSync(join(__dirname, "data/components.json"), "utf-8")
 ) as ComponentsData;
 
+const themes = JSON.parse(
+  readFileSync(join(__dirname, "data/themes.json"), "utf-8")
+) as ThemesData;
+
+const icons = JSON.parse(
+  readFileSync(join(__dirname, "data/icons.json"), "utf-8")
+) as IconsData;
+
 // ── Types ─────────────────────────────────────────────────────────────────
 // Minimal type definitions that describe the shapes of the JSON data files.
 // ─────────────────────────────────────────────────────────────────────────
@@ -79,6 +91,31 @@ interface TokensData {
   spacing:      Record<string, TokenNode>;
   borderRadius: Record<string, TokenNode>;
   shadow:       Record<string, TokenNode>;
+  motion:       Record<string, TokenNode>;
+  layout:       Record<string, TokenNode>;
+}
+
+/** A single theme specification as defined in themes.json. */
+interface ThemeSpec {
+  name: string;
+  description: string;
+  semantic: Record<string, string>;
+}
+/** The top-level themes data file shape. */
+interface ThemesData {
+  [themeKey: string]: ThemeSpec;
+}
+/** A single icon specification as defined in icons.json. */
+interface IconSpec {
+  name: string;
+  category: string;
+  keywords: string[];
+  sizes: number[];
+  description: string;
+}
+/** The top-level icons data file shape. */
+interface IconsData {
+  [iconKey: string]: IconSpec;
 }
 
 /** A full component specification as defined in components.json. */
@@ -158,6 +195,36 @@ function extractTokenRefs(obj: unknown, refs: Set<string>): void {
   }
 }
 
+// ── Utility: flatten token tree preserving metadata ─────────────────────
+// Like flattenTokenValues but also returns type and description for each leaf.
+// ─────────────────────────────────────────────────────────────────────────
+function flattenAllTokens(
+  obj: Record<string, unknown>,
+  prefix = ""
+): Record<string, { value: string; type: string; description?: string }> {
+  const result: Record<string, { value: string; type: string; description?: string }> = {};
+
+  for (const [key, val] of Object.entries(obj)) {
+    const fullPath = prefix ? `${prefix}.${key}` : key;
+
+    if (val !== null && typeof val === "object" && "value" in (val as object)) {
+      const entry = val as TokenEntry;
+      result[fullPath] = {
+        value: entry.value,
+        type: entry.type,
+        ...(entry.description ? { description: entry.description } : {}),
+      };
+    } else if (val !== null && typeof val === "object") {
+      Object.assign(
+        result,
+        flattenAllTokens(val as Record<string, unknown>, fullPath)
+      );
+    }
+  }
+
+  return result;
+}
+
 // ── MCP Server factory ────────────────────────────────────────────────────
 // Returns a fully configured McpServer with all tools registered.
 // Called once per HTTP request — stateless, no shared state between calls.
@@ -201,7 +268,7 @@ export function createMcpServer(): McpServer {
     "Get design tokens by category (color, typography, spacing, borderRadius, shadow). Returns the full nested token tree for that category. Omit category to get all tokens at once.",
     {
       category: z
-        .enum(["color", "typography", "spacing", "borderRadius", "shadow"])
+        .enum(["color", "typography", "spacing", "borderRadius", "shadow", "motion", "layout"])
         .optional()
         .describe(
           'Optional token category. If omitted, all tokens are returned. Example: "color"'
@@ -527,6 +594,308 @@ export function createMcpServer(): McpServer {
               null,
               2
             ),
+          },
+        ],
+      };
+    }
+  );
+
+  // ── TOOL: validate_component_usage ────────────────────────────────────
+  // Checks a component configuration (variant, size, state, props) against
+  // the design system rules and returns any violations found.
+  // ───────────────────────────────────────────────────────────────────────
+  server.tool(
+    "validate_component_usage",
+    "Validate whether a component configuration is valid according to the design system rules. Pass the component name and a props/config object to check. Returns a list of violations (if any) and a pass/fail result.",
+    {
+      componentName: z.string().min(1).describe('Component key, e.g. "button", "input".'),
+      config: z.record(z.unknown()).describe('Props/config object to validate, e.g. { variant: "primary", size: "xl" }.'),
+    },
+    async ({ componentName, config }) => {
+      const key  = componentName.toLowerCase().trim();
+      const spec = components[key];
+
+      if (!spec) {
+        return {
+          content: [{ type: "text" as const, text: `Component "${componentName}" not found. Available: ${Object.keys(components).join(", ")}` }],
+          isError: true,
+        };
+      }
+
+      const violations: string[] = [];
+
+      if (config.variant !== undefined && spec.variants) {
+        if (!spec.variants.includes(String(config.variant))) {
+          violations.push(
+            `Variant "${config.variant}" is not valid for ${spec.name}. Allowed variants: ${spec.variants.join(", ")}.`
+          );
+        }
+      }
+
+      if (config.size !== undefined && spec.sizes) {
+        if (!spec.sizes.includes(String(config.size))) {
+          violations.push(
+            `Size "${config.size}" is not valid for ${spec.name}. Allowed sizes: ${spec.sizes.join(", ")}.`
+          );
+        }
+      }
+
+      if (config.state !== undefined && spec.states) {
+        if (!spec.states.includes(String(config.state))) {
+          violations.push(
+            `State "${config.state}" is not valid for ${spec.name}. Allowed states: ${spec.states.join(", ")}.`
+          );
+        }
+      }
+
+      if (spec.props) {
+        for (const propKey of Object.keys(config)) {
+          if (!(propKey in spec.props)) {
+            violations.push(
+              `Unknown prop "${propKey}" — not defined in the ${spec.name} spec.`
+            );
+          }
+        }
+      }
+
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(
+              {
+                component:    spec.name,
+                valid:        violations.length === 0,
+                violations,
+                checkedProps: Object.keys(config),
+              },
+              null,
+              2
+            ),
+          },
+        ],
+      };
+    }
+  );
+
+  // ── TOOL: suggest_token ─────────────────────────────────────────────────
+  // Scores and ranks tokens by how well they match a natural-language intent.
+  // ───────────────────────────────────────────────────────────────────────
+  server.tool(
+    "suggest_token",
+    "Suggest the most appropriate design token for a described intent (e.g. 'primary button background', 'error text color', 'small spacing between icon and label'). Returns a ranked list of matching tokens with their values and paths.",
+    {
+      intent: z.string().min(1).describe('Natural-language description of what the token should be used for.'),
+      category: z
+        .enum(["color", "typography", "spacing", "borderRadius", "shadow", "motion", "layout"])
+        .optional()
+        .describe("Optionally restrict the search to a single token category."),
+    },
+    async ({ intent, category }) => {
+      const intentLower = intent.toLowerCase();
+      const intentWords = intentLower.split(/[\s\-_./]+/).filter(Boolean);
+
+      // Build the flat token map to search — either one category or all.
+      const source: Record<string, unknown> = category
+        ? { [category]: tokens[category] }
+        : (tokens as unknown as Record<string, unknown>);
+
+      const flat = flattenAllTokens(source as Record<string, unknown>);
+
+      const scored = Object.entries(flat).map(([tokenPath, meta]) => {
+        const segments = tokenPath.toLowerCase().split(".");
+        let score = 0;
+        for (const word of intentWords) {
+          for (const seg of segments) {
+            if (seg.includes(word) || word.includes(seg)) score += 2;
+          }
+          if (meta.description) {
+            const descWords = meta.description.toLowerCase().split(/\W+/);
+            for (const dw of descWords) {
+              if (dw && (dw.includes(word) || word.includes(dw))) score += 3;
+            }
+          }
+        }
+        return { tokenPath, value: meta.value, type: meta.type, description: meta.description ?? null, score };
+      });
+
+      const top5 = scored
+        .filter(r => r.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5);
+
+      if (top5.length === 0) {
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify(
+                { intent, results: [], message: "No tokens matched the given intent. Try different keywords or omit the category filter." },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      }
+
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify({ intent, results: top5 }, null, 2),
+          },
+        ],
+      };
+    }
+  );
+
+  // ── TOOL: diff_against_system ───────────────────────────────────────────
+  // Audits a map of CSS property→value pairs against all design tokens.
+  // Flags non-token values and suggests the correct token to use.
+  // ───────────────────────────────────────────────────────────────────────
+  server.tool(
+    "diff_against_system",
+    "Compare a set of CSS properties or component props against the design system definitions. Flags values that don't match any token, and suggests the correct token to use instead. Useful for auditing generated or hand-written UI code.",
+    {
+      properties: z
+        .record(z.string())
+        .describe('Map of CSS property names to values, e.g. { "background-color": "#2563eb", "font-size": "14px" }.'),
+    },
+    async ({ properties }) => {
+      // Build a reverse map: lowercased value → list of token paths.
+      const allFlat = flattenAllTokens(tokens as unknown as Record<string, unknown>);
+      const reverseMap: Record<string, string[]> = {};
+      for (const [path, meta] of Object.entries(allFlat)) {
+        const key = meta.value.toLowerCase();
+        (reverseMap[key] ??= []).push(path);
+      }
+
+      const results = Object.entries(properties).map(([property, value]) => {
+        const matches = reverseMap[value.toLowerCase()];
+        if (matches && matches.length > 0) {
+          return { property, value, status: "token-matched" as const, matchingTokens: matches };
+        }
+        return { property, value, status: "no-token-match" as const, suggestion: "Replace with a design token" };
+      });
+
+      const matched   = results.filter(r => r.status === "token-matched").length;
+      const total     = results.length;
+      const violations = total - matched;
+      const compliant = violations === 0;
+
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(
+              {
+                compliant,
+                summary: `${matched} of ${total} properties match design tokens. ${violations} violation${violations === 1 ? "" : "s"} found.`,
+                results,
+              },
+              null,
+              2
+            ),
+          },
+        ],
+      };
+    }
+  );
+
+  // ── TOOL: search ────────────────────────────────────────────────────────
+  // Full-text search across tokens, components, and icons.
+  // ───────────────────────────────────────────────────────────────────────
+  server.tool(
+    "search",
+    "Search across all design system tokens, components, and icons by keyword. Returns matching tokens, components, and icons ranked by relevance. Use this to discover the right token or component for a given term.",
+    {
+      query: z.string().min(1).describe("Search term, e.g. \"primary blue\" or \"modal overlay\"."),
+      limit: z
+        .number()
+        .int()
+        .min(1)
+        .max(50)
+        .optional()
+        .describe("Maximum number of results to return (default 10, max 50)."),
+    },
+    async ({ query, limit = 10 }) => {
+      const queryWords = query.toLowerCase().split(/[\s\-_./,;:!?]+/).filter(Boolean);
+
+      type SearchResult = { type: "token" | "component" | "icon"; key: string; score: number; preview: string };
+      const results: SearchResult[] = [];
+
+      // ── Tokens ──────────────────────────────────────────────────────────
+      const flat = flattenAllTokens(tokens as unknown as Record<string, unknown>);
+      for (const [tokenPath, meta] of Object.entries(flat)) {
+        const segments = tokenPath.toLowerCase().split(".");
+        let score = 0;
+        for (const word of queryWords) {
+          for (const seg of segments) {
+            if (seg.includes(word) || word.includes(seg)) score += 2;
+          }
+          if (meta.description) {
+            for (const dw of meta.description.toLowerCase().split(/\W+/)) {
+              if (dw && (dw.includes(word) || word.includes(dw))) score += 3;
+            }
+          }
+        }
+        if (score > 0) {
+          results.push({ type: "token", key: tokenPath, score, preview: meta.value });
+        }
+      }
+
+      // ── Components ───────────────────────────────────────────────────────
+      for (const [compKey, spec] of Object.entries(components)) {
+        const haystack = [
+          spec.name,
+          spec.description,
+          ...(spec.variants ?? []),
+          ...Object.keys(spec.props ?? {}),
+          ...(spec.constraints ?? []),
+        ].join(" ").toLowerCase();
+
+        let score = 0;
+        for (const word of queryWords) {
+          const count = (haystack.match(new RegExp(word, "g")) ?? []).length;
+          score += count * 2;
+        }
+        if (score > 0) {
+          results.push({ type: "component", key: compKey, score, preview: spec.description });
+        }
+      }
+
+      // ── Icons ────────────────────────────────────────────────────────────
+      for (const [iconKey, icon] of Object.entries(icons)) {
+        const haystack = [
+          icon.name,
+          icon.category,
+          icon.description,
+          ...icon.keywords,
+        ].join(" ").toLowerCase();
+
+        let score = 0;
+        for (const word of queryWords) {
+          const count = (haystack.match(new RegExp(word, "g")) ?? []).length;
+          score += count * 2;
+        }
+        if (score > 0) {
+          results.push({
+            type: "icon",
+            key: iconKey,
+            score,
+            preview: `${icon.category} icon — ${icon.description}`,
+          });
+        }
+      }
+
+      results.sort((a, b) => b.score - a.score);
+
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify({ query, results: results.slice(0, limit) }, null, 2),
           },
         ],
       };

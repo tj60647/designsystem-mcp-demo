@@ -649,8 +649,10 @@ export function createMcpServer(): McpServer {
       }
 
       if (spec.props) {
+        // Exclude keys that have their own dedicated validation above.
+        const reservedKeys = new Set(["variant", "size", "state"]);
         for (const propKey of Object.keys(config)) {
-          if (!(propKey in spec.props)) {
+          if (!reservedKeys.has(propKey) && !(propKey in spec.props)) {
             violations.push(
               `Unknown prop "${propKey}" — not defined in the ${spec.name} spec.`
             );
@@ -845,6 +847,9 @@ export function createMcpServer(): McpServer {
         }
       }
 
+      // Pre-compile word regexes once before iterating over components/icons.
+      const wordRegexes = queryWords.map(w => new RegExp(w, "g"));
+
       // ── Components ───────────────────────────────────────────────────────
       for (const [compKey, spec] of Object.entries(components)) {
         const haystack = [
@@ -856,8 +861,9 @@ export function createMcpServer(): McpServer {
         ].join(" ").toLowerCase();
 
         let score = 0;
-        for (const word of queryWords) {
-          const count = (haystack.match(new RegExp(word, "g")) ?? []).length;
+        for (const re of wordRegexes) {
+          re.lastIndex = 0;
+          const count = (haystack.match(re) ?? []).length;
           score += count * 2;
         }
         if (score > 0) {
@@ -875,8 +881,9 @@ export function createMcpServer(): McpServer {
         ].join(" ").toLowerCase();
 
         let score = 0;
-        for (const word of queryWords) {
-          const count = (haystack.match(new RegExp(word, "g")) ?? []).length;
+        for (const re of wordRegexes) {
+          re.lastIndex = 0;
+          const count = (haystack.match(re) ?? []).length;
           score += count * 2;
         }
         if (score > 0) {

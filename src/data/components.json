@@ -1,0 +1,224 @@
+{
+  "button": {
+    "name": "Button",
+    "description": "Primary interactive element for triggering actions. Use for form submissions, confirmations, and navigation.",
+    "variants": ["primary", "secondary", "ghost", "destructive"],
+    "sizes": ["sm", "md", "lg"],
+    "states": ["default", "hover", "active", "disabled", "loading"],
+    "props": {
+      "variant":   { "type": "enum",      "values": ["primary", "secondary", "ghost", "destructive"], "default": "primary" },
+      "size":      { "type": "enum",      "values": ["sm", "md", "lg"], "default": "md" },
+      "disabled":  { "type": "boolean",   "default": false },
+      "loading":   { "type": "boolean",   "default": false, "description": "Shows a loading spinner and disables interaction" },
+      "fullWidth": { "type": "boolean",   "default": false },
+      "leftIcon":  { "type": "ReactNode", "optional": true },
+      "rightIcon": { "type": "ReactNode", "optional": true },
+      "children":  { "type": "ReactNode", "required": true, "description": "Button label text or content" }
+    },
+    "tokens": {
+      "background": {
+        "primary":            "{color.semantic.action.primary}",
+        "primary-hover":      "{color.semantic.action.primaryHover}",
+        "secondary":          "transparent",
+        "secondary-hover":    "{color.neutral.50}",
+        "ghost":              "transparent",
+        "ghost-hover":        "{color.neutral.100}",
+        "destructive":        "{color.error.default}",
+        "destructive-hover":  "{color.error.dark}",
+        "disabled":           "{color.neutral.100}"
+      },
+      "text": {
+        "primary":     "{color.semantic.action.primaryText}",
+        "secondary":   "{color.semantic.action.primary}",
+        "ghost":       "{color.semantic.text.primary}",
+        "destructive": "{color.neutral.0}",
+        "disabled":    "{color.semantic.text.disabled}"
+      },
+      "border": {
+        "secondary": "{color.semantic.action.primary}",
+        "others":    "transparent"
+      },
+      "spacing": {
+        "sm": { "paddingY": "{spacing.1}", "paddingX": "{spacing.3}", "gap": "{spacing.1}" },
+        "md": { "paddingY": "{spacing.2}", "paddingX": "{spacing.4}", "gap": "{spacing.2}" },
+        "lg": { "paddingY": "{spacing.3}", "paddingX": "{spacing.6}", "gap": "{spacing.2}" }
+      },
+      "typography": {
+        "sm": "{typography.textStyle.label}",
+        "md": "{typography.textStyle.label}",
+        "lg": "{typography.textStyle.body}"
+      },
+      "borderRadius": "{borderRadius.md}",
+      "focusRing":    "{color.semantic.border.focus}"
+    },
+    "constraints": [
+      "Always use an approved variant; never use arbitrary background colors on buttons",
+      "Use the 'destructive' variant only for irreversible actions (delete, remove)",
+      "A loading button must disable all interaction and show a spinner",
+      "Minimum touch target is 44×44px to meet WCAG accessibility requirements",
+      "Button labels should be sentence case (e.g. 'Save changes', not 'SAVE CHANGES')",
+      "Do not use more than one primary button per section or form",
+      "Icon-only buttons must include an aria-label describing the action"
+    ],
+    "accessibility": {
+      "role": "button",
+      "minTouchTarget": "44px",
+      "focusVisible": true,
+      "keyboardSupport": ["Enter", "Space"],
+      "ariaRequired": ["aria-label when icon-only", "aria-disabled when disabled", "aria-busy when loading"]
+    }
+  },
+
+  "input": {
+    "name": "Input",
+    "description": "Single-line text input for collecting user data. Always pair with a visible label.",
+    "variants": ["default", "error", "success"],
+    "sizes": ["sm", "md", "lg"],
+    "states": ["default", "focus", "filled", "error", "disabled"],
+    "props": {
+      "size":         { "type": "enum",    "values": ["sm", "md", "lg"], "default": "md" },
+      "variant":      { "type": "enum",    "values": ["default", "error", "success"], "default": "default" },
+      "disabled":     { "type": "boolean", "default": false },
+      "required":     { "type": "boolean", "default": false },
+      "label":        { "type": "string",  "optional": false, "description": "Visible label text — always required" },
+      "helperText":   { "type": "string",  "optional": true,  "description": "Supporting instruction below the input" },
+      "errorMessage": { "type": "string",  "optional": true,  "description": "Validation error shown when variant is 'error'" },
+      "placeholder":  { "type": "string",  "optional": true,  "description": "Hint text inside the field — not a substitute for a label" },
+      "leftIcon":     { "type": "ReactNode", "optional": true },
+      "rightIcon":    { "type": "ReactNode", "optional": true }
+    },
+    "tokens": {
+      "background": {
+        "default":  "{color.neutral.0}",
+        "disabled": "{color.neutral.100}"
+      },
+      "text": {
+        "value":       "{color.semantic.text.primary}",
+        "placeholder": "{color.neutral.400}",
+        "disabled":    "{color.semantic.text.disabled}"
+      },
+      "border": {
+        "default":  "{color.semantic.border.default}",
+        "focus":    "{color.semantic.border.focus}",
+        "error":    "{color.error.default}",
+        "success":  "{color.success.default}",
+        "disabled": "{color.neutral.200}"
+      },
+      "label":      "{typography.textStyle.label}",
+      "helperText": "{typography.textStyle.body-sm}",
+      "inputText":  "{typography.textStyle.body}",
+      "spacing": {
+        "sm": { "paddingY": "{spacing.1}", "paddingX": "{spacing.2}" },
+        "md": { "paddingY": "{spacing.2}", "paddingX": "{spacing.3}" },
+        "lg": { "paddingY": "{spacing.3}", "paddingX": "{spacing.4}" }
+      },
+      "borderRadius": "{borderRadius.md}"
+    },
+    "constraints": [
+      "Every input must have a visible label — do not rely on placeholder text alone",
+      "Error messages must be linked to the input via aria-describedby",
+      "Do not use placeholder text as a substitute for a label",
+      "Input borders must achieve 3:1 contrast ratio against the background (WCAG 1.4.11)",
+      "Display error state and errorMessage together — never show one without the other",
+      "Helper text and error messages must not overlap; show only the error when invalid"
+    ],
+    "accessibility": {
+      "role": "textbox",
+      "labelRequired": true,
+      "ariaRequired": [
+        "associated label element or aria-label",
+        "aria-describedby pointing to helperText or errorMessage",
+        "aria-invalid='true' when variant is 'error'",
+        "aria-disabled='true' when disabled"
+      ]
+    }
+  },
+
+  "card": {
+    "name": "Card",
+    "description": "Container for grouping related content into a visually distinct surface.",
+    "variants": ["default", "outlined", "elevated"],
+    "props": {
+      "variant":     { "type": "enum",    "values": ["default", "outlined", "elevated"], "default": "default" },
+      "padding":     { "type": "enum",    "values": ["none", "sm", "md", "lg"],           "default": "md" },
+      "interactive": { "type": "boolean", "default": false, "description": "Adds hover/focus states for clickable cards (e.g. link cards)" }
+    },
+    "tokens": {
+      "background": {
+        "default": "{color.neutral.0}",
+        "subtle":  "{color.neutral.50}"
+      },
+      "border": {
+        "outlined": "{color.semantic.border.default}",
+        "others":   "transparent"
+      },
+      "shadow": {
+        "default":          "{shadow.none}",
+        "elevated":         "{shadow.md}",
+        "interactive-hover":"{shadow.lg}"
+      },
+      "padding": {
+        "none": "{spacing.0}",
+        "sm":   "{spacing.4}",
+        "md":   "{spacing.6}",
+        "lg":   "{spacing.8}"
+      },
+      "borderRadius": "{borderRadius.lg}"
+    },
+    "constraints": [
+      "Do not nest interactive cards inside other interactive cards",
+      "Elevated cards should not be used on dark or colored backgrounds without a token adjustment",
+      "Internal card content must use the established spacing scale — no arbitrary padding values",
+      "If a card is entirely clickable, wrap it in an anchor element and set an appropriate aria-label"
+    ],
+    "accessibility": {
+      "role": "region or article (context-dependent)",
+      "interactiveNote": "When interactive=true the card must be keyboard-focusable and have a visible focus ring",
+      "ariaRequired": ["aria-label when interactive and no visible heading present"]
+    }
+  },
+
+  "badge": {
+    "name": "Badge",
+    "description": "Small label used to convey status, counts, or categorical metadata. Purely informational — not interactive.",
+    "variants": ["primary", "success", "warning", "error", "neutral"],
+    "sizes": ["sm", "md"],
+    "props": {
+      "variant": { "type": "enum",    "values": ["primary", "success", "warning", "error", "neutral"], "default": "neutral" },
+      "size":    { "type": "enum",    "values": ["sm", "md"], "default": "md" },
+      "dot":     { "type": "boolean", "default": false, "description": "Renders a colored dot instead of text — useful for status indicators" }
+    },
+    "tokens": {
+      "background": {
+        "primary": "{color.primary.50}",
+        "success": "{color.success.light}",
+        "warning": "{color.warning.light}",
+        "error":   "{color.error.light}",
+        "neutral": "{color.neutral.100}"
+      },
+      "text": {
+        "primary": "{color.primary.700}",
+        "success": "{color.success.dark}",
+        "warning": "{color.warning.dark}",
+        "error":   "{color.error.dark}",
+        "neutral": "{color.neutral.700}"
+      },
+      "typography": "{typography.textStyle.label}",
+      "borderRadius": "{borderRadius.full}",
+      "spacing": {
+        "sm": { "paddingY": "{spacing.0}", "paddingX": "{spacing.2}" },
+        "md": { "paddingY": "{spacing.1}", "paddingX": "{spacing.2}" }
+      }
+    },
+    "constraints": [
+      "Do not use a badge as an interactive element — use a button or tag component instead",
+      "Badge text should be 1–3 words maximum; longer strings break the visual compact form",
+      "Never use arbitrary colors; only approved variants are permitted",
+      "Dot badges must include a visually hidden text label for screen readers"
+    ],
+    "accessibility": {
+      "role": "status (implicit)",
+      "ariaRequired": ["aria-label or visually hidden text when using dot variant"]
+    }
+  }
+}

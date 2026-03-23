@@ -387,6 +387,21 @@
       .chat-panel { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid var(--border); height: 60vh; }
       .preview-panel { height: auto; min-height: 40vh; }
     }
+
+    /* Live UI preview iframe */
+    .preview-ui-label {
+      font-size: 11px; font-weight: 600; letter-spacing: .4px;
+      color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px;
+    }
+    .preview-iframe {
+      width: 100%;
+      min-height: 280px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+      margin-bottom: 20px;
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -595,8 +610,14 @@
   }
 
   // ── Preview panel ───────────────────────────────────────────────────────
+  let currentBlobUrl = null;
+
   function updatePreview(text, toolsUsed, model) {
     if (model) modelBadge.textContent = model;
+
+    // Extract the first ```html ... ``` code block if present
+    const htmlBlockMatch = text.match(/```html\n([\s\S]*?)```/);
+    const renderedUiHtml = htmlBlockMatch ? htmlBlockMatch[1].trim() : null;
 
     const contentDiv = document.createElement("div");
     contentDiv.className = "preview-content";
@@ -606,6 +627,22 @@
     highlightTokens(contentDiv);
 
     let html = contentDiv.outerHTML;
+
+    // If there's a renderable HTML snippet, show it in a sandboxed iframe
+    if (renderedUiHtml) {
+      // Revoke the previous blob URL to avoid memory leaks
+      if (currentBlobUrl) {
+        URL.revokeObjectURL(currentBlobUrl);
+        currentBlobUrl = null;
+      }
+      const iframeDoc = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+        body { margin: 16px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 14px; }
+      </style></head><body>${renderedUiHtml}</body></html>`;
+      const blob = new Blob([iframeDoc], { type: "text/html" });
+      currentBlobUrl = URL.createObjectURL(blob);
+      html = `<div class="preview-ui-label">Live Preview</div>
+        <iframe class="preview-iframe" src="${currentBlobUrl}" sandbox="" title="UI Preview"></iframe>` + html;
+    }
 
     if (toolsUsed && toolsUsed.length > 0) {
       const toolsHtml = `

@@ -49,6 +49,39 @@ AI clients call these tools via `POST /mcp` using the JSON-RPC protocol.
 
 ---
 
+## Demo UI Flow
+
+The intended demo experience is a **split-panel chatbot**:
+
+```
+┌─────────────────────────────┬──────────────────────────────┐
+│  Chat                       │  Preview                     │
+│                             │                              │
+│  User: "Create a login      │  ┌─────────────────────────┐ │
+│  form with email, password, │  │  [Email input]          │ │
+│  and a primary submit       │  │  [Password input]       │ │
+│  button"                    │  │  [Submit button]        │ │
+│                             │  └─────────────────────────┘ │
+│  AI: Here's a login form    │  Token refs used:            │
+│  using the design system…   │  · color.semantic.action…   │
+│                             │  · spacing.4 / spacing.16   │
+└─────────────────────────────┴──────────────────────────────┘
+```
+
+**How it works — step by step:**
+
+1. **User describes a UI** in natural language in the chat panel
+2. **The LLM processes the message** and recognizes it needs design system context — it calls MCP tools automatically (e.g. `get_component("input")`, `get_component("button")`, `get_tokens("spacing")`)
+3. **The MCP server returns structured data** — correct tokens, approved variants, constraints, and accessibility rules for each component
+4. **The LLM generates a grounded response** — component specs, JSX/HTML, or a structured component tree that uses the actual token names and variant values from the design system, not guesses
+5. **The preview panel renders the result** — a live component preview, a token swatch grid, or a visual spec card built from the structured MCP response
+
+The key distinction from a plain LLM chat: the AI's output is anchored to the real design system definition fetched at query time, so colors, spacing, typography, and constraints are always correct.
+
+> This demo ships only the MCP server (step 3). The chatbot UI (steps 1–2, 5) is the next layer to build — see [Phase 5 in the roadmap](#roadmap).
+
+---
+
 ## Getting Started
 
 ### Prerequisites
@@ -75,17 +108,11 @@ npm run build
 npm start
 ```
 
-### Deploy
-
-**Heroku** — a `Procfile` is included. Push to a Heroku app and the server starts automatically.
-
-**Vercel** — `vercel.json` is configured for serverless deployment. The server runs in stateless mode, which is compatible with Vercel's function execution model.
-
 ### Connect an AI client
 
-To connect Claude Desktop (or any MCP-compatible client), point it at `http://localhost:3000/mcp` using the StreamableHTTP transport.
+To connect Claude Desktop (or any MCP-compatible client), point it at your deployed server URL using the StreamableHTTP transport.
 
-Example MCP client config entry:
+Example `claude_desktop_config.json` entry (local dev):
 
 ```json
 {
@@ -96,6 +123,110 @@ Example MCP client config entry:
   }
 }
 ```
+
+Replace the URL with your deployed server address when running in production.
+
+---
+
+## Deployment
+
+The MCP server is a standard Node.js HTTP process. It runs equally well as a long-running server or a serverless function. Choose the option that fits your workflow.
+
+### Recommended options
+
+| Platform | Best for | Cost | Config included |
+|---|---|---|---|
+| **Heroku** | Simple, long-running server | Free tier removed; ~$5/mo Eco dyno | ✅ `Procfile` |
+| **Vercel** | Serverless, zero-ops | Generous free tier | ✅ `vercel.json` |
+| **Railway** | Heroku-like, modern DX | ~$5/mo | Manual (see below) |
+| **Render** | Free tier with spin-down | Free (spins down after inactivity) | Manual (see below) |
+| **Fly.io** | Persistent, global edge | Free allowance | Manual (see below) |
+| **Local / ngrok** | Quick demos, AI client testing | Free | ✅ `npm run dev` |
+
+---
+
+### Heroku
+
+A `Procfile` is included (`web: node dist/index.js`).
+
+```bash
+# Install the Heroku CLI, then:
+heroku create your-app-name
+git push heroku main
+heroku open
+```
+
+The `PORT` environment variable is set automatically by Heroku. No additional config is needed.
+
+> **Note:** Heroku removed its free tier in 2022. The Eco dyno plan starts at ~$5/month. The server will sleep after 30 minutes of inactivity on Eco — upgrade to Basic ($7/mo) for always-on behavior.
+
+---
+
+### Vercel
+
+`vercel.json` is pre-configured for serverless deployment.
+
+```bash
+npm install -g vercel
+vercel
+```
+
+The server runs in stateless mode (one fresh instance per request), which is correct for Vercel's function model. `VERCEL=1` is set automatically by the platform, which skips the `app.listen()` call and exports the Express app instead.
+
+> **Note:** Vercel serverless functions have a maximum execution timeout (default 10s on Hobby, 60s on Pro). This is plenty for MCP tool calls, which return in milliseconds.
+
+---
+
+### Railway
+
+Railway auto-detects Node.js projects and builds from source.
+
+1. Push your repo to GitHub
+2. Create a new Railway project → **Deploy from GitHub repo**
+3. Railway runs `npm run build` and `npm start` automatically
+4. Set `PORT` to `3000` in Railway's environment variables (or leave it unset — Railway injects `PORT` automatically)
+
+No additional config files are needed.
+
+---
+
+### Render
+
+1. Create a new **Web Service** in the Render dashboard
+2. Connect your GitHub repo
+3. Set **Build Command**: `npm run build`
+4. Set **Start Command**: `npm start`
+5. Choose the **Free** instance type (note: free instances spin down after 15 minutes of inactivity — first request after sleep takes ~30s to wake)
+
+For a demo server that should stay responsive, use the Starter plan ($7/mo).
+
+---
+
+### Fly.io
+
+```bash
+# Install flyctl, then:
+fly launch          # auto-detects Node, generates fly.toml
+fly deploy
+```
+
+Fly runs the app as a persistent VM. The free allowance covers one small VM. Set `PORT` to `8080` (Fly's default internal port) or configure `fly.toml` to match port `3000`.
+
+---
+
+### Local + ngrok (quick AI client demo)
+
+If you want to test with Claude Desktop or another local AI client without deploying:
+
+```bash
+# Terminal 1 — start the MCP server
+npm run dev
+
+# Terminal 2 — expose it publicly
+npx ngrok http 3000
+```
+
+Use the ngrok HTTPS URL (e.g. `https://abc123.ngrok.io/mcp`) as the MCP server URL in your AI client config. Useful for demos and testing before committing to a deployment platform.
 
 ---
 
@@ -145,7 +276,9 @@ scripts/
 - [ ] `diff_against_system` tool — compares arbitrary CSS/props against system definitions
 - [ ] Semantic search over components and tokens using embeddings
 
-### Phase 5 — AI workflow integration
+### Phase 5 — Demo UI and AI workflow integration
+- [ ] Split-panel chatbot demo UI (chat + live component preview panel)
+- [ ] Structured component renderer — turn MCP responses into rendered HTML/React previews
 - [ ] GitHub Copilot / VS Code extension integration
 - [ ] Prompt templates for common AI-assisted UI generation tasks
 - [ ] Audit report generation: scan a codebase and report design system deviations

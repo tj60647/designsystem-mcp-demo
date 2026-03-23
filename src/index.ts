@@ -46,11 +46,19 @@ app.get("/demo", (_req, res) => {
   res.redirect("/demo.html");
 });
 
-// ── Health check ──────────────────────────────────────────────────────────
-// A simple GET / so Heroku, Vercel, and uptime monitors can confirm the
-// server is alive without sending a full MCP request.
+// ── Root redirect ─────────────────────────────────────────────────────────
+// Send visitors straight to the demo UI. MCP clients and uptime monitors
+// that need a JSON health check can use GET /health instead.
 // ─────────────────────────────────────────────────────────────────────────
 app.get("/", (_req, res) => {
+  res.redirect("/demo");
+});
+
+// ── Health check ──────────────────────────────────────────────────────────
+// Lightweight JSON status endpoint for MCP clients, Heroku, Vercel, and
+// uptime monitors that need to confirm the server is alive.
+// ─────────────────────────────────────────────────────────────────────────
+app.get("/health", (_req, res) => {
   res.json({
     name: "Design System MCP",
     version: "0.1.0",

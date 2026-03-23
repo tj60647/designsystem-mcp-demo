@@ -287,8 +287,7 @@
       "variant":      { "type": "enum",    "values": ["default", "error", "success"], "default": "default" },
       "disabled":     { "type": "boolean", "default": false },
       "required":     { "type": "boolean", "default": false },
-      "label":        { "type": "string",  "optional": false, "description": "Visible label text — always required" },
-      "placeholder":  { "type": "string",  "optional": true,  "description": "Hint option shown when no value is selected" },
+      "label":        { "type": "string",  "required": true,  "description": "Visible label text — always required" },
       "helperText":   { "type": "string",  "optional": true,  "description": "Supporting instruction below the select" },
       "errorMessage": { "type": "string",  "optional": true,  "description": "Validation error shown when variant is 'error'" },
       "options":      { "type": "Array<{ value: string; label: string; disabled?: boolean }>", "required": true, "description": "List of selectable options" },
@@ -358,7 +357,7 @@
       "checked":       { "type": "boolean",  "default": false, "description": "Whether the checkbox is checked (controlled)" },
       "indeterminate": { "type": "boolean",  "default": false, "description": "Tri-state indeterminate visual — used for parent checkboxes in a group" },
       "disabled":      { "type": "boolean",  "default": false },
-      "label":         { "type": "string",   "optional": false, "description": "Visible label text beside the checkbox" },
+      "label":         { "type": "string",   "required": true,  "description": "Visible label text beside the checkbox" },
       "helperText":    { "type": "string",   "optional": true,  "description": "Supporting instruction below the label" },
       "errorMessage":  { "type": "string",   "optional": true,  "description": "Validation error shown when variant is 'error'" },
       "onChange":      { "type": "function", "required": true,  "description": "Callback with new checked value on change" }

@@ -1,16 +1,16 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
   "builds": [
     {
       "src": "src/index.ts",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["src/data/**"]
+      }
     }
   ],
   "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "src/index.ts"
-    }
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "src/index.ts" }
   ]
 }

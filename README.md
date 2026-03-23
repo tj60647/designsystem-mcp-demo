@@ -2,7 +2,7 @@
 
 > A queryable context layer that makes design systems machine-readable, enforceable, and usable by AI.
 
-This repository is a **minimum viable demo** of the Design System MCP concept. It provides a live HTTP server that exposes design system data — tokens, components, and their constraints — as structured, queryable tools that AI systems (Claude, Copilot, etc.) can call via the [Model Context Protocol (MCP)](https://modelcontextprotocol.io).
+This repository is a **full-stack demo** of the Design System MCP concept. It provides a live HTTP server that exposes design system data — tokens, components, and their constraints — as structured, queryable tools that AI systems (Claude, Copilot, etc.) can call via the [Model Context Protocol (MCP)](https://modelcontextprotocol.io), plus a split-panel chatbot UI powered by [OpenRouter](https://openrouter.ai).
 
 ---
 
@@ -16,19 +16,21 @@ This enables AI-assisted tools to generate, evaluate, and transform UI in ways t
 
 ---
 
-## MVP Scope
-
-This demo implements the minimal foundation required to validate the concept end-to-end:
+## Scope
 
 | Layer | What's included |
 |---|---|
-| **Token data** | Colors, typography, spacing, border radius, shadows — loaded from `tokens.json` |
-| **Component data** | Button, Input, Card, Badge — loaded from `components.json` |
-| **MCP tools** | 8 queryable tools AI clients can call (see below) |
+| **Token data** | Color, typography, spacing, border radius, shadow, motion, layout — loaded from `tokens.json` |
+| **Component data** | Button, Input, Card, Badge, Modal, Select, Checkbox, Toast, Navigation, Table, Form — loaded from `components.json` |
+| **Theme data** | Light and dark mode semantic token overrides — loaded from `themes.json` |
+| **Icon metadata** | 34 icons across 7 categories — loaded from `icons.json` |
+| **MCP tools** | 12 queryable tools AI clients can call (see below) |
 | **HTTP transport** | Stateless Express server with a `POST /mcp` endpoint |
-| **Figma-style source** | `figma-export.json` — a simulated design tool export showing the upstream data shape |
+| **Demo chatbot UI** | Split-panel chat UI at `/demo` — powered by OpenRouter with live MCP tool calling |
+| **Figma pipeline** | `scripts/figma-sync.mjs` syncs tokens from the Figma Variables API; `scripts/generate-tokens.mjs` transforms `figma-export.json` |
+| **Deployment** | Vercel (primary), Heroku, Railway, Render, Fly.io, or local + ngrok |
 
-The data files (`tokens.json`, `components.json`) represent what a real pipeline would produce from a design tool like Figma via Style Dictionary. The `figma-export.json` file simulates what that raw upstream export looks like before transformation.
+The data files represent what a real pipeline would produce from a design tool like Figma via Style Dictionary. The `figma-export.json` file simulates what that raw upstream export looks like before transformation.
 
 ---
 
@@ -38,7 +40,7 @@ AI clients call these tools via `POST /mcp` using the JSON-RPC protocol.
 
 | Tool | Description |
 |---|---|
-| `list_token_categories` | List all top-level token categories (color, typography, spacing…) |
+| `list_token_categories` | List all top-level token categories (color, typography, spacing, motion, layout…) |
 | `get_tokens` | Get the full token tree for a category, or all tokens |
 | `get_token` | Look up a single token by dot-path (e.g. `color.primary.600`) |
 | `list_components` | List all components with names, descriptions, variants, and sizes |
@@ -46,6 +48,10 @@ AI clients call these tools via `POST /mcp` using the JSON-RPC protocol.
 | `get_component_tokens` | Get all token references a component depends on |
 | `validate_color` | Check whether a hex/rgb value matches a named design token |
 | `get_component_constraints` | Get usage rules and constraints for a component |
+| `validate_component_usage` | Check whether a component config (variant, size, props) is valid per the spec |
+| `suggest_token` | Suggest the best token for a described intent (e.g. "error text color") |
+| `diff_against_system` | Compare CSS property values against the token set — flags non-compliant values |
+| `search` | Full-text search across all tokens, components, and icons by keyword |
 
 ---
 
@@ -78,7 +84,7 @@ The intended demo experience is a **split-panel chatbot**:
 
 The key distinction from a plain LLM chat: the AI's output is anchored to the real design system definition fetched at query time, so colors, spacing, typography, and constraints are always correct.
 
-> This demo ships only the MCP server (step 3). The chatbot UI (steps 1–2, 5) is the next layer to build — see [Phase 5 in the roadmap](#roadmap).
+> The split-panel demo UI is live at `/demo`. It uses [OpenRouter](https://openrouter.ai) as the LLM backend and calls MCP tools automatically in an agentic loop. Set `OPENROUTER_API_KEY` in your environment to enable it.
 
 ---
 
@@ -88,18 +94,24 @@ The key distinction from a plain LLM chat: the AI's output is anchored to the re
 
 - Node.js ≥ 20
 - npm
+- An [OpenRouter API key](https://openrouter.ai/keys) (for the chatbot demo UI)
 
 ### Install & run locally
 
 ```bash
 npm install
+cp .env.example .env
+# Edit .env and set OPENROUTER_API_KEY=sk-or-...
 npm run dev
 ```
 
 The server starts at `http://localhost:3000`.
 
 - `GET /` — health check, returns server info and available tools
+- `GET /demo` — split-panel chatbot demo UI (requires `OPENROUTER_API_KEY`)
 - `POST /mcp` — MCP JSON-RPC endpoint for AI clients
+- `POST /api/chat` — OpenRouter-backed agentic chat endpoint
+- `GET /prompt-templates` — pre-built prompt templates for the demo UI
 
 ### Build for production
 
@@ -136,8 +148,8 @@ The MCP server is a standard Node.js HTTP process. It runs equally well as a lon
 
 | Platform | Best for | Cost | Config included |
 |---|---|---|---|
+| **Vercel** | Serverless, zero-ops (**recommended**) | Generous free tier | ✅ `vercel.json` |
 | **Heroku** | Simple, long-running server | Free tier removed; ~$5/mo Eco dyno | ✅ `Procfile` |
-| **Vercel** | Serverless, zero-ops | Generous free tier | ✅ `vercel.json` |
 | **Railway** | Heroku-like, modern DX | ~$5/mo | Manual (see below) |
 | **Render** | Free tier with spin-down | Free (spins down after inactivity) | Manual (see below) |
 | **Fly.io** | Persistent, global edge | Free allowance | Manual (see below) |
@@ -171,9 +183,11 @@ npm install -g vercel
 vercel
 ```
 
-The server runs in stateless mode (one fresh instance per request), which is correct for Vercel's function model. `VERCEL=1` is set automatically by the platform, which skips the `app.listen()` call and exports the Express app instead.
+After deployment, set the `OPENROUTER_API_KEY` environment variable in the Vercel project settings to enable the chatbot demo at `/demo`.
 
-> **Note:** Vercel serverless functions have a maximum execution timeout (default 10s on Hobby, 60s on Pro). This is plenty for MCP tool calls, which return in milliseconds.
+The server runs in stateless mode (one fresh instance per request). `VERCEL=1` is set automatically by the platform, which skips the `app.listen()` call and exports the Express app instead. Static files in `public/` (the demo UI) are served by Vercel's CDN — they never hit the serverless function.
+
+> **Note:** Vercel serverless functions have a maximum execution timeout (default 10s on Hobby, 60s on Pro). MCP tool calls return in milliseconds; the `/api/chat` agentic loop completes in 2–5 seconds.
 
 ---
 
@@ -234,22 +248,30 @@ Use the ngrok HTTPS URL (e.g. `https://abc123.ngrok.io/mcp`) as the MCP server U
 
 ```
 src/
-  index.ts          — Express HTTP server (health check + MCP endpoint)
-  mcp-server.ts     — MCP server factory; all tool definitions
+  index.ts          — Express server (health check, MCP endpoint, /api/chat, /prompt-templates)
+  mcp-server.ts     — MCP server factory; all 12 tool definitions
+  toolRunner.ts     — Local tool executor used by the /api/chat agentic loop
   data/
-    tokens.json     — Design tokens (color, typography, spacing, etc.)
-    components.json — Component specs (props, tokens, constraints, a11y)
+    tokens.json     — Design tokens (color, typography, spacing, motion, layout…)
+    components.json — Component specs (11 components: Button, Input, Card, Badge, Modal…)
+    themes.json     — Light and dark theme semantic token overrides
+    icons.json      — Icon metadata (34 icons across 7 categories)
+
+public/
+  demo.html         — Split-panel chatbot demo UI (vanilla HTML/CSS/JS)
 
 figma-export.json   — Simulated Figma/design-tool export (upstream source shape)
 scripts/
-  copy-data.mjs     — Post-build script: copies data files into dist/
+  copy-data.mjs     — Post-build: copies src/data/ files into dist/data/
+  figma-sync.mjs    — Syncs live token data from the Figma Variables API
+  generate-tokens.mjs — Transforms figma-export.json into tokens.json (Style Dictionary style)
 ```
 
 ---
 
 ## Roadmap
 
-### Phase 1 — Foundation ✅ (this demo)
+### Phase 1 — Foundation ✅
 - [x] Stateless MCP HTTP server with Express
 - [x] Token data: color, typography, spacing, border radius, shadow
 - [x] Component data: Button, Input, Card, Badge
@@ -257,32 +279,32 @@ scripts/
 - [x] Heroku and Vercel deployment support
 - [x] Simulated Figma export JSON showing the upstream data shape
 
-### Phase 2 — Richer design system coverage
-- [ ] Expand component library (Modal, Select, Checkbox, Toast, Navigation, Table, Form)
-- [ ] Add layout patterns (page shells, grid system, responsive breakpoints)
-- [ ] Add motion/animation tokens
-- [ ] Add dark mode / theme variant support
-- [ ] Add icon token references and icon metadata
+### Phase 2 — Richer design system coverage ✅
+- [x] Expand component library (Modal, Select, Checkbox, Toast, Navigation, Table, Form)
+- [x] Add layout patterns (grid system, responsive breakpoints, z-index scale)
+- [x] Add motion/animation tokens
+- [x] Add dark mode / theme variant support (`themes.json`)
+- [x] Add icon token references and icon metadata (`icons.json`)
 
-### Phase 3 — Live pipeline integration
-- [ ] Connect to a real Figma file via the Figma REST API
-- [ ] Automate token extraction using Style Dictionary
-- [ ] Webhook or polling to keep the MCP data in sync with design tool changes
-- [ ] Support multiple brand themes or product lines
+### Phase 3 — Live pipeline integration ✅
+- [x] Connect to a real Figma file via the Figma REST API (`scripts/figma-sync.mjs`)
+- [x] Automate token extraction using Style Dictionary (`scripts/generate-tokens.mjs`)
+- [x] Support multiple brand themes / dark mode via `themes.json`
+- [ ] Webhook or polling to keep the MCP data in sync with design tool changes _(requires always-on server)_
 
-### Phase 4 — Validation and enforcement
-- [ ] `validate_component_usage` tool — checks whether a given component config is valid
-- [ ] `suggest_token` tool — suggests the correct token for a described intent (e.g. "error text color")
-- [ ] `diff_against_system` tool — compares arbitrary CSS/props against system definitions
-- [ ] Semantic search over components and tokens using embeddings
+### Phase 4 — Validation and enforcement ✅
+- [x] `validate_component_usage` tool — checks whether a given component config is valid
+- [x] `suggest_token` tool — suggests the correct token for a described intent
+- [x] `diff_against_system` tool — compares arbitrary CSS/props against system definitions
+- [x] `search` tool — full-text search across all tokens, components, and icons
 
-### Phase 5 — Demo UI and AI workflow integration
-- [ ] Split-panel chatbot demo UI (chat + live component preview panel)
-- [ ] Structured component renderer — turn MCP responses into rendered HTML/React previews
-- [ ] GitHub Copilot / VS Code extension integration
-- [ ] Prompt templates for common AI-assisted UI generation tasks
-- [ ] Audit report generation: scan a codebase and report design system deviations
-- [ ] Storybook or component playground integration for live preview
+### Phase 5 — Demo UI and AI workflow integration ✅
+- [x] Split-panel chatbot demo UI at `/demo` (chat + preview panel)
+- [x] OpenRouter-backed agentic loop — LLM calls MCP tools automatically
+- [x] Prompt templates for common AI-assisted UI generation tasks (`/prompt-templates`)
+- [x] Deployed on Vercel with `@vercel/node` and proper static asset routing
+- [ ] GitHub Copilot / VS Code extension integration _(separate project)_
+- [ ] Storybook or component playground integration _(future enhancement)_
 
 ---
 

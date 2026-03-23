@@ -220,5 +220,391 @@
       "role": "status (implicit)",
       "ariaRequired": ["aria-label or visually hidden text when using dot variant"]
     }
+  },
+
+  "modal": {
+    "name": "Modal",
+    "description": "Dialog overlay that interrupts the current flow to request a decision or display critical information. Use sparingly — prefer inline patterns when possible.",
+    "variants": ["default", "alert", "fullscreen"],
+    "sizes": ["sm", "md", "lg", "xl"],
+    "states": ["open", "closed"],
+    "props": {
+      "isOpen":              { "type": "boolean",   "required": true,  "description": "Controls visibility of the modal" },
+      "onClose":             { "type": "function",  "required": true,  "description": "Callback invoked when the modal requests to close" },
+      "title":               { "type": "string",    "required": true,  "description": "Heading displayed in the modal header" },
+      "size":                { "type": "enum",      "values": ["sm", "md", "lg", "xl"], "default": "md" },
+      "closeOnOverlayClick": { "type": "boolean",   "default": true,   "description": "Dismiss the modal when clicking the backdrop overlay" },
+      "children":            { "type": "ReactNode", "required": true,  "description": "Modal body content" }
+    },
+    "tokens": {
+      "overlay": {
+        "background": "rgb(0 0 0 / 0.5)"
+      },
+      "content": {
+        "background": "{color.neutral.0}",
+        "borderRadius": "{borderRadius.xl}",
+        "padding": "{spacing.6}",
+        "shadow": "{shadow.xl}"
+      },
+      "zIndex": "{layout.zIndex.modal}",
+      "width": {
+        "sm": "380px",
+        "md": "512px",
+        "lg": "672px",
+        "xl": "896px"
+      }
+    },
+    "constraints": [
+      "Every modal must have a descriptive title visible in the header",
+      "The alert variant is reserved for destructive or irreversible confirmations only",
+      "Focus must be trapped inside the modal while it is open",
+      "Pressing Escape must close non-alert modals",
+      "Scroll must be locked on the document body while a modal is open",
+      "Do not stack more than two modals — prefer wizards or multi-step flows instead",
+      "fullscreen variant should only be used on mobile or for immersive content"
+    ],
+    "accessibility": {
+      "role": "dialog",
+      "ariaRequired": [
+        "aria-modal='true'",
+        "aria-labelledby pointing to the modal title element",
+        "aria-describedby pointing to the modal body when content is descriptive"
+      ],
+      "focusBehavior": "Move focus to first focusable element on open; return focus to trigger element on close",
+      "keyboardSupport": ["Escape to close", "Tab / Shift+Tab to cycle within modal"],
+      "focusTrap": true
+    }
+  },
+
+  "select": {
+    "name": "Select",
+    "description": "Dropdown select input for choosing one option from a list. Use when there are five or more options; prefer radio buttons for fewer choices.",
+    "variants": ["default", "error", "success"],
+    "sizes": ["sm", "md", "lg"],
+    "states": ["default", "focus", "open", "filled", "error", "disabled"],
+    "props": {
+      "size":         { "type": "enum",    "values": ["sm", "md", "lg"], "default": "md" },
+      "variant":      { "type": "enum",    "values": ["default", "error", "success"], "default": "default" },
+      "disabled":     { "type": "boolean", "default": false },
+      "required":     { "type": "boolean", "default": false },
+      "label":        { "type": "string",  "required": true,  "description": "Visible label text — always required" },
+      "helperText":   { "type": "string",  "optional": true,  "description": "Supporting instruction below the select" },
+      "errorMessage": { "type": "string",  "optional": true,  "description": "Validation error shown when variant is 'error'" },
+      "options":      { "type": "Array<{ value: string; label: string; disabled?: boolean }>", "required": true, "description": "List of selectable options" },
+      "value":        { "type": "string",  "optional": true,  "description": "Currently selected value (controlled)" },
+      "onChange":     { "type": "function","required": true,  "description": "Callback with new value on change" }
+    },
+    "tokens": {
+      "background": {
+        "default":  "{color.neutral.0}",
+        "disabled": "{color.neutral.100}"
+      },
+      "text": {
+        "value":       "{color.semantic.text.primary}",
+        "placeholder": "{color.neutral.400}",
+        "disabled":    "{color.semantic.text.disabled}"
+      },
+      "border": {
+        "default":  "{color.semantic.border.default}",
+        "focus":    "{color.semantic.border.focus}",
+        "error":    "{color.error.default}",
+        "success":  "{color.success.default}",
+        "disabled": "{color.neutral.200}"
+      },
+      "dropdown": {
+        "background":   "{color.neutral.0}",
+        "shadow":       "{shadow.lg}",
+        "borderRadius": "{borderRadius.md}",
+        "optionHover":  "{color.neutral.50}",
+        "optionActive": "{color.primary.50}"
+      },
+      "label":     "{typography.textStyle.label}",
+      "inputText": "{typography.textStyle.body}",
+      "spacing": {
+        "sm": { "paddingY": "{spacing.1}", "paddingX": "{spacing.2}" },
+        "md": { "paddingY": "{spacing.2}", "paddingX": "{spacing.3}" },
+        "lg": { "paddingY": "{spacing.3}", "paddingX": "{spacing.4}" }
+      },
+      "borderRadius": "{borderRadius.md}"
+    },
+    "constraints": [
+      "Every select must have a visible label — do not rely on placeholder alone",
+      "Error messages must be linked to the control via aria-describedby",
+      "Do not use select for binary yes/no choices — use a checkbox or toggle instead",
+      "Option lists longer than 10 items should consider a searchable combobox instead",
+      "Display error state and errorMessage together — never show one without the other"
+    ],
+    "accessibility": {
+      "role": "combobox",
+      "ariaRequired": [
+        "associated label element or aria-label",
+        "aria-expanded indicating open/closed state",
+        "aria-haspopup='listbox'",
+        "aria-describedby pointing to helperText or errorMessage",
+        "aria-invalid='true' when variant is 'error'",
+        "aria-disabled='true' when disabled"
+      ],
+      "keyboardSupport": ["Enter / Space to open", "Arrow keys to navigate options", "Escape to close", "Home / End to jump to first / last option"]
+    }
+  },
+
+  "checkbox": {
+    "name": "Checkbox",
+    "description": "Binary or tri-state input for selecting one or multiple items from a list. Always pair with a visible label.",
+    "variants": ["default", "error"],
+    "states": ["unchecked", "checked", "indeterminate", "disabled"],
+    "props": {
+      "checked":       { "type": "boolean",  "default": false, "description": "Whether the checkbox is checked (controlled)" },
+      "indeterminate": { "type": "boolean",  "default": false, "description": "Tri-state indeterminate visual — used for parent checkboxes in a group" },
+      "disabled":      { "type": "boolean",  "default": false },
+      "label":         { "type": "string",   "required": true,  "description": "Visible label text beside the checkbox" },
+      "helperText":    { "type": "string",   "optional": true,  "description": "Supporting instruction below the label" },
+      "errorMessage":  { "type": "string",   "optional": true,  "description": "Validation error shown when variant is 'error'" },
+      "onChange":      { "type": "function", "required": true,  "description": "Callback with new checked value on change" }
+    },
+    "tokens": {
+      "control": {
+        "background": {
+          "unchecked":     "{color.neutral.0}",
+          "checked":       "{color.semantic.action.primary}",
+          "indeterminate": "{color.semantic.action.primary}",
+          "disabled":      "{color.neutral.100}"
+        },
+        "border": {
+          "unchecked":     "{color.semantic.border.default}",
+          "checked":       "{color.semantic.action.primary}",
+          "indeterminate": "{color.semantic.action.primary}",
+          "error":         "{color.error.default}",
+          "disabled":      "{color.neutral.200}"
+        },
+        "checkmark": "{color.neutral.0}",
+        "size":      "16px",
+        "borderRadius": "{borderRadius.sm}"
+      },
+      "label":     "{typography.textStyle.body}",
+      "helperText":"{typography.textStyle.body-sm}",
+      "errorText": "{color.error.dark}",
+      "focusRing": "{color.semantic.border.focus}"
+    },
+    "constraints": [
+      "Always provide a visible label — a standalone checkbox is inaccessible",
+      "Use indeterminate only for parent checkboxes that partially select a child group",
+      "Disabled checkboxes must not be the only way to convey required state",
+      "Group related checkboxes inside a fieldset with a legend",
+      "Error state and errorMessage must appear together"
+    ],
+    "accessibility": {
+      "role": "checkbox",
+      "ariaRequired": [
+        "associated label element or aria-label",
+        "aria-checked='mixed' when indeterminate",
+        "aria-invalid='true' when variant is 'error'",
+        "aria-disabled='true' when disabled",
+        "aria-describedby pointing to helperText or errorMessage"
+      ],
+      "keyboardSupport": ["Space to toggle"]
+    }
+  },
+
+  "toast": {
+    "name": "Toast",
+    "description": "Transient notification that appears at the edge of the screen to communicate feedback without interrupting the user's flow.",
+    "variants": ["info", "success", "warning", "error"],
+    "states": ["visible", "dismissed"],
+    "props": {
+      "variant":    { "type": "enum",    "values": ["info", "success", "warning", "error"], "default": "info" },
+      "title":      { "type": "string",  "optional": true,  "description": "Short headline for the notification" },
+      "message":    { "type": "string",  "required": true,  "description": "Main notification body text" },
+      "duration":   { "type": "number",  "default": 5000,   "description": "Auto-dismiss delay in milliseconds; 0 disables auto-dismiss" },
+      "dismissible":{ "type": "boolean", "default": true,   "description": "Renders a close button for manual dismissal" },
+      "action":     { "type": "{ label: string; onClick: () => void }","optional": true, "description": "Optional inline action link/button" }
+    },
+    "tokens": {
+      "background": {
+        "info":    "{color.primary.50}",
+        "success": "{color.success.light}",
+        "warning": "{color.warning.light}",
+        "error":   "{color.error.light}"
+      },
+      "text": {
+        "info":    "{color.primary.700}",
+        "success": "{color.success.dark}",
+        "warning": "{color.warning.dark}",
+        "error":   "{color.error.dark}"
+      },
+      "icon": {
+        "info":    "{color.primary.600}",
+        "success": "{color.success.default}",
+        "warning": "{color.warning.default}",
+        "error":   "{color.error.default}"
+      },
+      "borderRadius": "{borderRadius.lg}",
+      "shadow":       "{shadow.lg}",
+      "padding":      "{spacing.4}",
+      "maxWidth":     "400px",
+      "zIndex":       "{layout.zIndex.toast}"
+    },
+    "constraints": [
+      "Toasts must not contain critical information the user cannot recover if missed",
+      "Use error toasts sparingly — prefer inline form errors for field-level issues",
+      "Auto-dismiss duration must be at least 4000ms to meet WCAG 2.2.1 timing requirements",
+      "Toasts with action links must not auto-dismiss while the action is still relevant",
+      "Do not stack more than three toasts simultaneously; queue additional ones"
+    ],
+    "accessibility": {
+      "role": "alert",
+      "ariaRequired": [
+        "role='alert' for error/warning (polite interrupt) or role='status' for info/success",
+        "aria-live='assertive' for error, aria-live='polite' for info and success",
+        "aria-label on the dismiss button"
+      ],
+      "keyboardSupport": ["Escape to dismiss focused toast"]
+    }
+  },
+
+  "navigation": {
+    "name": "Navigation",
+    "description": "Top navigation bar providing site-wide wayfinding, branding, and primary actions.",
+    "variants": ["default", "transparent"],
+    "states": ["default", "scrolled"],
+    "props": {
+      "logo":        { "type": "ReactNode", "required": true,  "description": "Brand logo or wordmark rendered on the left side" },
+      "items":       { "type": "Array<{ label: string; href: string; icon?: ReactNode }>", "required": true, "description": "Primary navigation link items" },
+      "activeItem":  { "type": "string",    "optional": true,  "description": "href value of the currently active navigation item" },
+      "rightContent":{ "type": "ReactNode", "optional": true,  "description": "Slot for right-aligned content such as user avatar or CTA button" }
+    },
+    "tokens": {
+      "background": {
+        "default":     "{color.neutral.0}",
+        "transparent": "transparent",
+        "scrolled":    "{color.neutral.0}"
+      },
+      "text": {
+        "default": "{color.semantic.text.primary}",
+        "muted":   "{color.semantic.text.secondary}",
+        "active":  "{color.semantic.action.primary}"
+      },
+      "activeIndicator": {
+        "color":     "{color.semantic.action.primary}",
+        "height":    "2px",
+        "borderRadius": "{borderRadius.full}"
+      },
+      "border": {
+        "bottom": "{color.semantic.border.default}"
+      },
+      "height":  "64px",
+      "padding": "{spacing.4}",
+      "shadow":  "{shadow.sm}",
+      "zIndex":  "{layout.zIndex.sticky}"
+    },
+    "constraints": [
+      "Do not add more than seven primary navigation items — use mega-menus or drawers for deep structures",
+      "The logo must link to the home page and carry an aria-label describing the site name",
+      "Active item must be visually distinct through color and an accessible indicator, not color alone",
+      "transparent variant must ensure sufficient contrast with page hero imagery below it",
+      "Navigation must remain accessible at 200% browser zoom"
+    ],
+    "accessibility": {
+      "role": "navigation",
+      "ariaRequired": [
+        "aria-label='Main navigation' on the nav element",
+        "aria-current='page' on the active item link"
+      ],
+      "keyboardSupport": ["Tab to move between items", "Enter to activate link"]
+    }
+  },
+
+  "table": {
+    "name": "Table",
+    "description": "Data table for displaying structured, comparative information in rows and columns.",
+    "variants": ["default", "striped", "bordered"],
+    "states": ["default", "loading", "empty"],
+    "props": {
+      "columns":  { "type": "Array<{ key: string; header: string; sortable?: boolean; width?: string }>", "required": true,  "description": "Column definitions including header label and optional sort config" },
+      "data":     { "type": "Array<Record<string, unknown>>",                                             "required": true,  "description": "Array of row data objects keyed to column keys" },
+      "variant":  { "type": "enum",   "values": ["default", "striped", "bordered"], "default": "default" },
+      "sortKey":  { "type": "string", "optional": true,  "description": "Key of the currently sorted column" },
+      "sortDir":  { "type": "enum",   "values": ["asc", "desc"],                    "optional": true,  "description": "Current sort direction" },
+      "onSort":   { "type": "function","optional": true,  "description": "Callback with (key, direction) when a sortable column header is clicked" }
+    },
+    "tokens": {
+      "header": {
+        "background":  "{color.neutral.50}",
+        "text":        "{color.semantic.text.primary}",
+        "typography":  "{typography.textStyle.label}",
+        "borderBottom":"{color.semantic.border.strong}"
+      },
+      "row": {
+        "background":        "{color.neutral.0}",
+        "backgroundStriped": "{color.neutral.50}",
+        "backgroundHover":   "{color.neutral.100}",
+        "text":              "{color.semantic.text.primary}",
+        "typography":        "{typography.textStyle.body}"
+      },
+      "border":  "{color.semantic.border.default}",
+      "padding": {
+        "cell": { "paddingY": "{spacing.3}", "paddingX": "{spacing.4}" }
+      },
+      "sortIcon": {
+        "default": "{color.neutral.400}",
+        "active":  "{color.semantic.action.primary}"
+      }
+    },
+    "constraints": [
+      "Tables must not be used for layout — only for tabular data with logical row/column relationships",
+      "Every column must have a non-empty header label",
+      "Sortable columns must indicate sort direction with both a visual icon and aria attributes",
+      "Tables wider than their container must scroll horizontally, not clip content",
+      "Use the empty state slot when data is an empty array"
+    ],
+    "accessibility": {
+      "role": "table",
+      "ariaRequired": [
+        "aria-sort='ascending' or 'descending' on the active sort column header",
+        "scope='col' on th elements",
+        "aria-label or caption describing the table content",
+        "aria-live region to announce sort changes to screen readers"
+      ],
+      "keyboardSupport": ["Enter / Space to toggle sort on focused column header"]
+    }
+  },
+
+  "form": {
+    "name": "Form",
+    "description": "Layout wrapper that organises form controls into a consistent vertical or horizontal structure. References Button, Input, Checkbox, and Select components for field composition.",
+    "variants": ["vertical", "horizontal"],
+    "props": {
+      "onSubmit": { "type": "function",  "required": true,  "description": "Callback invoked with form data on valid submission" },
+      "layout":   { "type": "enum",      "values": ["vertical", "horizontal"], "default": "vertical", "description": "Controls label placement relative to inputs" },
+      "spacing":  { "type": "enum",      "values": ["sm", "md", "lg"], "default": "md", "description": "Gap between form fields" }
+    },
+    "tokens": {
+      "gap": {
+        "sm": "{spacing.3}",
+        "md": "{spacing.5}",
+        "lg": "{spacing.8}"
+      },
+      "labelWidth": {
+        "horizontal": "160px",
+        "description": "Fixed label column width used in horizontal layout"
+      }
+    },
+    "relatedComponents": ["button", "input", "checkbox", "select"],
+    "constraints": [
+      "Always include at least one Button with type='submit' inside a Form",
+      "All fields within a Form must follow the label requirements of their respective components",
+      "Use horizontal layout only for simple forms with short labels and short inputs",
+      "Do not place a Form inside another Form — nested forms are invalid HTML",
+      "Provide an accessible name for the form via aria-label or an associated heading"
+    ],
+    "accessibility": {
+      "role": "form",
+      "ariaRequired": [
+        "aria-label or aria-labelledby linking to a visible form heading",
+        "novalidate attribute to use custom validation messaging",
+        "aria-describedby on the form element when global form errors are shown"
+      ],
+      "keyboardSupport": ["Enter within a text input submits single-field forms", "Tab to move between fields"]
+    }
   }
 }

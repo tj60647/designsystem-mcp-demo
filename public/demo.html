@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Design System AI — Demo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #0d1117;
+      --bg-panel:    #161b22;
+      --bg-input:    #1c2128;
+      --bg-tool:     #1a2332;
+      --border:      #30363d;
+      --border-soft: #21262d;
+      --text:        #e6edf3;
+      --text-muted:  #7d8590;
+      --text-dim:    #484f58;
+      --accent:      #2f81f7;
+      --accent-dim:  #1f4f8a;
+      --green:       #3fb950;
+      --orange:      #d29922;
+      --purple:      #bc8cff;
+      --red:         #f85149;
+      --radius:      8px;
+      --radius-sm:   4px;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      font-size: 14px;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ── Top bar ── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .topbar-logo {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; color: #fff;
+    }
+    .topbar-title { font-weight: 600; font-size: 15px; }
+    .mcp-badge {
+      font-size: 10px; font-weight: 600; letter-spacing: .5px;
+      background: var(--accent-dim); color: var(--accent);
+      border: 1px solid var(--accent-dim); border-radius: 20px;
+      padding: 2px 8px;
+    }
+    .topbar-spacer { flex: 1; }
+    .topbar-link {
+      font-size: 12px; color: var(--text-muted);
+      text-decoration: none; transition: color .15s;
+    }
+    .topbar-link:hover { color: var(--text); }
+
+    /* ── Main layout ── */
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      height: calc(100vh - 53px);
+    }
+
+    /* ── Left — Chat panel ── */
+    .chat-panel {
+      width: 40%;
+      min-width: 300px;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--border-soft);
+      flex-shrink: 0;
+    }
+    .panel-header h2 { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .6px; }
+
+    /* Messages */
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      scroll-behavior: smooth;
+    }
+    .messages::-webkit-scrollbar { width: 6px; }
+    .messages::-webkit-scrollbar-track { background: transparent; }
+    .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .msg {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-width: 90%;
+    }
+    .msg.user { align-self: flex-end; align-items: flex-end; }
+    .msg.assistant { align-self: flex-start; align-items: flex-start; }
+    .msg.error { align-self: flex-start; }
+
+    .msg-bubble {
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13.5px;
+      line-height: 1.55;
+      word-break: break-word;
+    }
+    .msg.user .msg-bubble {
+      background: var(--accent);
+      color: #fff;
+      border-bottom-right-radius: var(--radius-sm);
+    }
+    .msg.assistant .msg-bubble {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-soft);
+      color: var(--text);
+      border-bottom-left-radius: var(--radius-sm);
+    }
+    .msg.error .msg-bubble {
+      background: rgba(248, 81, 73, .12);
+      border: 1px solid rgba(248, 81, 73, .3);
+      color: var(--red);
+    }
+    .msg-meta { font-size: 11px; color: var(--text-dim); }
+
+    /* Tool calls badge */
+    .tool-calls-wrap {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+    .tool-pills {
+      display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;
+    }
+    .tool-pill {
+      display: flex; align-items: center; gap: 4px;
+      background: var(--bg-tool);
+      border: 1px solid var(--border-soft);
+      border-radius: 20px;
+      padding: 2px 8px;
+      font-size: 11px; color: var(--purple);
+    }
+    .tool-pill::before { content: "⚙"; font-size: 10px; }
+
+    /* Loading */
+    .loading-bubble {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-soft);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex; gap: 5px; align-items: center;
+    }
+    .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--text-muted);
+      animation: bounce .9s infinite ease-in-out;
+    }
+    .dot:nth-child(2) { animation-delay: .15s; }
+    .dot:nth-child(3) { animation-delay: .3s; }
+    @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+
+    /* Chips */
+    .chips-section {
+      padding: 8px 12px 4px;
+      flex-shrink: 0;
+      border-top: 1px solid var(--border-soft);
+    }
+    .chips-label {
+      font-size: 10.5px; font-weight: 600; letter-spacing: .4px;
+      color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px;
+    }
+    .chips {
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .chip {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: border-color .15s, color .15s, background .15s;
+      white-space: nowrap;
+    }
+    .chip:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(47,129,247,.08);
+    }
+
+    /* Input area */
+    .input-area {
+      display: flex;
+      gap: 8px;
+      padding: 12px 14px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-panel);
+      flex-shrink: 0;
+      align-items: flex-end;
+    }
+    textarea {
+      flex: 1;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13.5px;
+      line-height: 1.5;
+      padding: 9px 12px;
+      resize: none;
+      min-height: 40px;
+      max-height: 120px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    textarea:focus { border-color: var(--accent); }
+    textarea::placeholder { color: var(--text-dim); }
+
+    button.send-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 9px 16px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity .15s;
+      height: 40px;
+    }
+    button.send-btn:hover:not(:disabled) { opacity: .85; }
+    button.send-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* ── Right — Preview panel ── */
+    .preview-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .preview-header {
+      padding: 14px 20px 10px;
+      border-bottom: 1px solid var(--border-soft);
+      flex-shrink: 0;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .preview-header h2 { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .6px; flex: 1; }
+    .preview-model-badge {
+      font-size: 11px; color: var(--text-dim);
+      background: var(--bg-input);
+      border: 1px solid var(--border-soft);
+      border-radius: 20px;
+      padding: 2px 8px;
+    }
+
+    .preview-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+    .preview-body::-webkit-scrollbar { width: 6px; }
+    .preview-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .preview-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 12px;
+      color: var(--text-dim);
+    }
+    .preview-empty-icon { font-size: 48px; opacity: .4; }
+    .preview-empty-text { font-size: 14px; text-align: center; }
+
+    .preview-content {
+      max-width: 680px;
+    }
+
+    /* Rendered markdown-like content */
+    .preview-content h1, .preview-content h2, .preview-content h3 {
+      color: var(--text);
+      margin: 1.2em 0 .5em;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+    .preview-content h1 { font-size: 20px; border-bottom: 1px solid var(--border-soft); padding-bottom: 8px; }
+    .preview-content h2 { font-size: 16px; }
+    .preview-content h3 { font-size: 14px; }
+    .preview-content p { margin: .6em 0; color: var(--text); line-height: 1.7; }
+    .preview-content ul, .preview-content ol { padding-left: 1.4em; margin: .6em 0; }
+    .preview-content li { margin: .25em 0; color: var(--text); }
+    .preview-content code {
+      background: var(--bg-input);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-sm);
+      padding: 1px 5px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 12.5px;
+      color: var(--orange);
+    }
+    .preview-content pre {
+      background: var(--bg-input);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      overflow-x: auto;
+      margin: .8em 0;
+    }
+    .preview-content pre code {
+      background: none; border: none; padding: 0;
+      color: var(--text); font-size: 12.5px;
+    }
+    .preview-content strong { font-weight: 600; color: var(--text); }
+    .preview-content hr { border: none; border-top: 1px solid var(--border-soft); margin: 1.2em 0; }
+
+    /* Token chips inside preview */
+    .token-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(188,140,255,.1);
+      border: 1px solid rgba(188,140,255,.25);
+      border-radius: 20px;
+      padding: 1px 8px;
+      font-size: 12px; color: var(--purple);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      vertical-align: middle;
+    }
+    .token-chip-swatch {
+      width: 10px; height: 10px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.2);
+      flex-shrink: 0;
+    }
+
+    /* Tools used section */
+    .preview-tools {
+      margin-top: 20px;
+      padding: 12px 16px;
+      background: var(--bg-tool);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius);
+    }
+    .preview-tools-label {
+      font-size: 11px; font-weight: 600; letter-spacing: .4px;
+      color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px;
+    }
+    .preview-tools-list {
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .preview-tool-item {
+      display: flex; align-items: center; gap: 5px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 12px; color: var(--purple);
+    }
+    .preview-tool-item::before { content: "⚙"; font-size: 11px; opacity: .7; }
+
+    /* Mobile responsive */
+    @media (max-width: 700px) {
+      .main { flex-direction: column; height: auto; overflow: visible; }
+      .chat-panel { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid var(--border); height: 60vh; }
+      .preview-panel { height: auto; min-height: 40vh; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Top bar -->
+<header class="topbar">
+  <div class="topbar-logo">DS</div>
+  <span class="topbar-title">Design System AI</span>
+  <span class="mcp-badge">MCP</span>
+  <div class="topbar-spacer"></div>
+  <a href="/" class="topbar-link">API status ↗</a>
+</header>
+
+<!-- Main split-panel -->
+<div class="main">
+
+  <!-- Left: Chat panel -->
+  <section class="chat-panel" aria-label="Chat">
+    <div class="panel-header">
+      <h2>Chat</h2>
+    </div>
+
+    <div class="messages" id="messages" role="log" aria-live="polite">
+      <div class="msg assistant">
+        <div class="msg-bubble">
+          Hi! Ask me anything about the design system — tokens, components, colors, spacing, or accessibility. I'll query the live MCP server to give you accurate answers. 🎨
+        </div>
+      </div>
+    </div>
+
+    <div class="chips-section">
+      <div class="chips-label">Quick start</div>
+      <div class="chips" id="chips"></div>
+    </div>
+
+    <div class="input-area">
+      <textarea
+        id="user-input"
+        placeholder="Ask about tokens, components, colors…"
+        rows="1"
+        aria-label="Message"
+      ></textarea>
+      <button class="send-btn" id="send-btn" aria-label="Send">Send</button>
+    </div>
+  </section>
+
+  <!-- Right: Preview panel -->
+  <section class="preview-panel" aria-label="Response preview">
+    <div class="preview-header">
+      <h2>Preview</h2>
+      <span class="preview-model-badge" id="model-badge">—</span>
+    </div>
+    <div class="preview-body" id="preview-body">
+      <div class="preview-empty">
+        <div class="preview-empty-icon">✦</div>
+        <div class="preview-empty-text">Send a message to see the AI response<br>formatted with token highlighting</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────
+  const conversationHistory = [];
+  let isLoading = false;
+
+  // ── DOM refs ───────────────────────────────────────────────────────────
+  const messagesEl  = document.getElementById("messages");
+  const chipsEl     = document.getElementById("chips");
+  const inputEl     = document.getElementById("user-input");
+  const sendBtn     = document.getElementById("send-btn");
+  const previewBody = document.getElementById("preview-body");
+  const modelBadge  = document.getElementById("model-badge");
+
+  // ── Auto-resize textarea ───────────────────────────────────────────────
+  inputEl.addEventListener("input", () => {
+    inputEl.style.height = "auto";
+    inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + "px";
+  });
+
+  inputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  });
+  sendBtn.addEventListener("click", handleSend);
+
+  // ── Load prompt templates ──────────────────────────────────────────────
+  async function loadTemplates() {
+    try {
+      const res  = await fetch("/prompt-templates");
+      const data = await res.json();
+      const first4 = (data.templates || []).slice(0, 4);
+      chipsEl.innerHTML = "";
+      for (const t of first4) {
+        const chip = document.createElement("button");
+        chip.className = "chip";
+        chip.textContent = t.title;
+        chip.title = t.description;
+        chip.addEventListener("click", () => {
+          inputEl.value = t.prompt;
+          inputEl.style.height = "auto";
+          inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + "px";
+          handleSend();
+        });
+        chipsEl.appendChild(chip);
+      }
+    } catch (e) {
+      console.warn("Could not load templates", e);
+    }
+  }
+
+  // ── Chat logic ──────────────────────────────────────────────────────────
+  async function handleSend() {
+    const text = inputEl.value.trim();
+    if (!text || isLoading) return;
+
+    inputEl.value = "";
+    inputEl.style.height = "auto";
+    isLoading = true;
+    sendBtn.disabled = true;
+
+    // Add user message to UI
+    conversationHistory.push({ role: "user", content: text });
+    appendMessage("user", text);
+
+    // Show loading indicator
+    const loadingEl = appendLoading();
+    scrollToBottom();
+
+    try {
+      const res  = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: conversationHistory }),
+      });
+
+      const data = await res.json();
+      loadingEl.remove();
+
+      if (!res.ok) {
+        const errMsg = data.error || "Request failed";
+        appendMessage("error", "⚠ " + errMsg);
+      } else {
+        const responseText  = data.response || "";
+        const toolsUsed     = data.toolCallsUsed || [];
+        conversationHistory.push({ role: "assistant", content: responseText });
+        appendMessage("assistant", responseText, toolsUsed);
+        updatePreview(responseText, toolsUsed, data.model);
+      }
+    } catch (err) {
+      loadingEl.remove();
+      appendMessage("error", "⚠ Network error: " + err.message);
+    } finally {
+      isLoading = false;
+      sendBtn.disabled = false;
+      scrollToBottom();
+    }
+  }
+
+  // ── Append message to chat ──────────────────────────────────────────────
+  function appendMessage(role, text, toolsUsed = []) {
+    const wrap = document.createElement("div");
+    wrap.className = `msg ${role}`;
+
+    const bubble = document.createElement("div");
+    bubble.className = "msg-bubble";
+    bubble.textContent = text;
+    wrap.appendChild(bubble);
+
+    if (toolsUsed.length > 0) {
+      const toolWrap = document.createElement("div");
+      toolWrap.className = "tool-calls-wrap";
+      toolWrap.textContent = "Tools called:";
+      const pills = document.createElement("div");
+      pills.className = "tool-pills";
+      for (const t of toolsUsed) {
+        const pill = document.createElement("span");
+        pill.className = "tool-pill";
+        pill.textContent = t;
+        pills.appendChild(pill);
+      }
+      toolWrap.appendChild(pills);
+      wrap.appendChild(toolWrap);
+    }
+
+    messagesEl.appendChild(wrap);
+    return wrap;
+  }
+
+  // ── Loading indicator ───────────────────────────────────────────────────
+  function appendLoading() {
+    const wrap = document.createElement("div");
+    wrap.className = "msg assistant";
+    const bubble = document.createElement("div");
+    bubble.className = "loading-bubble";
+    bubble.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+    wrap.appendChild(bubble);
+    messagesEl.appendChild(wrap);
+    return wrap;
+  }
+
+  function scrollToBottom() {
+    requestAnimationFrame(() => { messagesEl.scrollTop = messagesEl.scrollHeight; });
+  }
+
+  // ── Preview panel ───────────────────────────────────────────────────────
+  function updatePreview(text, toolsUsed, model) {
+    if (model) modelBadge.textContent = model;
+
+    const contentDiv = document.createElement("div");
+    contentDiv.className = "preview-content";
+    contentDiv.innerHTML = renderMarkdown(text);
+
+    // Highlight token references like color.primary.600
+    highlightTokens(contentDiv);
+
+    let html = contentDiv.outerHTML;
+
+    if (toolsUsed && toolsUsed.length > 0) {
+      const toolsHtml = `
+        <div class="preview-tools">
+          <div class="preview-tools-label">MCP Tools Used</div>
+          <div class="preview-tools-list">
+            ${toolsUsed.map(t => `<span class="preview-tool-item">${escapeHtml(t)}</span>`).join("")}
+          </div>
+        </div>`;
+      html += toolsHtml;
+    }
+
+    previewBody.innerHTML = html;
+  }
+
+  // ── Simple Markdown renderer ────────────────────────────────────────────
+  function renderMarkdown(text) {
+    let html = escapeHtml(text);
+
+    // Headings
+    html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
+    html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
+    html = html.replace(/^# (.+)$/gm, "<h1>$1</h1>");
+
+    // Bold / italic
+    html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
+
+    // Code blocks
+    html = html.replace(/```[\w]*\n([\s\S]*?)```/g, "<pre><code>$1</code></pre>");
+
+    // Inline code
+    html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+
+    // Horizontal rule
+    html = html.replace(/^---$/gm, "<hr>");
+
+    // Unordered lists — collect consecutive <li> items and wrap in <ul>
+    html = html.replace(/^[*\-] (.+)$/gm, "<li>$1</li>");
+    html = html.replace(/(<li>(?:.*?)<\/li>\n?)+/gs, (block) => `<ul>${block}</ul>`);
+
+    // Ordered lists
+    html = html.replace(/^\d+\. (.+)$/gm, "<li>$1</li>");
+
+    // Paragraphs — wrap lines not already in tags
+    html = html.split("\n").map(line => {
+      const trimmed = line.trim();
+      if (!trimmed) return "";
+      if (/^<(h[1-3]|ul|ol|li|pre|hr)/.test(trimmed)) return trimmed;
+      return `<p>${trimmed}</p>`;
+    }).filter(Boolean).join("\n");
+
+    return html;
+  }
+
+  // ── Highlight token references in preview ──────────────────────────────
+  // Finds patterns like color.primary.600 and wraps them as colored chips.
+  function highlightTokens(container) {
+    const tokenRegex = /\b(color|spacing|typography|borderRadius|shadow|motion|layout)\.[a-zA-Z0-9_.]+/g;
+
+    // Walk text nodes
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
+    const toReplace = [];
+    let node;
+    while ((node = walker.nextNode())) {
+      if (tokenRegex.test(node.textContent)) {
+        toReplace.push(node);
+      }
+      tokenRegex.lastIndex = 0;
+    }
+
+    for (const textNode of toReplace) {
+      const parent = textNode.parentNode;
+      if (!parent || parent.tagName === "CODE" || parent.tagName === "PRE") continue;
+
+      const fragment = document.createDocumentFragment();
+      let lastIdx = 0;
+      let m;
+      tokenRegex.lastIndex = 0;
+      const str = textNode.textContent;
+
+      while ((m = tokenRegex.exec(str)) !== null) {
+        if (m.index > lastIdx) {
+          fragment.appendChild(document.createTextNode(str.slice(lastIdx, m.index)));
+        }
+        const chip = document.createElement("span");
+        chip.className = "token-chip";
+
+        // If it looks like a color token, try to show a swatch
+        if (m[0].startsWith("color.")) {
+          const swatch = document.createElement("span");
+          swatch.className = "token-chip-swatch";
+          // We can't resolve the value here without an API call — show a gradient placeholder
+          swatch.style.background = "linear-gradient(135deg, #2f81f7, #bc8cff)";
+          chip.appendChild(swatch);
+        }
+        chip.appendChild(document.createTextNode(m[0]));
+        fragment.appendChild(chip);
+        lastIdx = tokenRegex.lastIndex;
+      }
+      if (lastIdx < str.length) {
+        fragment.appendChild(document.createTextNode(str.slice(lastIdx)));
+      }
+      parent.replaceChild(fragment, textNode);
+      tokenRegex.lastIndex = 0;
+    }
+  }
+
+  function escapeHtml(str) {
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  // ── Boot ───────────────────────────────────────────────────────────────
+  loadTemplates();
+</script>
+</body>
+</html>

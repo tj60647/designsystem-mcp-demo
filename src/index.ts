@@ -31,6 +31,7 @@ import { createMcpServer } from "./mcp-server.js";
 import { runMcpTool } from "./toolRunner.js";
 import { setData, getData, resetData, type DataType } from "./dataStore.js";
 import { DATA_SCHEMAS } from "./schemas.js";
+import { generateDesignSystem } from "./generator.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
@@ -799,6 +800,30 @@ const OPENROUTER_TOOLS = [
   { type: "function", function: { name: "get_spacing_scale", description: "Get the complete spacing scale with semantic usage hints for each step.", parameters: { type: "object", properties: {}, required: [] } } },
   { type: "function", function: { name: "get_changelog", description: "Get the design system version history, filterable by version range.", parameters: { type: "object", properties: { fromVersion: { type: "string" }, toVersion: { type: "string" } }, required: [] } } },
   { type: "function", function: { name: "get_deprecations", description: "List all deprecated tokens, components, patterns, and endpoints with migration paths.", parameters: { type: "object", properties: { type: { type: "string", enum: ["token", "component", "endpoint", "all"] } }, required: [] } } },
+  // AI generation
+  {
+    type: "function",
+    function: {
+      name: "generate_design_system",
+      description:
+        "Generate a complete design system (tokens, components, themes, icons) from a natural-language description and automatically load it for immediate use. " +
+        "Call this once you have gathered sufficient information about the user's brand name, product type, aesthetic direction, primary colors, secondary colors, and typography preferences. " +
+        "The generated design system replaces the currently loaded data and is immediately available in the Component Explorer.",
+      parameters: {
+        type: "object",
+        properties: {
+          description: {
+            type: "string",
+            description:
+              "Comprehensive description including: brand name, product type, aesthetic direction " +
+              "(e.g. modern/minimal, playful, professional, trustworthy, bold/expressive), primary color(s), " +
+              "secondary color(s), typography style, and any other brand characteristics provided by the user.",
+          },
+        },
+        required: ["description"],
+      },
+    },
+  },
 ] as const;
 
 const CHAT_SYSTEM_PROMPT =
@@ -808,7 +833,13 @@ const CHAT_SYSTEM_PROMPT =
   "When the user asks you to create, build, design, or show a UI element or component, always include a complete, self-contained HTML snippet " +
   "in a fenced html code block (opening fence: three backticks followed by html) that can be rendered directly in a browser. " +
   "The HTML snippet must use inline styles only (no external stylesheets) and apply the exact token values (colors, spacing, font sizes, etc.) " +
-  "returned by the MCP tools. Include only the component markup — no html, head, or body wrappers.";
+  "returned by the MCP tools. Include only the component markup — no html, head, or body wrappers.\n\n" +
+  "You also help users create brand-new design systems through conversation. " +
+  "When a user wants to generate a design system:\n" +
+  "1. Gather their brand name, product type, aesthetic direction (e.g. modern/minimal, playful, professional, trustworthy, bold), primary color(s), secondary color(s), and typography style preferences.\n" +
+  "2. Ask clarifying questions one at a time until you have at least a clear brand aesthetic and color direction.\n" +
+  "3. Once you have enough information (typically after 2–4 exchanges), call the generate_design_system tool with a comprehensive, detailed description.\n" +
+  "4. After the tool returns success, briefly summarise what was generated and tell the user it has been loaded and is ready to explore.";
 
 // ── Chat endpoint ──────────────────────────────────────────────────────────
 // OpenRouter-backed agentic loop. Calls OpenRouter with the conversation and
@@ -850,7 +881,10 @@ app.post("/api/chat", async (req, res) => {
   ];
 
   const toolCallsUsed: string[] = [];
-  const MAX_ITERATIONS = 5;
+  const MAX_ITERATIONS = 8; // extra headroom: generate_design_system is slow and the conversation flow needs additional turns
+
+  // Holds the generated design system data if generate_design_system is called
+  let generatedDesignSystemData: Record<string, unknown> | null = null;
 
   try {
     for (let i = 0; i < MAX_ITERATIONS; i++) {
@@ -914,10 +948,44 @@ app.post("/api/chat", async (req, res) => {
           if (!toolCallsUsed.includes(toolName)) toolCallsUsed.push(toolName);
 
           let toolResult: string;
-          try {
-            toolResult = await runMcpTool(toolName, toolArgs);
-          } catch (toolErr) {
-            toolResult = JSON.stringify({ error: String(toolErr) });
+
+          // ── Special handling: generate_design_system ───────────────────
+          if (toolName === "generate_design_system") {
+            try {
+              const description = (toolArgs.description as string) ?? "";
+              const result = await generateDesignSystem(description, apiKey, model);
+
+              // Auto-load each present section into the data store
+              const VALID_TYPES: DataType[] = ["tokens", "components", "themes", "icons"];
+              const loadedSections: string[] = [];
+              for (const section of VALID_TYPES) {
+                if (result.data[section] !== undefined) {
+                  setData(section, result.data[section]);
+                  loadedSections.push(section);
+                }
+              }
+
+              generatedDesignSystemData = result.data;
+
+              toolResult = JSON.stringify({
+                success: true,
+                message:          "Design system generated and loaded successfully.",
+                sectionsLoaded:   loadedSections,
+                componentCount:   Object.keys((result.data.components ?? {}) as object).length,
+                themeCount:       Object.keys((result.data.themes    ?? {}) as object).length,
+                iconCount:        Object.keys((result.data.icons     ?? {}) as object).length,
+                warnings:         result.warnings,
+              });
+            } catch (genErr) {
+              toolResult = JSON.stringify({ success: false, error: String(genErr) });
+            }
+          } else {
+            // ── Standard tool execution ────────────────────────────────
+            try {
+              toolResult = await runMcpTool(toolName, toolArgs);
+            } catch (toolErr) {
+              toolResult = JSON.stringify({ error: String(toolErr) });
+            }
           }
 
           loopMessages.push({
@@ -933,14 +1001,14 @@ app.post("/api/chat", async (req, res) => {
 
       // No tool calls — return the final answer
       const responseText = assistantMessage.content ?? "";
-      res.json({ response: responseText, model, toolCallsUsed });
+      res.json({ response: responseText, model, toolCallsUsed, generatedDesignSystem: generatedDesignSystemData });
       return;
     }
 
     // Reached max iterations without a final text response — return whatever is in the last assistant message
     const lastAssistant = [...loopMessages].reverse().find((m: OpenRouterMessage) => m.role === "assistant" && m.content);
     const lastContent = lastAssistant?.content ?? "";
-    res.json({ response: String(lastContent), model, toolCallsUsed });
+    res.json({ response: String(lastContent), model, toolCallsUsed, generatedDesignSystem: generatedDesignSystemData });
   } catch (err) {
     console.error("Chat error:", err);
     if (!res.headersSent) {

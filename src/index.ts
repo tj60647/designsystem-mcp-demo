@@ -29,7 +29,7 @@ import { dirname, join } from "path";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createMcpServer } from "./mcp-server.js";
 import { runMcpTool } from "./toolRunner.js";
-import { setData, resetData, type DataType } from "./dataStore.js";
+import { setData, getData, resetData, type DataType } from "./dataStore.js";
 import { DATA_SCHEMAS } from "./schemas.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -120,9 +120,10 @@ app.get("/health", (_req, res) => {
       "design-system/token-rationale",
     ],
     additionalEndpoints: {
-      "GET /demo": "Split-panel chatbot demo UI",
+      "GET /demo": "Split-panel chatbot demo UI with Component Explorer",
       "POST /api/chat": "OpenRouter-backed agentic chat with MCP tool calling",
       "GET /prompt-templates": "DEPRECATED in v0.3.0 — use MCP Prompts primitive instead. Retained for backward compatibility.",
+      "GET /api/data/:type": "Read active data for a type (tokens, components, themes, icons) — used by Component Explorer",
       "POST /api/data": "Load custom JSON for a data type (tokens, components, themes, icons)",
       "POST /api/data/reset": "Reset all (or one) data type back to the bundled defaults",
       "GET /api/schema/:type": "Download the JSON Schema for a data type (tokens, components, themes, icons)",
@@ -178,6 +179,25 @@ app.post("/mcp", async (req, res) => {
 // Allow callers to replace one of the four data sets at runtime so that
 // subsequent MCP tool calls and chat responses reflect the new data.
 // ─────────────────────────────────────────────────────────────────────────
+
+/**
+ * GET /api/data/:type
+ * Returns the active data for the given type as JSON.
+ * Used by the Component Explorer UI to read live design system data.
+ */
+app.get("/api/data/:type", (req, res) => {
+  const VALID_TYPES: DataType[] = ["tokens", "components", "themes", "icons"];
+  const { type } = req.params;
+
+  if (!VALID_TYPES.includes(type as DataType)) {
+    res.status(404).json({
+      error: `Unknown type "${type}". Must be one of: ${VALID_TYPES.join(", ")}`,
+    });
+    return;
+  }
+
+  res.json(getData(type as DataType));
+});
 
 /**
  * POST /api/data

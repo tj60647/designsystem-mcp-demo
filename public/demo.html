@@ -78,7 +78,7 @@
     }
     .topbar-btn:hover { color: var(--text); border-color: var(--text-muted); }
 
-    /* ── Load JSON Modal ── */
+    /* ── Generic modal ── */
     .modal-overlay {
       display: none; position: fixed; inset: 0;
       background: rgba(0,0,0,.6); z-index: 100;
@@ -126,6 +126,22 @@
     }
     .modal-actions .btn-secondary:hover { color: var(--text); }
 
+    /* Info modal content */
+    .info-modal-body {
+      font-size: 13px; line-height: 1.7; color: var(--text-muted);
+      overflow-y: auto;
+    }
+    .info-modal-body p { margin-bottom: 10px; }
+    .info-modal-body ul { padding-left: 1.3em; }
+    .info-modal-body li { margin: 4px 0; }
+    .info-modal-body strong { color: var(--text); font-weight: 600; }
+    .info-modal-body code {
+      background: var(--bg-input); border: 1px solid var(--border-soft);
+      border-radius: var(--radius-sm); padding: 1px 5px;
+      font-family: "SFMono-Regular", Consolas, monospace; font-size: 12px;
+      color: var(--orange);
+    }
+
     /* ── Main layout ── */
     .main {
       display: flex;
@@ -134,22 +150,42 @@
       height: calc(100vh - 53px);
     }
 
+    /* ── Panel header (shared) ── */
+    .panel-header {
+      padding: 10px 16px 8px;
+      border-bottom: 1px solid var(--border-soft);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-header h2 {
+      font-size: 11px; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .6px;
+      flex: 1;
+    }
+    .panel-header-actions {
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    /* Info button (ℹ) */
+    .info-btn {
+      background: none; border: none; color: var(--text-dim);
+      font-size: 13px; cursor: pointer; padding: 2px 4px;
+      border-radius: var(--radius-sm);
+      line-height: 1; transition: color .15s;
+    }
+    .info-btn:hover { color: var(--text-muted); }
+
     /* ── Left — Chat panel ── */
     .chat-panel {
-      width: 40%;
-      min-width: 300px;
+      width: 38%;
+      min-width: 280px;
       display: flex;
       flex-direction: column;
       border-right: 1px solid var(--border);
       overflow: hidden;
     }
-
-    .panel-header {
-      padding: 14px 16px 10px;
-      border-bottom: 1px solid var(--border-soft);
-      flex-shrink: 0;
-    }
-    .panel-header h2 { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .6px; }
 
     /* Messages */
     .messages {
@@ -169,7 +205,7 @@
       display: flex;
       flex-direction: column;
       gap: 4px;
-      max-width: 90%;
+      max-width: 92%;
     }
     .msg.user { align-self: flex-end; align-items: flex-end; }
     .msg.assistant { align-self: flex-start; align-items: flex-start; }
@@ -178,8 +214,8 @@
     .msg-bubble {
       padding: 10px 14px;
       border-radius: 12px;
-      font-size: 13.5px;
-      line-height: 1.55;
+      font-size: 13px;
+      line-height: 1.6;
       word-break: break-word;
     }
     .msg.user .msg-bubble {
@@ -200,23 +236,42 @@
     }
     .msg-meta { font-size: 11px; color: var(--text-dim); }
 
-    /* Tool calls badge */
-    .tool-calls-wrap {
-      font-size: 11.5px;
-      color: var(--text-muted);
+    /* Rendered markdown inside chat bubbles */
+    .msg-bubble h1, .msg-bubble h2, .msg-bubble h3 {
+      color: inherit; font-weight: 600; margin: .7em 0 .3em;
+      font-size: 13px;
     }
-    .tool-pills {
-      display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;
+    .msg-bubble p { margin: .35em 0; }
+    .msg-bubble code {
+      background: rgba(0,0,0,.25); border-radius: 3px;
+      padding: 1px 4px; font-size: 11.5px;
+      font-family: "SFMono-Regular", Consolas, monospace;
     }
-    .tool-pill {
-      display: flex; align-items: center; gap: 4px;
-      background: var(--bg-tool);
-      border: 1px solid var(--border-soft);
-      border-radius: 20px;
-      padding: 2px 8px;
+    .msg.user .msg-bubble code { background: rgba(255,255,255,.15); }
+    .msg-bubble pre {
+      background: rgba(0,0,0,.3); border-radius: 6px;
+      padding: 10px 12px; overflow-x: auto; margin: .5em 0;
+    }
+    .msg-bubble pre code { background: none; padding: 0; font-size: 11.5px; }
+    .msg-bubble ul, .msg-bubble ol { padding-left: 1.3em; margin: .35em 0; }
+    .msg-bubble li { margin: .15em 0; }
+    .msg-bubble strong { font-weight: 600; }
+
+    /* Token chip in chat */
+    .msg-bubble .token-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(188,140,255,.15);
+      border: 1px solid rgba(188,140,255,.3);
+      border-radius: 20px; padding: 0px 6px;
       font-size: 11px; color: var(--purple);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      vertical-align: middle;
     }
-    .tool-pill::before { content: "⚙"; font-size: 10px; }
+    .msg.user .msg-bubble .token-chip {
+      background: rgba(255,255,255,.15);
+      border-color: rgba(255,255,255,.3);
+      color: #fff;
+    }
 
     /* Loading */
     .loading-bubble {
@@ -237,24 +292,24 @@
 
     /* Chips */
     .chips-section {
-      padding: 8px 12px 4px;
+      padding: 8px 12px 6px;
       flex-shrink: 0;
       border-top: 1px solid var(--border-soft);
     }
     .chips-label {
-      font-size: 10.5px; font-weight: 600; letter-spacing: .4px;
+      font-size: 10px; font-weight: 600; letter-spacing: .4px;
       color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px;
     }
     .chips {
-      display: flex; flex-wrap: wrap; gap: 6px;
+      display: flex; flex-wrap: wrap; gap: 5px;
     }
     .chip {
       background: var(--bg-input);
       border: 1px solid var(--border);
       color: var(--text-muted);
       border-radius: 20px;
-      padding: 4px 12px;
-      font-size: 12px;
+      padding: 3px 10px;
+      font-size: 11.5px;
       cursor: pointer;
       transition: border-color .15s, color .15s, background .15s;
       white-space: nowrap;
@@ -269,7 +324,7 @@
     .input-area {
       display: flex;
       gap: 8px;
-      padding: 12px 14px;
+      padding: 10px 12px;
       border-top: 1px solid var(--border);
       background: var(--bg-panel);
       flex-shrink: 0;
@@ -282,11 +337,11 @@
       border-radius: var(--radius);
       color: var(--text);
       font-family: inherit;
-      font-size: 13.5px;
+      font-size: 13px;
       line-height: 1.5;
-      padding: 9px 12px;
+      padding: 8px 12px;
       resize: none;
-      min-height: 40px;
+      min-height: 38px;
       max-height: 120px;
       outline: none;
       transition: border-color .15s;
@@ -299,32 +354,35 @@
       color: #fff;
       border: none;
       border-radius: var(--radius);
-      padding: 9px 16px;
-      font-size: 13.5px;
+      padding: 8px 16px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
       transition: opacity .15s;
-      height: 40px;
+      height: 38px;
     }
     button.send-btn:hover:not(:disabled) { opacity: .85; }
     button.send-btn:disabled { opacity: .4; cursor: not-allowed; }
 
-    /* ── Right — Preview panel ── */
-    .preview-panel {
+    /* ── Right column ── */
+    .right-column {
       flex: 1;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      min-width: 0;
     }
 
-    .preview-header {
-      padding: 14px 20px 10px;
-      border-bottom: 1px solid var(--border-soft);
-      flex-shrink: 0;
-      display: flex; align-items: center; gap: 10px;
+    /* ── Live Preview section (top) ── */
+    .preview-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border);
     }
-    .preview-header h2 { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .6px; flex: 1; }
+
     .preview-model-badge {
       font-size: 11px; color: var(--text-dim);
       background: var(--bg-input);
@@ -333,13 +391,24 @@
       padding: 2px 8px;
     }
 
+    /* Code/Preview toggle button */
+    .code-toggle-btn {
+      font-size: 11px; font-weight: 500; padding: 3px 10px;
+      background: var(--bg-input); color: var(--text-muted);
+      border: 1px solid var(--border); border-radius: 20px;
+      cursor: pointer; transition: color .15s, border-color .15s;
+      white-space: nowrap;
+    }
+    .code-toggle-btn:hover { color: var(--accent); border-color: var(--accent); }
+    .code-toggle-btn.active { color: var(--accent); border-color: var(--accent); background: rgba(47,129,247,.08); }
+
     .preview-body {
       flex: 1;
-      overflow-y: auto;
-      padding: 24px;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
     }
-    .preview-body::-webkit-scrollbar { width: 6px; }
-    .preview-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
     .preview-empty {
       display: flex;
@@ -349,52 +418,95 @@
       height: 100%;
       gap: 12px;
       color: var(--text-dim);
+      padding: 24px;
+      text-align: center;
     }
-    .preview-empty-icon { font-size: 48px; opacity: .4; }
-    .preview-empty-text { font-size: 14px; text-align: center; }
+    .preview-empty-icon { font-size: 40px; opacity: .35; }
+    .preview-empty-text { font-size: 13px; line-height: 1.6; }
 
-    .preview-content {
-      max-width: 680px;
+    /* Iframe fills the preview body */
+    .preview-iframe {
+      flex: 1;
+      width: 100%;
+      border: none;
+      background: #fff;
+      display: block;
     }
 
-    /* Rendered markdown-like content */
-    .preview-content h1, .preview-content h2, .preview-content h3 {
-      color: var(--text);
-      margin: 1.2em 0 .5em;
-      font-weight: 600;
-      line-height: 1.3;
+    /* Code view */
+    .code-view-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
     }
-    .preview-content h1 { font-size: 20px; border-bottom: 1px solid var(--border-soft); padding-bottom: 8px; }
-    .preview-content h2 { font-size: 16px; }
-    .preview-content h3 { font-size: 14px; }
-    .preview-content p { margin: .6em 0; color: var(--text); line-height: 1.7; }
-    .preview-content ul, .preview-content ol { padding-left: 1.4em; margin: .6em 0; }
-    .preview-content li { margin: .25em 0; color: var(--text); }
-    .preview-content code {
+    .code-view-toolbar {
+      display: flex; justify-content: flex-end;
+      padding: 8px 12px 4px;
       background: var(--bg-input);
-      border: 1px solid var(--border-soft);
-      border-radius: var(--radius-sm);
-      padding: 1px 5px;
+      border-bottom: 1px solid var(--border-soft);
+      flex-shrink: 0;
+    }
+    .copy-code-btn {
+      font-size: 11px; font-weight: 500; padding: 3px 10px;
+      background: var(--bg-panel); color: var(--text-muted);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      cursor: pointer; transition: color .15s;
+    }
+    .copy-code-btn:hover { color: var(--text); }
+    .code-view {
+      flex: 1;
+      overflow: auto;
+      margin: 0;
+      padding: 16px 20px;
+      background: var(--bg-input);
       font-family: "SFMono-Regular", Consolas, monospace;
-      font-size: 12.5px;
-      color: var(--orange);
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--text);
+      white-space: pre;
     }
-    .preview-content pre {
-      background: var(--bg-input);
-      border: 1px solid var(--border-soft);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      overflow-x: auto;
-      margin: .8em 0;
-    }
-    .preview-content pre code {
-      background: none; border: none; padding: 0;
-      color: var(--text); font-size: 12.5px;
-    }
-    .preview-content strong { font-weight: 600; color: var(--text); }
-    .preview-content hr { border: none; border-top: 1px solid var(--border-soft); margin: 1.2em 0; }
+    .code-view::-webkit-scrollbar { width: 6px; height: 6px; }
+    .code-view::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-    /* Token chips inside preview */
+    /* ── Design System Used section (bottom) ── */
+    .tools-section {
+      flex: 0 0 auto;
+      max-height: 180px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .tools-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 14px 12px;
+    }
+    .tools-body::-webkit-scrollbar { width: 6px; }
+    .tools-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .tools-empty {
+      font-size: 12px; color: var(--text-dim);
+      font-style: italic; padding: 6px 0;
+    }
+
+    .tools-list {
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+
+    .tool-item {
+      display: flex; align-items: center; gap: 5px;
+      background: var(--bg-tool);
+      border: 1px solid var(--border-soft);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 12px; color: var(--purple);
+    }
+    .tool-item::before { content: "⚙"; font-size: 10px; opacity: .7; }
+
+    /* Token chips (in markdown/preview) */
     .token-chip {
       display: inline-flex; align-items: center; gap: 5px;
       background: rgba(188,140,255,.1);
@@ -411,51 +523,13 @@
       flex-shrink: 0;
     }
 
-    /* Tools used section */
-    .preview-tools {
-      margin-top: 20px;
-      padding: 12px 16px;
-      background: var(--bg-tool);
-      border: 1px solid var(--border-soft);
-      border-radius: var(--radius);
-    }
-    .preview-tools-label {
-      font-size: 11px; font-weight: 600; letter-spacing: .4px;
-      color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px;
-    }
-    .preview-tools-list {
-      display: flex; flex-wrap: wrap; gap: 6px;
-    }
-    .preview-tool-item {
-      display: flex; align-items: center; gap: 5px;
-      background: var(--bg-panel);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 3px 10px;
-      font-size: 12px; color: var(--purple);
-    }
-    .preview-tool-item::before { content: "⚙"; font-size: 11px; opacity: .7; }
-
     /* Mobile responsive */
     @media (max-width: 700px) {
       .main { flex-direction: column; height: auto; overflow: visible; }
-      .chat-panel { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid var(--border); height: 60vh; }
-      .preview-panel { height: auto; min-height: 40vh; }
-    }
-
-    /* Live UI preview iframe */
-    .preview-ui-label {
-      font-size: 11px; font-weight: 600; letter-spacing: .4px;
-      color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px;
-    }
-    .preview-iframe {
-      width: 100%;
-      min-height: 280px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: #fff;
-      margin-bottom: 20px;
-      display: block;
+      .chat-panel { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid var(--border); height: 55vh; }
+      .right-column { height: auto; min-height: 45vh; }
+      .preview-section { flex: none; height: 40vh; }
+      .tools-section { max-height: 140px; }
     }
   </style>
 </head>
@@ -469,10 +543,11 @@
   <div class="topbar-spacer"></div>
   <button class="topbar-btn" id="load-json-btn" title="Replace a data file (tokens, components, themes, icons) with custom JSON">Load JSON</button>
   <button class="topbar-btn" id="reset-btn" title="Reset all data back to bundled defaults">Reset</button>
+  <a href="/mcp" target="_blank" rel="noopener noreferrer" class="topbar-link" title="Open the raw MCP endpoint">MCP endpoint ↗</a>
   <a href="/" class="topbar-link">API status ↗</a>
 </header>
 
-<!-- Load JSON Modal -->
+<!-- Load JSON modal -->
 <div class="modal-overlay" id="load-json-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
   <div class="modal">
     <div class="modal-header">
@@ -503,6 +578,20 @@
   </div>
 </div>
 
+<!-- Info modal (shared, filled dynamically) -->
+<div class="modal-overlay" id="info-modal" role="dialog" aria-modal="true" aria-labelledby="info-modal-title">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <span class="modal-title" id="info-modal-title"></span>
+      <button class="modal-close" id="info-modal-close" aria-label="Close">✕</button>
+    </div>
+    <div class="info-modal-body" id="info-modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn-primary" id="info-modal-ok">Got it</button>
+    </div>
+  </div>
+</div>
+
 <!-- Main split-panel -->
 <div class="main">
 
@@ -510,6 +599,9 @@
   <section class="chat-panel" aria-label="Chat">
     <div class="panel-header">
       <h2>Chat</h2>
+      <div class="panel-header-actions">
+        <button class="info-btn" data-info="chat" title="About the Chat panel">ℹ</button>
+      </div>
     </div>
 
     <div class="messages" id="messages" role="log" aria-live="polite">
@@ -536,33 +628,105 @@
     </div>
   </section>
 
-  <!-- Right: Preview panel -->
-  <section class="preview-panel" aria-label="Response preview">
-    <div class="preview-header">
-      <h2>Preview</h2>
-      <span class="preview-model-badge" id="model-badge">—</span>
-    </div>
-    <div class="preview-body" id="preview-body">
-      <div class="preview-empty">
-        <div class="preview-empty-icon">✦</div>
-        <div class="preview-empty-text">Send a message to see the AI response<br>formatted with token highlighting</div>
+  <!-- Right column -->
+  <div class="right-column">
+
+    <!-- Live Preview section -->
+    <section class="preview-section" aria-label="Live Preview">
+      <div class="panel-header">
+        <h2>Live Preview</h2>
+        <div class="panel-header-actions">
+          <span class="preview-model-badge" id="model-badge" style="display:none"></span>
+          <button class="code-toggle-btn" id="code-toggle-btn" style="display:none" title="Toggle between rendered preview and HTML source">Show Code</button>
+          <button class="info-btn" data-info="preview" title="About the Live Preview panel">ℹ</button>
+        </div>
       </div>
-    </div>
-  </section>
+      <div class="preview-body" id="preview-body">
+        <div class="preview-empty">
+          <div class="preview-empty-icon">✦</div>
+          <div class="preview-empty-text">Generated UI will appear here.<br>Try a prompt like <em>"Create a login form"</em> to get started.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Design System Used section -->
+    <section class="tools-section" aria-label="Design System Used">
+      <div class="panel-header">
+        <h2>Design System Used</h2>
+        <div class="panel-header-actions">
+          <button class="info-btn" data-info="tools" title="About the Design System Used panel">ℹ</button>
+        </div>
+      </div>
+      <div class="tools-body" id="tools-body">
+        <div class="tools-empty">MCP tools called will appear here after you send a message.</div>
+      </div>
+    </section>
+
+  </div><!-- /.right-column -->
 </div>
 
 <script>
+  // ── Info content ──────────────────────────────────────────────────────────
+  const INFO = {
+    chat: {
+      title: "Chat Panel",
+      body: `
+        <p>This is your conversation window with the AI assistant. Type any question about the design system and the assistant will respond using live MCP tool calls to fetch accurate, up-to-date data.</p>
+        <p><strong>What you can ask:</strong></p>
+        <ul>
+          <li>Design token values — colors, spacing, typography, shadows</li>
+          <li>Component specifications, variants, and accessibility rules</li>
+          <li>Token suggestions for a given intent (e.g. "error text color")</li>
+          <li>Generate UI components grounded in the real token system</li>
+          <li>Dark mode token overrides and theming</li>
+        </ul>
+        <p>Use the <strong>Quick Start</strong> chips below the chat to jump straight to common queries.</p>
+      `,
+    },
+    preview: {
+      title: "Live Preview Panel",
+      body: `
+        <p>When the AI generates an HTML/CSS UI component, it renders live here in a sandboxed iframe so you can see exactly what the component looks like.</p>
+        <p><strong>Show Code / Show Preview toggle:</strong> Switch between the rendered visual output and the underlying HTML source code. You can copy the code directly from the code view.</p>
+        <p>The preview is fully isolated — scripts and external resources are sandboxed, so only the generated HTML and inline styles are rendered.</p>
+        <p>If the AI responds with analysis or token information (no UI output), this panel will show an empty state.</p>
+      `,
+    },
+    tools: {
+      title: "Design System Used",
+      body: `
+        <p>Every time the AI responds, it calls one or more <strong>MCP tools</strong> on the design system server to fetch real data. This panel shows which tools were called during the last response.</p>
+        <p><strong>Available tools include:</strong></p>
+        <ul>
+          <li><code>get_tokens</code> — fetch design tokens by category</li>
+          <li><code>get_component</code> — full component spec with props and constraints</li>
+          <li><code>suggest_token</code> — rank tokens matching a natural-language intent</li>
+          <li><code>validate_color</code> — check if a value matches a named token</li>
+          <li><code>diff_against_system</code> — find CSS properties that break token compliance</li>
+          <li><code>search</code> — full-text search across tokens, components, and icons</li>
+          <li>…and 7 more. See <a href="/mcp" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">MCP endpoint ↗</a></li>
+        </ul>
+        <p>Because the AI always queries live data, responses stay accurate even if you load custom JSON via <strong>Load JSON</strong>.</p>
+      `,
+    },
+  };
+
   // ── State ──────────────────────────────────────────────────────────────
   const conversationHistory = [];
   let isLoading = false;
+  let currentHtmlCode = null;   // latest extracted HTML block
+  let showingCode = false;       // toggle state: false = preview, true = code
+  let currentBlobUrl = null;
 
   // ── DOM refs ───────────────────────────────────────────────────────────
-  const messagesEl  = document.getElementById("messages");
-  const chipsEl     = document.getElementById("chips");
-  const inputEl     = document.getElementById("user-input");
-  const sendBtn     = document.getElementById("send-btn");
-  const previewBody = document.getElementById("preview-body");
-  const modelBadge  = document.getElementById("model-badge");
+  const messagesEl    = document.getElementById("messages");
+  const chipsEl       = document.getElementById("chips");
+  const inputEl       = document.getElementById("user-input");
+  const sendBtn       = document.getElementById("send-btn");
+  const previewBody   = document.getElementById("preview-body");
+  const toolsBody     = document.getElementById("tools-body");
+  const modelBadge    = document.getElementById("model-badge");
+  const codeToggleBtn = document.getElementById("code-toggle-btn");
 
   // ── Auto-resize textarea ───────────────────────────────────────────────
   inputEl.addEventListener("input", () => {
@@ -578,14 +742,65 @@
   });
   sendBtn.addEventListener("click", handleSend);
 
+  // ── Show Code / Show Preview toggle ───────────────────────────────────
+  codeToggleBtn.addEventListener("click", () => {
+    showingCode = !showingCode;
+    if (showingCode) {
+      renderCodeView();
+      codeToggleBtn.textContent = "Show Preview";
+      codeToggleBtn.classList.add("active");
+    } else {
+      renderIframeView();
+      codeToggleBtn.textContent = "Show Code";
+      codeToggleBtn.classList.remove("active");
+    }
+  });
+
+  function renderIframeView() {
+    if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
+    const iframeDoc = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+      body { margin: 16px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 14px; line-height: 1.5; }
+    </style></head><body>${currentHtmlCode}</body></html>`;
+    const blob = new Blob([iframeDoc], { type: "text/html" });
+    currentBlobUrl = URL.createObjectURL(blob);
+    previewBody.innerHTML = "";
+    const iframe = document.createElement("iframe");
+    iframe.className = "preview-iframe";
+    iframe.src = currentBlobUrl;
+    iframe.setAttribute("sandbox", "");
+    iframe.title = "UI Preview";
+    previewBody.appendChild(iframe);
+  }
+
+  function renderCodeView() {
+    const escaped = escapeHtml(currentHtmlCode);
+    previewBody.innerHTML = `
+      <div class="code-view-wrap">
+        <div class="code-view-toolbar">
+          <button class="copy-code-btn" id="copy-code-btn">Copy HTML</button>
+        </div>
+        <pre class="code-view"><code>${escaped}</code></pre>
+      </div>`;
+    document.getElementById("copy-code-btn").addEventListener("click", copyCode);
+  }
+
+  function copyCode() {
+    if (!currentHtmlCode) return;
+    navigator.clipboard.writeText(currentHtmlCode).then(() => {
+      const btn = document.getElementById("copy-code-btn");
+      if (btn) { btn.textContent = "Copied!"; setTimeout(() => { btn.textContent = "Copy HTML"; }, 1500); }
+    }).catch(() => {});
+  }
+
   // ── Load prompt templates ──────────────────────────────────────────────
   async function loadTemplates() {
     try {
       const res  = await fetch("/prompt-templates");
       const data = await res.json();
-      const first4 = (data.templates || []).slice(0, 4);
+      const templates = data.templates || [];
+      // Show all templates returned by the server
       chipsEl.innerHTML = "";
-      for (const t of first4) {
+      for (const t of templates) {
         const chip = document.createElement("button");
         chip.className = "chip";
         chip.textContent = t.title;
@@ -613,11 +828,9 @@
     isLoading = true;
     sendBtn.disabled = true;
 
-    // Add user message to UI
     conversationHistory.push({ role: "user", content: text });
     appendMessage("user", text);
 
-    // Show loading indicator
     const loadingEl = appendLoading();
     scrollToBottom();
 
@@ -636,11 +849,11 @@
         const details = data.details ? `\n${data.details}` : "";
         appendMessage("error", "⚠ " + errMsg + details);
       } else {
-        const responseText  = data.response || "";
-        const toolsUsed     = data.toolCallsUsed || [];
+        const responseText = data.response || "";
+        const toolsUsed    = data.toolCallsUsed || [];
         conversationHistory.push({ role: "assistant", content: responseText });
-        appendMessage("assistant", responseText, toolsUsed);
-        updatePreview(responseText, toolsUsed, data.model);
+        appendMessage("assistant", responseText);
+        updateLivePreview(responseText, toolsUsed, data.model);
       }
     } catch (err) {
       loadingEl.remove();
@@ -653,31 +866,22 @@
   }
 
   // ── Append message to chat ──────────────────────────────────────────────
-  function appendMessage(role, text, toolsUsed = []) {
+  function appendMessage(role, text) {
     const wrap = document.createElement("div");
     wrap.className = `msg ${role}`;
 
     const bubble = document.createElement("div");
     bubble.className = "msg-bubble";
-    bubble.textContent = text;
-    wrap.appendChild(bubble);
 
-    if (toolsUsed.length > 0) {
-      const toolWrap = document.createElement("div");
-      toolWrap.className = "tool-calls-wrap";
-      toolWrap.textContent = "Tools called:";
-      const pills = document.createElement("div");
-      pills.className = "tool-pills";
-      for (const t of toolsUsed) {
-        const pill = document.createElement("span");
-        pill.className = "tool-pill";
-        pill.textContent = t;
-        pills.appendChild(pill);
-      }
-      toolWrap.appendChild(pills);
-      wrap.appendChild(toolWrap);
+    if (role === "user" || role === "error") {
+      bubble.textContent = text;
+    } else {
+      // Render markdown + token chips for assistant messages
+      bubble.innerHTML = renderMarkdown(text);
+      highlightTokens(bubble);
     }
 
+    wrap.appendChild(bubble);
     messagesEl.appendChild(wrap);
     return wrap;
   }
@@ -698,53 +902,44 @@
     requestAnimationFrame(() => { messagesEl.scrollTop = messagesEl.scrollHeight; });
   }
 
-  // ── Preview panel ───────────────────────────────────────────────────────
-  let currentBlobUrl = null;
-
-  function updatePreview(text, toolsUsed, model) {
-    if (model) modelBadge.textContent = model;
-
-    // Extract the first ```html ... ``` code block if present
-    const htmlBlockMatch = text.match(/```html\n([\s\S]*?)```/);
-    const renderedUiHtml = htmlBlockMatch ? htmlBlockMatch[1].trim() : null;
-
-    const contentDiv = document.createElement("div");
-    contentDiv.className = "preview-content";
-    contentDiv.innerHTML = renderMarkdown(text);
-
-    // Highlight token references like color.primary.600
-    highlightTokens(contentDiv);
-
-    let html = contentDiv.outerHTML;
-
-    // If there's a renderable HTML snippet, show it in a sandboxed iframe
-    if (renderedUiHtml) {
-      // Revoke the previous blob URL to avoid memory leaks
-      if (currentBlobUrl) {
-        URL.revokeObjectURL(currentBlobUrl);
-        currentBlobUrl = null;
-      }
-      const iframeDoc = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
-        body { margin: 16px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 14px; }
-      </style></head><body>${renderedUiHtml}</body></html>`;
-      const blob = new Blob([iframeDoc], { type: "text/html" });
-      currentBlobUrl = URL.createObjectURL(blob);
-      html = `<div class="preview-ui-label">Live Preview</div>
-        <iframe class="preview-iframe" src="${currentBlobUrl}" sandbox="" title="UI Preview"></iframe>` + html;
+  // ── Live Preview + Tools panels ─────────────────────────────────────────
+  function updateLivePreview(text, toolsUsed, model) {
+    if (model) {
+      modelBadge.textContent = model;
+      modelBadge.style.display = "";
     }
 
-    if (toolsUsed && toolsUsed.length > 0) {
-      const toolsHtml = `
-        <div class="preview-tools">
-          <div class="preview-tools-label">MCP Tools Used</div>
-          <div class="preview-tools-list">
-            ${toolsUsed.map(t => `<span class="preview-tool-item">${escapeHtml(t)}</span>`).join("")}
-          </div>
+    // Extract the first ```html ... ``` block
+    const htmlMatch = text.match(/```html\n([\s\S]*?)```/);
+    currentHtmlCode = htmlMatch ? htmlMatch[1].trim() : null;
+    showingCode = false;
+
+    if (currentHtmlCode) {
+      // Show toggle button and render iframe
+      codeToggleBtn.style.display = "";
+      codeToggleBtn.textContent = "Show Code";
+      codeToggleBtn.classList.remove("active");
+      renderIframeView();
+    } else {
+      // No HTML generated — show informative empty state
+      codeToggleBtn.style.display = "none";
+      previewBody.innerHTML = `
+        <div class="preview-empty">
+          <div class="preview-empty-icon">◇</div>
+          <div class="preview-empty-text">No UI was generated for this response.<br>Try asking to <em>create</em> or <em>build</em> a component.</div>
         </div>`;
-      html += toolsHtml;
     }
 
-    previewBody.innerHTML = html;
+    updateToolsPanel(toolsUsed);
+  }
+
+  function updateToolsPanel(toolsUsed) {
+    if (!toolsUsed || toolsUsed.length === 0) {
+      toolsBody.innerHTML = `<div class="tools-empty">No MCP tools were called for this response.</div>`;
+      return;
+    }
+    const items = toolsUsed.map(t => `<span class="tool-item">${escapeHtml(t)}</span>`).join("");
+    toolsBody.innerHTML = `<div class="tools-list">${items}</div>`;
   }
 
   // ── Simple Markdown renderer ────────────────────────────────────────────
@@ -769,14 +964,14 @@
     // Horizontal rule
     html = html.replace(/^---$/gm, "<hr>");
 
-    // Unordered lists — collect consecutive <li> items and wrap in <ul>
+    // Unordered lists
     html = html.replace(/^[*\-] (.+)$/gm, "<li>$1</li>");
     html = html.replace(/(<li>(?:.*?)<\/li>\n?)+/gs, (block) => `<ul>${block}</ul>`);
 
     // Ordered lists
     html = html.replace(/^\d+\. (.+)$/gm, "<li>$1</li>");
 
-    // Paragraphs — wrap lines not already in tags
+    // Paragraphs
     html = html.split("\n").map(line => {
       const trimmed = line.trim();
       if (!trimmed) return "";
@@ -787,19 +982,15 @@
     return html;
   }
 
-  // ── Highlight token references in preview ──────────────────────────────
-  // Finds patterns like color.primary.600 and wraps them as colored chips.
+  // ── Highlight token references ──────────────────────────────────────────
   function highlightTokens(container) {
     const tokenRegex = /\b(color|spacing|typography|borderRadius|shadow|motion|layout)\.[a-zA-Z0-9_.]+/g;
 
-    // Walk text nodes
     const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
     const toReplace = [];
     let node;
     while ((node = walker.nextNode())) {
-      if (tokenRegex.test(node.textContent)) {
-        toReplace.push(node);
-      }
+      if (tokenRegex.test(node.textContent)) toReplace.push(node);
       tokenRegex.lastIndex = 0;
     }
 
@@ -819,12 +1010,9 @@
         }
         const chip = document.createElement("span");
         chip.className = "token-chip";
-
-        // If it looks like a color token, try to show a swatch
         if (m[0].startsWith("color.")) {
           const swatch = document.createElement("span");
           swatch.className = "token-chip-swatch";
-          // We can't resolve the value here without an API call — show a gradient placeholder
           swatch.style.background = "linear-gradient(135deg, #2f81f7, #bc8cff)";
           chip.appendChild(swatch);
         }
@@ -848,20 +1036,47 @@
       .replace(/"/g, "&quot;");
   }
 
+  // ── Info modals ─────────────────────────────────────────────────────────
+  function initInfoModals() {
+    const overlay   = document.getElementById("info-modal");
+    const titleEl   = document.getElementById("info-modal-title");
+    const bodyEl    = document.getElementById("info-modal-body");
+    const closeBtn  = document.getElementById("info-modal-close");
+    const okBtn     = document.getElementById("info-modal-ok");
+
+    function openInfo(key) {
+      const info = INFO[key];
+      if (!info) return;
+      titleEl.textContent = info.title;
+      bodyEl.innerHTML = info.body;
+      overlay.classList.add("open");
+    }
+
+    function closeInfo() { overlay.classList.remove("open"); }
+
+    document.querySelectorAll(".info-btn[data-info]").forEach(btn => {
+      btn.addEventListener("click", () => openInfo(btn.dataset.info));
+    });
+
+    closeBtn.addEventListener("click", closeInfo);
+    okBtn.addEventListener("click", closeInfo);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) closeInfo(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeInfo(); });
+  }
+
   // ── Load JSON modal & Reset ─────────────────────────────────────────────
   function initLoadJsonModal() {
-    const overlay      = document.getElementById("load-json-modal");
-    const typeSelect   = document.getElementById("modal-type-select");
-    const jsonInput    = document.getElementById("modal-json-input");
-    const schemaHint   = document.getElementById("schema-hint");
+    const overlay       = document.getElementById("load-json-modal");
+    const typeSelect    = document.getElementById("modal-type-select");
+    const jsonInput     = document.getElementById("modal-json-input");
+    const schemaHint    = document.getElementById("schema-hint");
     const schemaLoading = document.getElementById("schema-loading");
-    const openBtn      = document.getElementById("load-json-btn");
-    const closeBtn     = document.getElementById("modal-close-btn");
-    const cancelBtn    = document.getElementById("modal-cancel-btn");
-    const submitBtn    = document.getElementById("modal-submit-btn");
-    const resetBtn     = document.getElementById("reset-btn");
+    const openBtn       = document.getElementById("load-json-btn");
+    const closeBtn      = document.getElementById("modal-close-btn");
+    const cancelBtn     = document.getElementById("modal-cancel-btn");
+    const submitBtn     = document.getElementById("modal-submit-btn");
+    const resetBtn      = document.getElementById("reset-btn");
 
-    // Cache fetched schemas to avoid repeated MCP calls
     const schemaCache = {};
 
     async function fetchSchema(dataType) {
@@ -878,7 +1093,6 @@
         });
         const data = await res.json();
         schemaLoading.textContent = "";
-        // MCP returns result.content[0].text
         const text = data?.result?.content?.[0]?.text ?? "";
         schemaCache[dataType] = text;
         return text;
@@ -896,9 +1110,7 @@
       schemaHint.textContent = schema;
     }
 
-    function closeModal() {
-      overlay.classList.remove("open");
-    }
+    function closeModal() { overlay.classList.remove("open"); }
 
     typeSelect.addEventListener("change", async () => {
       const schema = await fetchSchema(typeSelect.value);
@@ -956,7 +1168,6 @@
         });
         const result = await res.json();
         if (!res.ok) { alert("Error: " + (result.error ?? "Unknown error")); return; }
-        // Clear schema cache so schemas are re-fetched after reset
         for (const k in schemaCache) { delete schemaCache[k]; }
         appendMessage("assistant", "✓ All data reset to bundled defaults. MCP tools now reflect the original design system.");
         scrollToBottom();
@@ -970,6 +1181,7 @@
 
   // ── Boot ───────────────────────────────────────────────────────────────
   loadTemplates();
+  initInfoModals();
   initLoadJsonModal();
 </script>
 </body>

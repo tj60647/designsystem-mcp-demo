@@ -241,6 +241,36 @@ app.get("/prompt-templates", (_req, res) => {
         description: "Design a navigation bar using design system tokens",
         prompt: "Design a navigation bar using only design system tokens",
       },
+      {
+        id: "alert-notification",
+        title: "Alert / notification",
+        description: "Build an alert or notification banner with status variants",
+        prompt: "Create an alert component with success, warning, error, and info variants using design system tokens",
+      },
+      {
+        id: "typography-scale",
+        title: "Typography scale",
+        description: "Explore available typography tokens and usage",
+        prompt: "Show me the typography tokens — sizes, weights, and line-heights — and when to use each",
+      },
+      {
+        id: "icon-search",
+        title: "Search icons",
+        description: "Find icons available in the design system",
+        prompt: "What icons are available in the design system? Show me navigation and action icons",
+      },
+      {
+        id: "token-compliance",
+        title: "Token compliance check",
+        description: "Check whether common CSS values match design tokens",
+        prompt: "Check these CSS values for token compliance: color #2563eb, font-size 16px, border-radius 8px, padding 16px",
+      },
+      {
+        id: "pricing-card",
+        title: "Pricing card",
+        description: "Build a pricing card component using design system tokens",
+        prompt: "Create a pricing card with a plan name, price, feature list, and a primary CTA button using design system tokens",
+      },
     ],
   });
 });

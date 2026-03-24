@@ -31,43 +31,14 @@
  *   suggest_token              — suggest best token for a described intent
  *   diff_against_system        — compare CSS props to design tokens
  *   search                     — full-text search across tokens, components, icons
+ *   get_schema                 — JSON Schema for a data file (tokens/components/themes/icons)
  * ──────────────────────────────────────────────────────────────────────────
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { readFileSync } from "fs";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
-
-// ── Resolve __dirname in ESM ──────────────────────────────────────────────
-// In modern Node.js with ES modules, __dirname is not available by default.
-// We reconstruct it from import.meta.url so we can locate the data files
-// relative to this source file regardless of where the process is started.
-// ─────────────────────────────────────────────────────────────────────────
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// ── Load design system data ───────────────────────────────────────────────
-// The JSON files are the canonical source of truth for tokens and components.
-// In a production system these would be generated from a design tool pipeline
-// (e.g. Figma → Style Dictionary → tokens.json).
-// ─────────────────────────────────────────────────────────────────────────
-const tokens = JSON.parse(
-  readFileSync(join(__dirname, "data/tokens.json"), "utf-8")
-) as TokensData;
-
-const components = JSON.parse(
-  readFileSync(join(__dirname, "data/components.json"), "utf-8")
-) as ComponentsData;
-
-const themes = JSON.parse(
-  readFileSync(join(__dirname, "data/themes.json"), "utf-8")
-) as ThemesData;
-
-const icons = JSON.parse(
-  readFileSync(join(__dirname, "data/icons.json"), "utf-8")
-) as IconsData;
+import { getData } from "./dataStore.js";
+import { DATA_SCHEMAS } from "./schemas.js";
 
 // ── Types ─────────────────────────────────────────────────────────────────
 // Minimal type definitions that describe the shapes of the JSON data files.
@@ -228,8 +199,16 @@ function flattenAllTokens(
 // ── MCP Server factory ────────────────────────────────────────────────────
 // Returns a fully configured McpServer with all tools registered.
 // Called once per HTTP request — stateless, no shared state between calls.
+// Data is read from the shared dataStore on each call so that any JSON
+// loaded via POST /api/data is immediately reflected in tool responses.
 // ─────────────────────────────────────────────────────────────────────────
 export function createMcpServer(): McpServer {
+  // Snapshot the current store state for this request.
+  const tokens     = getData("tokens")     as TokensData;
+  const components = getData("components") as ComponentsData;
+  const themes     = getData("themes")     as ThemesData;
+  const icons      = getData("icons")      as IconsData;
+
   const server = new McpServer({
     name: "design-system-mcp",
     version: "0.1.0",
@@ -903,6 +882,32 @@ export function createMcpServer(): McpServer {
           {
             type: "text" as const,
             text: JSON.stringify({ query, results: results.slice(0, limit) }, null, 2),
+          },
+        ],
+      };
+    }
+  );
+
+  // ── TOOL: get_schema ────────────────────────────────────────────────────
+  // Returns the JSON Schema (draft-07) for one of the four data files.
+  // Use this before loading custom JSON via POST /api/data to understand
+  // the expected structure.  The demo UI uses this to show inline hints
+  // in the "Load JSON" modal.
+  // ───────────────────────────────────────────────────────────────────────
+  server.tool(
+    "get_schema",
+    'Return the JSON Schema for a design system data file. Use this before loading custom data (via POST /api/data) to understand the expected structure. Valid dataType values: "tokens", "components", "themes", "icons".',
+    {
+      dataType: z
+        .enum(["tokens", "components", "themes", "icons"])
+        .describe('The data file whose schema you want. One of: "tokens", "components", "themes", "icons".'),
+    },
+    async ({ dataType }) => {
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(DATA_SCHEMAS[dataType], null, 2),
           },
         ],
       };

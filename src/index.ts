@@ -29,6 +29,7 @@ import { dirname, join } from "path";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createMcpServer } from "./mcp-server.js";
 import { runMcpTool } from "./toolRunner.js";
+import { setData, resetData, type DataType } from "./dataStore.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
@@ -79,11 +80,14 @@ app.get("/health", (_req, res) => {
       "suggest_token",
       "diff_against_system",
       "search",
+      "get_schema",
     ],
     additionalEndpoints: {
       "GET /demo": "Split-panel chatbot demo UI",
       "POST /api/chat": "OpenRouter-backed agentic chat with MCP tool calling",
       "GET /prompt-templates": "Pre-built prompt templates for the demo",
+      "POST /api/data": "Load custom JSON for a data type (tokens, components, themes, icons)",
+      "POST /api/data/reset": "Reset all (or one) data type back to the bundled defaults",
     },
   });
 });
@@ -129,6 +133,58 @@ app.post("/mcp", async (req, res) => {
       res.status(500).json({ error: "Internal server error" });
     }
   }
+});
+
+// ── Data loading endpoints ────────────────────────────────────────────────
+// Allow callers to replace one of the four data sets at runtime so that
+// subsequent MCP tool calls and chat responses reflect the new data.
+// ─────────────────────────────────────────────────────────────────────────
+
+/**
+ * POST /api/data
+ * Body: { "type": "tokens"|"components"|"themes"|"icons", "data": <object> }
+ * Replaces the active data for the given type with the supplied JSON.
+ */
+app.post("/api/data", (req, res) => {
+  const VALID_TYPES: DataType[] = ["tokens", "components", "themes", "icons"];
+  const { type, data } = req.body as { type?: string; data?: unknown };
+
+  if (!type || !VALID_TYPES.includes(type as DataType)) {
+    res.status(400).json({
+      error: `"type" must be one of: ${VALID_TYPES.join(", ")}`,
+    });
+    return;
+  }
+
+  if (data === null || typeof data !== "object" || Array.isArray(data)) {
+    res.status(400).json({ error: '"data" must be a JSON object.' });
+    return;
+  }
+
+  setData(type as DataType, data);
+  res.json({ ok: true, type, message: `${type} data replaced. MCP tools now reflect the new data.` });
+});
+
+/**
+ * POST /api/data/reset
+ * Body (optional): { "type": "tokens"|"components"|"themes"|"icons" }
+ * Resets the active data back to the bundled on-disk defaults.
+ * If no type is supplied, all four data sets are reset.
+ */
+app.post("/api/data/reset", (req, res) => {
+  const VALID_TYPES: DataType[] = ["tokens", "components", "themes", "icons"];
+  const { type } = (req.body ?? {}) as { type?: string };
+
+  if (type !== undefined && !VALID_TYPES.includes(type as DataType)) {
+    res.status(400).json({
+      error: `"type" must be one of: ${VALID_TYPES.join(", ")} (or omit to reset all)`,
+    });
+    return;
+  }
+
+  resetData(type as DataType | undefined);
+  const resetTarget = type ?? "all data";
+  res.json({ ok: true, type: type ?? "all", message: `${resetTarget} reset to bundled defaults.` });
 });
 
 // ── Prompt templates ──────────────────────────────────────────────────────
@@ -369,6 +425,24 @@ const OPENROUTER_TOOLS = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "get_schema",
+      description: 'Return the JSON Schema for a design system data file. Use this before loading custom data to understand the expected structure. Valid dataType values: "tokens", "components", "themes", "icons".',
+      parameters: {
+        type: "object",
+        properties: {
+          dataType: {
+            type: "string",
+            enum: ["tokens", "components", "themes", "icons"],
+            description: 'The data file to get the schema for.',
+          },
+        },
+        required: ["dataType"],
+      },
+    },
+  },
 ] as const;
 
 const CHAT_SYSTEM_PROMPT =
@@ -378,7 +452,7 @@ const CHAT_SYSTEM_PROMPT =
 
 // ── Chat endpoint ──────────────────────────────────────────────────────────
 // OpenRouter-backed agentic loop. Calls OpenRouter with the conversation and
-// all 12 design-system tools. Tool calls are executed locally via runMcpTool,
+// all 13 design-system tools. Tool calls are executed locally via runMcpTool,
 // and results are fed back into the loop until the model returns a final answer.
 // ─────────────────────────────────────────────────────────────────────────
 app.post("/api/chat", async (req, res) => {

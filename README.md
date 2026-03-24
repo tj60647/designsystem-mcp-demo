@@ -12,7 +12,7 @@
 2. [Why this matters](#2-why-this-matters)
 3. [Core concepts](#3-core-concepts)
 4. [How it works end-to-end](#4-how-it-works-end-to-end)
-5. [The 12 MCP tools — and when to use them](#5-the-12-mcp-tools--and-when-to-use-them)
+5. [The 13 MCP tools — and when to use them](#5-the-13-mcp-tools--and-when-to-use-them)
 6. [Using the demo](#6-using-the-demo)
 7. [Connecting an AI client](#7-connecting-an-ai-client)
 8. [Key design considerations](#8-key-design-considerations)
@@ -129,7 +129,7 @@ The key distinction: the AI's output is anchored to the real design system defin
 
 ---
 
-## 5. The 12 MCP tools — and when to use them
+## 5. The 13 MCP tools — and when to use them
 
 AI clients call these tools via `POST /mcp` using the JSON-RPC protocol.
 
@@ -154,11 +154,12 @@ AI clients call these tools via `POST /mcp` using the JSON-RPC protocol.
 | `get_component_constraints` | Get the usage rules for a component — do's and don'ts, when not to use it, required props — use to validate AI-generated usage before shipping |
 | `validate_component_usage` | Check whether a specific variant/size/props combination is valid per the spec — use in CI or before rendering |
 
-### Search
+### Search and schema
 
 | Tool | When to use |
 |---|---|
 | `search` | Full-text search across all tokens, components, and icons by keyword — use when you don't know the exact path or component name |
+| `get_schema` | Get the JSON Schema for a data file (`tokens`, `components`, `themes`, or `icons`) — use to understand the expected structure before loading custom data via `POST /api/data` |
 
 ---
 
@@ -264,11 +265,15 @@ AI tools should reference **semantic tokens** (e.g. `color.semantic.error`) rath
 
 Design your token structure so semantic tokens are the public API of the design system. Primitives are implementation details.
 
-### Stateless vs. stateful MCP servers
+### Stateless MCP server with shared data store
 
-This server is **stateless** — every request creates a fresh instance, handles the call, and tears down. This is the right choice for serverless deployments (Vercel, Netlify) and most demo use cases.
+The MCP server is **stateless** — every request creates a fresh McpServer instance, handles the call, and tears down. This is the right choice for serverless deployments (Vercel, Netlify) and most demo use cases.
 
-For production systems that need persistent sessions, caching, or real-time token sync from Figma, you'll need a long-running server (Heroku, Railway, Fly.io, or a self-hosted Node process).
+However, all four data files (`tokens`, `components`, `themes`, `icons`) are held in a **shared in-memory data store** (`dataStore.ts`) that lives for the lifetime of the Node.js process. This means:
+
+- MCP tool calls always reflect the most recently loaded data — if you call `POST /api/data` to replace `components.json`, the next MCP request sees the new data.
+- On Vercel (serverless), each function invocation gets its own process, so loaded data does not persist across cold starts. Use the bundled defaults or a persistent store for production.
+- On Heroku, Railway, or local Node.js the process stays alive and loaded data persists until the process restarts or `POST /api/data/reset` is called.
 
 ### Keeping the MCP data in sync with the source of truth
 
@@ -346,6 +351,40 @@ The server starts at `http://localhost:3000` and opens the demo UI automatically
 | `POST /mcp` | MCP JSON-RPC endpoint for AI clients |
 | `POST /api/chat` | OpenRouter-backed agentic chat endpoint |
 | `GET /prompt-templates` | Pre-built prompt templates for the demo UI |
+| `POST /api/data` | Load custom JSON for a data type (`tokens`, `components`, `themes`, or `icons`) |
+| `POST /api/data/reset` | Reset all (or one) data type back to bundled defaults |
+
+### Loading custom data at runtime
+
+The MCP server keeps the four data files in memory. You can replace any of them at runtime so that all subsequent tool calls reflect the new data. This is the mechanism the demo UI's **Load JSON** button uses.
+
+```bash
+# Replace the components data with your own
+curl -X POST http://localhost:3000/api/data \
+  -H "Content-Type: application/json" \
+  -d '{ "type": "components", "data": { "button": { "name": "Button", "description": "…" } } }'
+
+# Reset everything back to the bundled defaults
+curl -X POST http://localhost:3000/api/data/reset \
+  -H "Content-Type: application/json" \
+  -d '{}'
+
+# Reset only tokens
+curl -X POST http://localhost:3000/api/data/reset \
+  -H "Content-Type: application/json" \
+  -d '{ "type": "tokens" }'
+```
+
+Before loading custom JSON, call the `get_schema` MCP tool to see the expected structure:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": { "name": "get_schema", "arguments": { "dataType": "components" } }
+}
+```
 
 ### Build for production
 
@@ -408,9 +447,11 @@ Use the ngrok HTTPS URL as the MCP server URL in your AI client config.
 
 ```
 src/
-  index.ts            — Express server (routes, MCP endpoint, /api/chat)
-  mcp-server.ts       — MCP server factory; all 12 tool definitions
+  index.ts            — Express server (routes, MCP endpoint, /api/chat, /api/data)
+  mcp-server.ts       — MCP server factory; all 13 tool definitions
   toolRunner.ts       — Local tool executor for the /api/chat agentic loop
+  dataStore.ts        — Shared in-memory data store; getData/setData/resetData
+  schemas.ts          — JSON Schema definitions for each data file (tokens/components/themes/icons)
   data/
     tokens.json       — Design tokens (color, typography, spacing, motion, layout…)
     components.json   — Component specs (11 components)

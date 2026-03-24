@@ -2,21 +2,16 @@
  * Design System MCP — Tool Runner
  *
  * Provides a single `runMcpTool(name, args)` function that executes any of the
- * 12 design-system tools and returns a plain string result. Used by the
+ * 13 design-system tools and returns a plain string result. Used by the
  * /api/chat agentic loop to execute OpenRouter tool-call responses locally
  * without going through the full MCP JSON-RPC protocol.
  *
- * The data-loading and utility logic mirrors mcp-server.ts intentionally; the
- * two modules are kept separate so that the MCP server remains stateless and
- * framework-agnostic while this module can be imported by Express routes.
+ * Data is read from the shared dataStore on every call so that JSON loaded
+ * via POST /api/data is immediately reflected in chat tool responses.
  */
 
-import { readFileSync } from "fs";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname  = dirname(__filename);
+import { getData } from "./dataStore.js";
+import { DATA_SCHEMAS } from "./schemas.js";
 
 // ── Data ──────────────────────────────────────────────────────────────────
 interface TokenEntry {
@@ -51,10 +46,6 @@ interface IconSpec {
   sizes: number[]; description: string;
 }
 interface IconsData { [key: string]: IconSpec; }
-
-const tokens     = JSON.parse(readFileSync(join(__dirname, "data/tokens.json"),     "utf-8")) as TokensData;
-const components = JSON.parse(readFileSync(join(__dirname, "data/components.json"), "utf-8")) as ComponentsData;
-const icons      = JSON.parse(readFileSync(join(__dirname, "data/icons.json"),      "utf-8")) as IconsData;
 
 // ── Utilities ─────────────────────────────────────────────────────────────
 
@@ -105,6 +96,12 @@ function extractTokenRefs(obj: unknown, refs: Set<string>): void {
 // ── Tool runner ───────────────────────────────────────────────────────────
 
 export async function runMcpTool(name: string, args: Record<string, unknown>): Promise<string> {
+  // Read the current store state on each call so that any JSON loaded via
+  // POST /api/data is reflected immediately in chat tool responses.
+  const tokens     = getData("tokens")     as TokensData;
+  const components = getData("components") as ComponentsData;
+  const icons      = getData("icons")      as IconsData;
+
   switch (name) {
 
     case "list_token_categories": {
@@ -318,6 +315,14 @@ export async function runMcpTool(name: string, args: Record<string, unknown>): P
 
       results.sort((a, b) => b.score - a.score);
       return JSON.stringify({ query, results: results.slice(0, limit) }, null, 2);
+    }
+
+    case "get_schema": {
+      const dataType = args.dataType as string;
+      if (!(dataType in DATA_SCHEMAS)) {
+        return JSON.stringify({ error: `Unknown dataType "${dataType}". Valid values: tokens, components, themes, icons.` });
+      }
+      return JSON.stringify(DATA_SCHEMAS[dataType], null, 2);
     }
 
     default:

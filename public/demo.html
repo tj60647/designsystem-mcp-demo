@@ -633,7 +633,8 @@
 
       if (!res.ok) {
         const errMsg = data.error || "Request failed";
-        appendMessage("error", "⚠ " + errMsg);
+        const details = data.details ? `\n${data.details}` : "";
+        appendMessage("error", "⚠ " + errMsg + details);
       } else {
         const responseText  = data.response || "";
         const toolsUsed     = data.toolCallsUsed || [];

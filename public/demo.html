@@ -141,6 +141,20 @@
       font-family: "SFMono-Regular", Consolas, monospace; font-size: 12px;
       color: var(--orange);
     }
+    .info-modal-body pre {
+      background: var(--bg-input); border: 1px solid var(--border-soft);
+      border-radius: var(--radius-sm); padding: 10px 12px;
+      font-family: "SFMono-Regular", Consolas, monospace; font-size: 12px;
+      color: var(--text-muted); overflow-x: auto; white-space: pre;
+      margin: 6px 0 10px;
+    }
+    .info-modal-body pre code {
+      background: none; border: none; padding: 0; color: inherit; font-size: inherit;
+    }
+    .info-modal-body h4 {
+      color: var(--text); font-size: 12px; font-weight: 600;
+      margin: 12px 0 4px;
+    }
 
     /* ── Main layout ── */
     .main {
@@ -543,8 +557,7 @@
   <div class="topbar-spacer"></div>
   <button class="topbar-btn" id="load-json-btn" title="Replace a data file (tokens, components, themes, icons) with custom JSON">Load JSON</button>
   <button class="topbar-btn" id="reset-btn" title="Reset all data back to bundled defaults">Reset</button>
-  <a href="/mcp" target="_blank" rel="noopener noreferrer" class="topbar-link" title="Open the raw MCP endpoint">MCP endpoint ↗</a>
-  <a href="/" class="topbar-link">API status ↗</a>
+  <button class="topbar-btn" id="mcp-info-btn" title="How to connect to the MCP server">MCP server</button>
 </header>
 
 <!-- Load JSON modal -->
@@ -692,6 +705,37 @@
         <p>If the AI responds with analysis or token information (no UI output), this panel will show an empty state.</p>
       `,
     },
+    mcp: {
+      title: "Connecting to the MCP Server",
+      body: `
+        <p>This server exposes your design system as a set of <strong>MCP tools</strong> that any compatible AI client can call in real time — tokens, components, usage rules, color validation, and more.</p>
+        <h4>Endpoint</h4>
+        <pre><code id="mcp-endpoint-url">POST https://your-host/mcp</code></pre>
+        <h4>Claude Desktop</h4>
+        <p>Add to <code>claude_desktop_config.json</code> under <code>mcpServers</code>:</p>
+        <pre><code>{
+  "mcpServers": {
+    "design-system": {
+      "url": "https://your-host/mcp",
+      "type": "http"
+    }
+  }
+}</code></pre>
+        <h4>GitHub Copilot / VS Code</h4>
+        <p>Add to <code>.vscode/mcp.json</code> in your project:</p>
+        <pre><code>{
+  "servers": {
+    "design-system": {
+      "type": "http",
+      "url": "https://your-host/mcp"
+    }
+  }
+}</code></pre>
+        <h4>What to expect</h4>
+        <p>Once connected, your AI client can call tools like <code>get_tokens</code>, <code>get_component</code>, <code>suggest_token</code>, and <code>diff_against_system</code> automatically when answering design questions. Responses are grounded in live design system data — not the AI's training knowledge.</p>
+        <p>See <a href="/health" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">server status ↗</a> for the full tool list.</p>
+      `,
+    },
     tools: {
       title: "Design System Used",
       body: `
@@ -704,7 +748,7 @@
           <li><code>validate_color</code> — check if a value matches a named token</li>
           <li><code>diff_against_system</code> — find CSS properties that break token compliance</li>
           <li><code>search</code> — full-text search across tokens, components, and icons</li>
-          <li>…and 7 more. See <a href="/mcp" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">MCP endpoint ↗</a></li>
+          <li>…and 7 more. See <a href="/health" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">MCP server ↗</a></li>
         </ul>
         <p>Because the AI always queries live data, responses stay accurate even if you load custom JSON via <strong>Load JSON</strong>.</p>
       `,
@@ -1062,6 +1106,17 @@
     okBtn.addEventListener("click", closeInfo);
     overlay.addEventListener("click", (e) => { if (e.target === overlay) closeInfo(); });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeInfo(); });
+
+    // MCP server topbar button
+    const mcpInfoBtn = document.getElementById("mcp-info-btn");
+    if (mcpInfoBtn) {
+      mcpInfoBtn.addEventListener("click", () => {
+        openInfo("mcp");
+        // Fill in the real host URL after the modal renders
+        const el = document.getElementById("mcp-endpoint-url");
+        if (el) el.textContent = `POST ${window.location.origin}/mcp`;
+      });
+    }
   }
 
   // ── Load JSON modal & Reset ─────────────────────────────────────────────

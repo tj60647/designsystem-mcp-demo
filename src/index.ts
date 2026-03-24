@@ -829,11 +829,18 @@ const OPENROUTER_TOOLS = [
 const CHAT_SYSTEM_PROMPT =
   "You are a design system expert assistant. You have access to a design system MCP server with tokens, components, themes, icons, and guidelines. " +
   "When the user asks about UI components, colors, spacing, typography, or design tokens, call the appropriate tools to get accurate data from the design system before answering. " +
-  "Always use the actual token values and component specs from the tools — never guess or invent values. " +
-  "When the user asks you to create, build, design, or show a UI element or component, always include a complete, self-contained HTML snippet " +
-  "in a fenced html code block (opening fence: three backticks followed by html) that can be rendered directly in a browser. " +
-  "The HTML snippet must use inline styles only (no external stylesheets) and apply the exact token values (colors, spacing, font sizes, etc.) " +
-  "returned by the MCP tools. Include only the component markup — no html, head, or body wrappers.\n\n" +
+  "Always use the actual token values and component specs from the tools — never guess or invent values.\n\n" +
+  "## Response format\n" +
+  "IMPORTANT: Every response must be a single valid JSON object. Output ONLY the JSON — no text, no markdown, no code fences outside it.\n\n" +
+  "When answering a question (no UI to render):\n" +
+  '{"message": "Your prose answer here."}\n\n' +
+  "When generating a UI component:\n" +
+  '{"message": "Your prose explanation here.", "preview": "<button style=\\"...\\">...</button>"}\n\n' +
+  "Field rules:\n" +
+  '  • "message": plain prose text for the chat — no HTML, no code fences. Required.\n' +
+  '  • "preview": raw HTML markup only — no backtick fences, no extra wrappers. ' +
+  "Use inline styles only. Apply exact token values from the MCP tools. " +
+  "Omit this field entirely when no UI is generated.\n\n" +
   "You also help users create brand-new design systems through conversation. " +
   "When a user wants to generate a design system:\n" +
   "1. Gather their brand name, product type, aesthetic direction (e.g. modern/minimal, playful, professional, trustworthy, bold), primary color(s), secondary color(s), and typography style preferences.\n" +
@@ -841,11 +848,60 @@ const CHAT_SYSTEM_PROMPT =
   "3. Once you have enough information (typically after 2–4 exchanges), call the generate_design_system tool with a comprehensive, detailed description.\n" +
   "4. After the tool returns success, briefly summarise what was generated and tell the user it has been loaded and is ready to explore.";
 
+// ── Agent info endpoint ───────────────────────────────────────────────────
+// Returns a machine-readable description of the chat agent's configuration:
+// its name, the exact system instructions it receives, the model in use,
+// agentic loop parameters, and the full set of MCP tools it can call.
+// Used by the "View Agents" modal in the demo UI.
+// ─────────────────────────────────────────────────────────────────────────
+app.get("/api/agent-info", (_req, res) => {
+  res.json({
+    agents: [
+      {
+        name: "Chat Assistant",
+        description: "OpenRouter-backed agentic loop that calls MCP tools to ground answers in live design system data.",
+        model: process.env.OPENROUTER_MODEL ?? "openai/gpt-oss-20b:nitro",
+        parameters: {
+          maxIterations: 8,
+          toolChoice: "auto",
+          endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
+        },
+        systemPrompt: CHAT_SYSTEM_PROMPT,
+        tools: OPENROUTER_TOOLS.map((t) => ({
+          name: t.function.name,
+          description: t.function.description,
+          parameters: t.function.parameters,
+        })),
+      },
+    ],
+  });
+});
+
 // ── Chat endpoint ──────────────────────────────────────────────────────────
 // OpenRouter-backed agentic loop. Calls OpenRouter with the conversation and
 // all 26 design-system tools. Tool calls are executed locally via runMcpTool,
 // and results are fed back into the loop until the model returns a final answer.
 // ─────────────────────────────────────────────────────────────────────────
+
+/** Parse the LLM's JSON response into {message, preview}.
+ *  Falls back to treating the raw text as the message if JSON parsing fails,
+ *  so a non-compliant model reply still works rather than blowing up. */
+function parseChatResponse(raw: string): { message: string; preview: string | null } {
+  const text = raw.trim();
+  // Strip a possible ```json ... ``` fence — some models add one despite instructions
+  const fenced = text.match(/^```(?:json)?\s*([\s\S]*?)```\s*$/i);
+  const candidate = fenced ? fenced[1].trim() : text;
+  try {
+    const parsed = JSON.parse(candidate) as { message?: unknown; preview?: unknown };
+    const message = typeof parsed.message === "string" ? parsed.message : raw;
+    const preview = typeof parsed.preview === "string" && parsed.preview.trim() ? parsed.preview.trim() : null;
+    return { message, preview };
+  } catch {
+    // Graceful fallback: plain text, no preview
+    return { message: raw, preview: null };
+  }
+}
+
 app.post("/api/chat", async (req, res) => {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
@@ -888,6 +944,9 @@ app.post("/api/chat", async (req, res) => {
 
   try {
     for (let i = 0; i < MAX_ITERATIONS; i++) {
+      console.log(`[chat] iteration=${i} model=${model} messages=${loopMessages.length}`);
+      console.log("[chat:prompt]", JSON.stringify(loopMessages, null, 2));
+
       const orResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -947,6 +1006,8 @@ app.post("/api/chat", async (req, res) => {
 
           if (!toolCallsUsed.includes(toolName)) toolCallsUsed.push(toolName);
 
+          console.log(`[chat:tool] calling ${toolName}`, JSON.stringify(toolArgs));
+
           let toolResult: string;
 
           // ── Special handling: generate_design_system ───────────────────
@@ -994,21 +1055,25 @@ app.post("/api/chat", async (req, res) => {
             name: toolName,
             content: toolResult,
           });
+          console.log(`[chat:tool] result for ${toolName}:`, toolResult.slice(0, 500));
         }
         // Continue loop to let the model process tool results
         continue;
       }
 
       // No tool calls — return the final answer
-      const responseText = assistantMessage.content ?? "";
-      res.json({ response: responseText, model, toolCallsUsed, generatedDesignSystem: generatedDesignSystemData });
+      const rawResponse = assistantMessage.content ?? "";
+      const { message, preview } = parseChatResponse(rawResponse);
+      console.log("[chat:response]", message.slice(0, 300));
+      res.json({ message, preview, model, toolCallsUsed, generatedDesignSystem: generatedDesignSystemData });
       return;
     }
 
     // Reached max iterations without a final text response — return whatever is in the last assistant message
     const lastAssistant = [...loopMessages].reverse().find((m: OpenRouterMessage) => m.role === "assistant" && m.content);
-    const lastContent = lastAssistant?.content ?? "";
-    res.json({ response: String(lastContent), model, toolCallsUsed, generatedDesignSystem: generatedDesignSystemData });
+    const rawLast = String(lastAssistant?.content ?? "");
+    const { message: lastMessage, preview: lastPreview } = parseChatResponse(rawLast);
+    res.json({ message: lastMessage, preview: lastPreview, model, toolCallsUsed, generatedDesignSystem: generatedDesignSystemData });
   } catch (err) {
     console.error("Chat error:", err);
     if (!res.headersSent) {

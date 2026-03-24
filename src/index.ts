@@ -478,7 +478,7 @@ app.post("/api/chat", async (req, res) => {
     return;
   }
 
-  const model = requestedModel ?? process.env.OPENROUTER_MODEL ?? "google/gemini-flash-1.5";
+  const model = requestedModel ?? process.env.OPENROUTER_MODEL ?? "google/gemini-flash-1.5:free";
 
   // Build the message list for OpenRouter: system + conversation
   type OpenRouterMessage = {

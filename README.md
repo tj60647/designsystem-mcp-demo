@@ -200,7 +200,7 @@ The demo UI shows each MCP tool call the AI makes in real time — the tool name
 ### Requirements
 
 - An [OpenRouter API key](https://openrouter.ai/keys) must be set as `OPENROUTER_API_KEY` in your environment (or Vercel project settings)
-- The demo uses `anthropic/claude-3.5-sonnet` via OpenRouter by default, but any model with tool-calling support works
+- The demo uses `google/gemini-flash-1.5:free` via OpenRouter by default (free tier, no credits needed), but any model with tool-calling support works — set `OPENROUTER_MODEL` in your environment to override
 
 ---
 

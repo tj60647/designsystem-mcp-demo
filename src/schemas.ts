@@ -107,4 +107,41 @@ export const DATA_SCHEMAS: Record<string, unknown> = {
       additionalProperties: false,
     },
   },
+
+  "design-system": {
+    $schema: "http://json-schema.org/draft-07/schema#",
+    title: "design-system.json",
+    description:
+      "Combined design system file. All four data sets in a single JSON object. " +
+      "Load this instead of individual files to replace all design system data at once.",
+    type: "object",
+    required: ["tokens", "components", "themes", "icons"],
+    properties: {
+      tokens: {
+        type: "object",
+        description:
+          "Design tokens — top-level keys are categories (color, typography, spacing, …). " +
+          "Leaf nodes follow the shape { value: string, type: string }.",
+      },
+      components: {
+        type: "object",
+        description:
+          "Component specs — each key is a lowercase component name. " +
+          "Each value must include at least { name: string, description: string }.",
+      },
+      themes: {
+        type: "object",
+        description:
+          "Theme overrides — each key is a theme identifier (e.g. 'light', 'dark'). " +
+          "Each value must include { name, description, semantic: { [tokenPath]: cssValue } }.",
+      },
+      icons: {
+        type: "object",
+        description:
+          "Icon metadata — each key is a lowercase icon identifier. " +
+          "Each value must include { name, category, keywords, sizes, description }.",
+      },
+    },
+    additionalProperties: false,
+  },
 };

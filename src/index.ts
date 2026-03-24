@@ -188,15 +188,38 @@ app.post("/api/data", (req, res) => {
   const VALID_TYPES: DataType[] = ["tokens", "components", "themes", "icons"];
   const { type, data } = req.body as { type?: string; data?: unknown };
 
-  if (!type || !VALID_TYPES.includes(type as DataType)) {
+  if (!type || (!VALID_TYPES.includes(type as DataType) && type !== "design-system")) {
     res.status(400).json({
-      error: `"type" must be one of: ${VALID_TYPES.join(", ")}`,
+      error: `"type" must be one of: ${[...VALID_TYPES, "design-system"].join(", ")}`,
     });
     return;
   }
 
   if (data === null || typeof data !== "object" || Array.isArray(data)) {
     res.status(400).json({ error: '"data" must be a JSON object.' });
+    return;
+  }
+
+  if (type === "design-system") {
+    // Split the combined payload and set each present sub-section.
+    const combined = data as Record<string, unknown>;
+    const loaded: string[] = [];
+    for (const section of VALID_TYPES) {
+      const sectionData = combined[section];
+      if (sectionData !== undefined) {
+        if (sectionData === null || typeof sectionData !== "object" || Array.isArray(sectionData)) {
+          res.status(400).json({ error: `"${section}" must be a JSON object.` });
+          return;
+        }
+        setData(section, sectionData);
+        loaded.push(section);
+      }
+    }
+    if (loaded.length === 0) {
+      res.status(400).json({ error: 'design-system JSON must contain at least one of: tokens, components, themes, icons.' });
+      return;
+    }
+    res.json({ ok: true, type: "design-system", loaded, message: `Design system data loaded (${loaded.join(", ")}). MCP tools now reflect the new data.` });
     return;
   }
 
@@ -236,10 +259,10 @@ app.post("/api/data/reset", (req, res) => {
  * Returns the JSON Schema for the given data type as downloadable JSON.
  */
 app.get("/api/schema/:type", (req, res) => {
-  const VALID_TYPES: DataType[] = ["tokens", "components", "themes", "icons"];
+  const VALID_TYPES = ["tokens", "components", "themes", "icons", "design-system"];
   const { type } = req.params;
 
-  if (!VALID_TYPES.includes(type as DataType)) {
+  if (!VALID_TYPES.includes(type)) {
     res.status(404).json({ error: `Unknown schema type "${type}". Must be one of: ${VALID_TYPES.join(", ")}` });
     return;
   }
@@ -263,8 +286,8 @@ app.post("/api/validate", (req, res) => {
   const VALID_TYPES: DataType[] = ["tokens", "components", "themes", "icons"];
   const { type, data } = req.body as { type?: string; data?: unknown };
 
-  if (!type || !VALID_TYPES.includes(type as DataType)) {
-    res.status(400).json({ error: `"type" must be one of: ${VALID_TYPES.join(", ")}` });
+  if (!type || (!VALID_TYPES.includes(type as DataType) && type !== "design-system")) {
+    res.status(400).json({ error: `"type" must be one of: ${[...VALID_TYPES, "design-system"].join(", ")}` });
     return;
   }
 
@@ -273,17 +296,54 @@ app.post("/api/validate", (req, res) => {
     return;
   }
 
-  const result = validateAgainstSchema(type as DataType, data as Record<string, unknown>);
+  const result = validateAgainstSchema(type as DataType | "design-system", data as Record<string, unknown>);
   res.json(result);
 });
 
 /** Lightweight structural validator for each design-system data type. */
 function validateAgainstSchema(
-  type: DataType,
+  type: DataType | "design-system",
   data: Record<string, unknown>,
 ): { valid: boolean; errors: string[]; recommendations: string[] } {
   const errors: string[] = [];
   const recommendations: string[] = [];
+
+  if (type === "design-system") {
+    const SECTIONS: DataType[] = ["tokens", "components", "themes", "icons"];
+    const keys = Object.keys(data);
+
+    // Warn about unexpected top-level keys
+    const unknown = keys.filter(k => !SECTIONS.includes(k as DataType));
+    if (unknown.length > 0) {
+      recommendations.push(
+        `Unexpected top-level keys: ${unknown.map(k => `"${k}"`).join(", ")}. ` +
+        `Expected keys are: ${SECTIONS.join(", ")}.`,
+      );
+    }
+
+    // Recommend adding any missing sections
+    for (const section of SECTIONS) {
+      if (!(section in data)) {
+        recommendations.push(`Section "${section}" is missing. Add it to include ${section} data.`);
+      }
+    }
+
+    // Validate each present sub-section, prefixing messages with the section name
+    for (const section of SECTIONS) {
+      if (section in data) {
+        const sectionData = data[section];
+        if (sectionData === null || typeof sectionData !== "object" || Array.isArray(sectionData)) {
+          errors.push(`"${section}" must be a JSON object.`);
+        } else {
+          const sub = validateAgainstSchema(section, sectionData as Record<string, unknown>);
+          for (const e of sub.errors) errors.push(`[${section}] ${e}`);
+          for (const r of sub.recommendations) recommendations.push(`[${section}] ${r}`);
+        }
+      }
+    }
+
+    return { valid: errors.length === 0, errors, recommendations };
+  }
 
   if (type === "tokens") {
     const KNOWN_CATEGORIES = ["color", "typography", "spacing", "borderRadius", "shadow", "motion", "layout"];

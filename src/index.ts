@@ -939,8 +939,20 @@ app.post("/api/chat", async (req, res) => {
   const toolCallsUsed: string[] = [];
   const MAX_ITERATIONS = 8; // extra headroom: generate_design_system is slow and the conversation flow needs additional turns
 
+  // Collects thinking steps to surface in the UI
+  type ThinkingStep =
+    | { type: "reasoning"; content: string }
+    | { type: "tool_call"; tool: string; args: string };
+  const thinkingSteps: ThinkingStep[] = [];
+
   // Holds the generated design system data if generate_design_system is called
   let generatedDesignSystemData: Record<string, unknown> | null = null;
+
+  // Content block shape returned by thinking-capable models (e.g. Claude)
+  type ContentBlock =
+    | { type: "thinking"; thinking: string }
+    | { type: "text"; text: string }
+    | { type: string; [key: string]: unknown };
 
   try {
     for (let i = 0; i < MAX_ITERATIONS; i++) {
@@ -973,7 +985,7 @@ app.post("/api/chat", async (req, res) => {
         choices: Array<{
           message: {
             role: string;
-            content: string | null;
+            content: string | Array<ContentBlock> | null;
             tool_calls?: Array<{
               id: string;
               type: string;
@@ -991,7 +1003,27 @@ app.post("/api/chat", async (req, res) => {
       }
 
       const assistantMessage = choice.message;
-      loopMessages.push(assistantMessage as OpenRouterMessage);
+
+      // Extract text content and any reasoning blocks when content is an array
+      // (thinking-capable models like Claude return an array of content blocks)
+      let assistantTextContent: string | null = null;
+      if (Array.isArray(assistantMessage.content)) {
+        for (const block of assistantMessage.content as ContentBlock[]) {
+          if (block.type === "thinking" && block.thinking) {
+            thinkingSteps.push({ type: "reasoning", content: block.thinking as string });
+          } else if (block.type === "text" && block.text) {
+            assistantTextContent = (assistantTextContent ?? "") + block.text;
+          }
+        }
+      } else {
+        assistantTextContent = assistantMessage.content;
+      }
+
+      // Store the message with normalised string content so the loop continues cleanly
+      loopMessages.push({
+        ...assistantMessage,
+        content: assistantTextContent,
+      } as OpenRouterMessage);
 
       // If the model requested tool calls, execute them and continue the loop
       if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
@@ -1005,6 +1037,9 @@ app.post("/api/chat", async (req, res) => {
           }
 
           if (!toolCallsUsed.includes(toolName)) toolCallsUsed.push(toolName);
+
+          // Record as a thinking step so the UI can show it
+          thinkingSteps.push({ type: "tool_call", tool: toolName, args: toolCall.function.arguments });
 
           console.log(`[chat:tool] calling ${toolName}`, JSON.stringify(toolArgs));
 
@@ -1062,10 +1097,10 @@ app.post("/api/chat", async (req, res) => {
       }
 
       // No tool calls — return the final answer
-      const rawResponse = assistantMessage.content ?? "";
+      const rawResponse = assistantTextContent ?? "";
       const { message, preview } = parseChatResponse(rawResponse);
       console.log("[chat:response]", message.slice(0, 300));
-      res.json({ message, preview, model, toolCallsUsed, generatedDesignSystem: generatedDesignSystemData });
+      res.json({ message, preview, model, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
       return;
     }
 
@@ -1073,7 +1108,7 @@ app.post("/api/chat", async (req, res) => {
     const lastAssistant = [...loopMessages].reverse().find((m: OpenRouterMessage) => m.role === "assistant" && m.content);
     const rawLast = String(lastAssistant?.content ?? "");
     const { message: lastMessage, preview: lastPreview } = parseChatResponse(rawLast);
-    res.json({ message: lastMessage, preview: lastPreview, model, toolCallsUsed, generatedDesignSystem: generatedDesignSystemData });
+    res.json({ message: lastMessage, preview: lastPreview, model, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
   } catch (err) {
     console.error("Chat error:", err);
     if (!res.headersSent) {

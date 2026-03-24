@@ -78,6 +78,54 @@
     }
     .topbar-btn:hover { color: var(--text); border-color: var(--text-muted); }
 
+    .topbar-btn-download {
+      color: var(--green) !important;
+      border-color: rgba(63,185,80,.4) !important;
+      background: rgba(63,185,80,.08) !important;
+    }
+    .topbar-btn-download:hover {
+      color: var(--green) !important;
+      border-color: var(--green) !important;
+      background: rgba(63,185,80,.15) !important;
+    }
+
+    /* ── Generated design system card ── */
+    .generated-ds-card {
+      background: rgba(63,185,80,.07);
+      border: 1px solid rgba(63,185,80,.3);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .generated-ds-header {
+      display: flex; align-items: center; gap: 8px;
+      font-weight: 600; font-size: 13px; color: var(--green);
+    }
+    .generated-ds-header-icon { font-size: 16px; }
+    .generated-ds-meta {
+      font-size: 12px; color: var(--text-muted); line-height: 1.6;
+    }
+    .generated-ds-actions {
+      display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .generated-ds-btn {
+      font-size: 12px; font-weight: 500; padding: 5px 12px;
+      border: 1px solid; border-radius: var(--radius-sm);
+      cursor: pointer; transition: background .15s, color .15s;
+    }
+    .generated-ds-btn-primary {
+      background: rgba(63,185,80,.15); color: var(--green);
+      border-color: rgba(63,185,80,.4);
+    }
+    .generated-ds-btn-primary:hover { background: rgba(63,185,80,.25); }
+    .generated-ds-btn-secondary {
+      background: var(--bg-input); color: var(--text-muted);
+      border-color: var(--border);
+    }
+    .generated-ds-btn-secondary:hover { color: var(--text); border-color: var(--text-muted); }
+
     /* ── Generic modal ── */
     .modal-overlay {
       display: none; position: fixed; inset: 0;
@@ -881,6 +929,7 @@
   <span class="topbar-title">Design System AI</span>
   <span class="mcp-badge">MCP</span>
   <div class="topbar-spacer"></div>
+  <button class="topbar-btn topbar-btn-download" id="download-ds-btn" title="Download the AI-generated design system as JSON" style="display:none">⬇ Download Design System JSON</button>
   <button class="topbar-btn" id="view-schema-btn" title="View and download the JSON schema for any data type">View Schema</button>
   <button class="topbar-btn" id="load-json-btn" title="Replace a data file (tokens, components, themes, icons) with custom JSON">Load JSON</button>
   <button class="topbar-btn" id="reset-btn" title="Reset all data back to bundled defaults">Reset</button>
@@ -1182,6 +1231,7 @@
   let currentHtmlCode = null;   // latest extracted HTML block
   let showingCode = false;       // toggle state: false = preview, true = code
   let currentBlobUrl = null;
+  let generatedDesignSystemData = null;  // latest AI-generated design system JSON
 
   // ── DOM refs ───────────────────────────────────────────────────────────
   const messagesEl    = document.getElementById("messages");
@@ -1192,6 +1242,7 @@
   const toolsBody     = document.getElementById("tools-body");
   const modelBadge    = document.getElementById("model-badge");
   const codeToggleBtn = document.getElementById("code-toggle-btn");
+  const downloadDsBtn = document.getElementById("download-ds-btn");
 
   // ── Auto-resize textarea ───────────────────────────────────────────────
   inputEl.addEventListener("input", () => {
@@ -1319,6 +1370,11 @@
         conversationHistory.push({ role: "assistant", content: responseText });
         appendMessage("assistant", responseText);
         updateLivePreview(responseText, toolsUsed, data.model);
+
+        // Handle AI-generated design system
+        if (data.generatedDesignSystem) {
+          handleGeneratedDesignSystem(data.generatedDesignSystem);
+        }
       }
     } catch (err) {
       loadingEl.remove();
@@ -1406,6 +1462,69 @@
     const items = toolsUsed.map(t => `<span class="tool-item">${escapeHtml(t)}</span>`).join("");
     toolsBody.innerHTML = `<div class="tools-list">${items}</div>`;
   }
+
+  // ── Generated Design System handler ─────────────────────────────────────
+  function handleGeneratedDesignSystem(dsData) {
+    generatedDesignSystemData = dsData;
+
+    // Show the topbar download button
+    downloadDsBtn.style.display = "";
+
+    // Build a summary card and append it to the chat
+    const compKeys  = Object.keys(dsData.components  || {});
+    const themeKeys = Object.keys(dsData.themes       || {});
+    const iconKeys  = Object.keys(dsData.icons        || {});
+
+    const card = document.createElement("div");
+    card.className = "msg assistant";
+
+    const inner = document.createElement("div");
+    inner.className = "msg-bubble";
+    inner.innerHTML = `
+      <div class="generated-ds-card">
+        <div class="generated-ds-header">
+          <span class="generated-ds-header-icon">✨</span>
+          Design System Generated
+        </div>
+        <div class="generated-ds-meta">
+          ${compKeys.length} component${compKeys.length !== 1 ? "s" : ""}
+          &nbsp;·&nbsp; ${themeKeys.length} theme${themeKeys.length !== 1 ? "s" : ""}
+          &nbsp;·&nbsp; ${iconKeys.length} icon${iconKeys.length !== 1 ? "s" : ""}
+        </div>
+        <div class="generated-ds-actions">
+          <button class="generated-ds-btn generated-ds-btn-primary" id="gen-view-btn">View in Component Explorer</button>
+          <button class="generated-ds-btn generated-ds-btn-secondary" id="gen-download-btn">⬇ Download JSON</button>
+        </div>
+      </div>`;
+    card.appendChild(inner);
+    messagesEl.appendChild(card);
+    scrollToBottom();
+
+    // Wire up card buttons
+    inner.querySelector("#gen-view-btn").addEventListener("click", () => {
+      if (typeof window.switchToExplorerTab === "function") window.switchToExplorerTab();
+    });
+    inner.querySelector("#gen-download-btn").addEventListener("click", downloadGeneratedDesignSystem);
+
+    // Trigger Component Explorer reload (data has changed), then auto-switch to it
+    if (typeof window.notifyDataReloaded === "function") window.notifyDataReloaded();
+    if (typeof window.switchToExplorerTab === "function") window.switchToExplorerTab();
+  }
+
+  function downloadGeneratedDesignSystem() {
+    if (!generatedDesignSystemData) return;
+    const json = JSON.stringify(generatedDesignSystemData, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = "design-system.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // Wire topbar download button
+  downloadDsBtn.addEventListener("click", downloadGeneratedDesignSystem);
 
   // ── Simple Markdown renderer ────────────────────────────────────────────
   function renderMarkdown(text) {
@@ -1863,6 +1982,9 @@
 
     tabPreview.addEventListener("click",  () => activateTab(tabPreview));
     tabExplorer.addEventListener("click", () => activateTab(tabExplorer));
+
+    // Expose globally so handleGeneratedDesignSystem can switch tabs
+    window.switchToExplorerTab = () => activateTab(tabExplorer);
     tabGallery.addEventListener("click",  () => activateTab(tabGallery));
   }
 

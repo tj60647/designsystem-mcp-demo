@@ -62,30 +62,66 @@ app.get("/", (_req, res) => {
 app.get("/health", (_req, res) => {
   res.json({
     name: "Design System MCP",
-    version: "0.1.0",
+    version: "0.3.0",
     status: "running",
     mcpEndpoint: "POST /mcp",
     description:
       "A queryable context layer that makes design systems machine-readable and usable by AI.",
+    primitives: {
+      tools: 26,
+      resources: "14 URIs + 4 templates",
+      prompts: 9,
+      logging: "4 levels, 14 events",
+      sampling: "5 use cases",
+      elicitation: "6 scenarios",
+    },
     availableTools: [
-      "list_token_categories",
-      "get_tokens",
-      "get_token",
-      "list_components",
-      "get_component",
-      "get_component_tokens",
-      "validate_color",
-      "get_component_constraints",
-      "validate_component_usage",
-      "suggest_token",
-      "diff_against_system",
-      "search",
-      "get_schema",
+      // v0.1.0
+      "list_token_categories", "get_tokens", "get_token",
+      "list_components", "get_component", "get_component_tokens",
+      "validate_color", "get_component_constraints", "validate_component_usage",
+      "suggest_token", "diff_against_system", "search", "get_schema",
+      // v0.2.0
+      "list_themes", "get_theme",
+      "list_icons", "get_icon", "search_icons",
+      "check_contrast", "get_accessibility_guidance",
+      "get_component_variants", "get_component_anatomy", "get_component_relationships",
+      "get_layout_guidance", "get_spacing_scale",
+      "get_changelog", "get_deprecations",
+    ],
+    availableResources: [
+      "design-system://tokens",
+      "design-system://tokens/{category}",
+      "design-system://components",
+      "design-system://components/{name}/spec",
+      "design-system://components/{name}/examples",
+      "design-system://themes",
+      "design-system://themes/{name}",
+      "design-system://icons",
+      "design-system://guidelines/accessibility",
+      "design-system://guidelines/layout",
+      "design-system://guidelines/content",
+      "design-system://guidelines/motion",
+      "design-system://changelog",
+      "design-system://changelog/latest",
+      "design-system://deprecations",
+    ],
+    availablePrompts: [
+      "design-system/build-component",
+      "design-system/compose-layout",
+      "design-system/implement-theme",
+      "design-system/review-markup",
+      "design-system/audit-page",
+      "design-system/migrate-deprecated",
+      "design-system/fix-violations",
+      "design-system/explain-component",
+      "design-system/compare-components",
+      "design-system/token-rationale",
     ],
     additionalEndpoints: {
       "GET /demo": "Split-panel chatbot demo UI",
       "POST /api/chat": "OpenRouter-backed agentic chat with MCP tool calling",
-      "GET /prompt-templates": "Pre-built prompt templates for the demo",
+      "GET /prompt-templates": "DEPRECATED in v0.3.0 — use MCP Prompts primitive instead. Retained for backward compatibility.",
       "POST /api/data": "Load custom JSON for a data type (tokens, components, themes, icons)",
       "POST /api/data/reset": "Reset all (or one) data type back to the bundled defaults",
     },
@@ -188,9 +224,14 @@ app.post("/api/data/reset", (req, res) => {
 });
 
 // ── Prompt templates ──────────────────────────────────────────────────────
-// Returns pre-built prompt templates for the demo UI's quick-start chips.
+// DEPRECATED in v0.3.0 — use MCP Prompts primitive instead.
+// This endpoint is retained for backward compatibility but will be removed
+// in a future version. Use the MCP prompts/list and prompts/get methods to
+// enumerate and retrieve prompt templates via any MCP client.
 // ─────────────────────────────────────────────────────────────────────────
 app.get("/prompt-templates", (_req, res) => {
+  res.setHeader("Deprecation", "true");
+  res.setHeader("Link", '</mcp>; rel="successor-version"');
   res.json({
     templates: [
       {
@@ -473,10 +514,25 @@ const OPENROUTER_TOOLS = [
       },
     },
   },
+  // v0.2.0 tools
+  { type: "function", function: { name: "list_themes", description: "List all available themes (e.g. light, dark). Returns theme keys, names, and descriptions.", parameters: { type: "object", properties: {}, required: [] } } },
+  { type: "function", function: { name: "get_theme", description: 'Get full theme definition including all semantic token overrides. Example: "light", "dark".', parameters: { type: "object", properties: { themeName: { type: "string", description: "The theme key." } }, required: ["themeName"] } } },
+  { type: "function", function: { name: "list_icons", description: "List all icons, optionally filtered by category or tag.", parameters: { type: "object", properties: { category: { type: "string" }, tag: { type: "string" } }, required: [] } } },
+  { type: "function", function: { name: "get_icon", description: "Get a single icon by name with metadata, sizes, and usage guidance.", parameters: { type: "object", properties: { iconName: { type: "string", description: "The icon key, e.g. 'arrow-right'." } }, required: ["iconName"] } } },
+  { type: "function", function: { name: "search_icons", description: "Semantic search across the icon set. E.g. 'warning' returns alert-triangle, exclamation-circle.", parameters: { type: "object", properties: { query: { type: "string" }, limit: { type: "number" } }, required: ["query"] } } },
+  { type: "function", function: { name: "check_contrast", description: "Check WCAG 2.1 contrast ratio between foreground and background hex colors. Returns AA/AAA pass/fail.", parameters: { type: "object", properties: { foreground: { type: "string", description: "Foreground hex color, e.g. '#1e293b'." }, background: { type: "string", description: "Background hex color, e.g. '#ffffff'." } }, required: ["foreground", "background"] } } },
+  { type: "function", function: { name: "get_accessibility_guidance", description: "Get per-component accessibility spec: ARIA roles, keyboard interaction, focus order, screen reader expectations.", parameters: { type: "object", properties: { componentName: { type: "string" } }, required: ["componentName"] } } },
+  { type: "function", function: { name: "get_component_variants", description: "List all variants for a component with when-to-use guidance for each.", parameters: { type: "object", properties: { componentName: { type: "string" } }, required: ["componentName"] } } },
+  { type: "function", function: { name: "get_component_anatomy", description: "Get internal structure of a component: named slots, valid children, and composition patterns.", parameters: { type: "object", properties: { componentName: { type: "string" } }, required: ["componentName"] } } },
+  { type: "function", function: { name: "get_component_relationships", description: "Get component relationships: parent, siblings, related components, and composition contexts.", parameters: { type: "object", properties: { componentName: { type: "string" } }, required: ["componentName"] } } },
+  { type: "function", function: { name: "get_layout_guidance", description: "Get layout rules: page gutters, content max-widths, breakpoints, grid columns, and region spacing.", parameters: { type: "object", properties: { context: { type: "string", description: "Optional context, e.g. 'page', 'form', 'dashboard'." } }, required: [] } } },
+  { type: "function", function: { name: "get_spacing_scale", description: "Get the complete spacing scale with semantic usage hints for each step.", parameters: { type: "object", properties: {}, required: [] } } },
+  { type: "function", function: { name: "get_changelog", description: "Get the design system version history, filterable by version range.", parameters: { type: "object", properties: { fromVersion: { type: "string" }, toVersion: { type: "string" } }, required: [] } } },
+  { type: "function", function: { name: "get_deprecations", description: "List all deprecated tokens, components, patterns, and endpoints with migration paths.", parameters: { type: "object", properties: { type: { type: "string", enum: ["token", "component", "endpoint", "all"] } }, required: [] } } },
 ] as const;
 
 const CHAT_SYSTEM_PROMPT =
-  "You are a design system expert assistant. You have access to a design system MCP server with tokens and components. " +
+  "You are a design system expert assistant. You have access to a design system MCP server with tokens, components, themes, icons, and guidelines. " +
   "When the user asks about UI components, colors, spacing, typography, or design tokens, call the appropriate tools to get accurate data from the design system before answering. " +
   "Always use the actual token values and component specs from the tools — never guess or invent values. " +
   "When the user asks you to create, build, design, or show a UI element or component, always include a complete, self-contained HTML snippet " +
@@ -486,7 +542,7 @@ const CHAT_SYSTEM_PROMPT =
 
 // ── Chat endpoint ──────────────────────────────────────────────────────────
 // OpenRouter-backed agentic loop. Calls OpenRouter with the conversation and
-// all 13 design-system tools. Tool calls are executed locally via runMcpTool,
+// all 26 design-system tools. Tool calls are executed locally via runMcpTool,
 // and results are fed back into the loop until the model returns a final answer.
 // ─────────────────────────────────────────────────────────────────────────
 app.post("/api/chat", async (req, res) => {
@@ -637,8 +693,12 @@ if (!isVercel) {
   const PORT = process.env.PORT ?? "3000";
   app.listen(Number(PORT), () => {
     console.log(`\nDesign System MCP server running on http://localhost:${PORT}`);
-    console.log(`  Health check : GET  /`);
-    console.log(`  MCP endpoint : POST /mcp\n`);
+    console.log(`  Health check  : GET  /health`);
+    console.log(`  MCP endpoint  : POST /mcp`);
+    console.log(`  Version       : 0.3.0`);
+    console.log(`  Tools         : 26`);
+    console.log(`  Resources     : 14 URIs + 4 templates`);
+    console.log(`  Prompts       : 9\n`);
   });
 }
 

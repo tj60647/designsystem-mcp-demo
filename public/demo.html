@@ -156,6 +156,50 @@
       margin: 12px 0 4px;
     }
 
+    /* View Schema modal */
+    .schema-modal { width: 620px; }
+    .schema-modal-body {
+      flex: 1; overflow-y: auto; min-height: 200px; max-height: 50vh;
+      background: var(--bg); border: 1px solid var(--border-soft);
+      border-radius: var(--radius-sm);
+    }
+    .schema-modal-state {
+      padding: 16px; font-size: 12px; color: var(--text-dim);
+    }
+    .schema-modal-body pre {
+      margin: 0; padding: 12px 14px;
+      font-family: "SFMono-Regular", Consolas, monospace; font-size: 11.5px;
+      color: var(--text-muted); white-space: pre; overflow-x: auto;
+    }
+    .schema-modal-body pre code { background: none; border: none; padding: 0; }
+
+    /* Validation modal */
+    .validation-modal-body {
+      font-size: 13px; line-height: 1.6; overflow-y: auto; max-height: 55vh;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .validation-status {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px; border-radius: var(--radius-sm);
+      font-weight: 600; font-size: 13px;
+    }
+    .validation-status.valid   { background: rgba(63,185,80,.12); color: var(--green); border: 1px solid rgba(63,185,80,.25); }
+    .validation-status.invalid { background: rgba(248,81,73,.12); color: var(--red);   border: 1px solid rgba(248,81,73,.25); }
+    .validation-status.warning { background: rgba(210,153,34,.12); color: var(--orange); border: 1px solid rgba(210,153,34,.25); }
+    .validation-section-title {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .5px; color: var(--text-muted); margin-bottom: 4px;
+    }
+    .validation-list {
+      list-style: none; display: flex; flex-direction: column; gap: 5px;
+    }
+    .validation-list li {
+      font-size: 12px; padding: 6px 10px;
+      border-radius: var(--radius-sm); line-height: 1.5;
+    }
+    .validation-list.errors li   { background: rgba(248,81,73,.08); color: var(--red); border-left: 3px solid var(--red); }
+    .validation-list.recs li     { background: rgba(210,153,34,.08); color: var(--orange); border-left: 3px solid var(--orange); }
+
     /* ── Main layout ── */
     .main {
       display: flex;
@@ -555,6 +599,7 @@
   <span class="topbar-title">Design System AI</span>
   <span class="mcp-badge">MCP</span>
   <div class="topbar-spacer"></div>
+  <button class="topbar-btn" id="view-schema-btn" title="View and download the JSON schema for any data type">View Schema</button>
   <button class="topbar-btn" id="load-json-btn" title="Replace a data file (tokens, components, themes, icons) with custom JSON">Load JSON</button>
   <button class="topbar-btn" id="reset-btn" title="Reset all data back to bundled defaults">Reset</button>
   <button class="topbar-btn" id="mcp-info-btn" title="How to connect to the MCP server">MCP server</button>
@@ -570,6 +615,7 @@
     <div>
       <label for="modal-type-select">Data type</label>
       <select id="modal-type-select">
+        <option value="design-system">design-system (all)</option>
         <option value="tokens">tokens</option>
         <option value="components">components</option>
         <option value="themes">themes</option>
@@ -587,6 +633,49 @@
     <div class="modal-actions">
       <button class="btn-secondary" id="modal-cancel-btn">Cancel</button>
       <button class="btn-primary" id="modal-submit-btn">Load</button>
+    </div>
+  </div>
+</div>
+
+<!-- View Schema modal -->
+<div class="modal-overlay" id="schema-modal" role="dialog" aria-modal="true" aria-labelledby="schema-modal-title">
+  <div class="modal schema-modal">
+    <div class="modal-header">
+      <span class="modal-title" id="schema-modal-title">View Schema</span>
+      <button class="modal-close" id="schema-modal-close" aria-label="Close">✕</button>
+    </div>
+    <div>
+      <label for="schema-modal-type">Data type</label>
+      <select id="schema-modal-type">
+        <option value="design-system">design-system (all)</option>
+        <option value="tokens">tokens</option>
+        <option value="components">components</option>
+        <option value="themes">themes</option>
+        <option value="icons">icons</option>
+      </select>
+    </div>
+    <div class="schema-modal-body">
+      <div id="schema-modal-loading" class="schema-modal-state">Loading schema…</div>
+      <pre id="schema-modal-pre" style="display:none"><code id="schema-modal-code"></code></pre>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="schema-modal-cancel">Close</button>
+      <button class="btn-primary" id="schema-modal-download">⬇ Download .json</button>
+    </div>
+  </div>
+</div>
+
+<!-- Validation Results modal -->
+<div class="modal-overlay" id="validation-modal" role="dialog" aria-modal="true" aria-labelledby="validation-modal-title">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="validation-modal-title">Validation Results</span>
+      <button class="modal-close" id="validation-modal-close" aria-label="Close">✕</button>
+    </div>
+    <div id="validation-modal-body" class="validation-modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="validation-modal-cancel">Fix &amp; Review</button>
+      <button class="btn-primary" id="validation-modal-load">Load Anyway</button>
     </div>
   </div>
 </div>
@@ -1138,17 +1227,11 @@
       if (schemaCache[dataType]) return schemaCache[dataType];
       try {
         schemaLoading.textContent = "(loading…)";
-        const res = await fetch("/mcp", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            jsonrpc: "2.0", id: 1, method: "tools/call",
-            params: { name: "get_schema", arguments: { dataType } },
-          }),
-        });
-        const data = await res.json();
+        const res = await fetch(`/api/schema/${dataType}`);
         schemaLoading.textContent = "";
-        const text = data?.result?.content?.[0]?.text ?? "";
+        if (!res.ok) return "(could not load schema)";
+        const json = await res.json();
+        const text = JSON.stringify(json, null, 2);
         schemaCache[dataType] = text;
         return text;
       } catch {
@@ -1191,19 +1274,25 @@
         return;
       }
 
+      // Validate before loading — show results modal
       submitBtn.disabled = true;
-      submitBtn.textContent = "Loading…";
+      submitBtn.textContent = "Validating…";
       try {
-        const res = await fetch("/api/data", {
+        const vRes = await fetch("/api/validate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ type: typeSelect.value, data: parsed }),
         });
-        const result = await res.json();
-        if (!res.ok) { alert("Error: " + (result.error ?? "Unknown error")); return; }
-        closeModal();
-        appendMessage("assistant", `✓ ${typeSelect.value} data loaded. MCP tools now reflect the new data.`);
-        scrollToBottom();
+        const vResult = await vRes.json();
+        if (!vRes.ok) { alert("Validation error: " + (vResult.error ?? "Unknown error")); return; }
+
+        if (vResult.valid && vResult.recommendations.length === 0) {
+          // Clean — load immediately without showing the modal
+          await doLoad(parsed, typeSelect.value);
+        } else {
+          // Show the validation results modal; let the user decide
+          openValidationModal(vResult, parsed, typeSelect.value, doLoad);
+        }
       } catch (err) {
         alert("Network error: " + err.message);
       } finally {
@@ -1211,6 +1300,26 @@
         submitBtn.textContent = "Load";
       }
     });
+
+    async function doLoad(data, dataType) {
+      try {
+        const res = await fetch("/api/data", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: dataType, data }),
+        });
+        const result = await res.json();
+        if (!res.ok) { alert("Error: " + (result.error ?? "Unknown error")); return; }
+        closeModal();
+        const msg = dataType === "design-system"
+          ? `✓ Design system data loaded (${result.loaded?.join(", ") ?? "all"}). MCP tools now reflect the new data.`
+          : `✓ ${dataType} data loaded. MCP tools now reflect the new data.`;
+        appendMessage("assistant", msg);
+        scrollToBottom();
+      } catch (err) {
+        alert("Network error: " + err.message);
+      }
+    }
 
     resetBtn.addEventListener("click", async () => {
       if (!confirm("Reset all design system data back to bundled defaults?")) return;
@@ -1234,10 +1343,171 @@
     });
   }
 
+  // ── View Schema modal ──────────────────────────────────────────────────
+  function initViewSchemaModal() {
+    const overlay      = document.getElementById("schema-modal");
+    const typeSelect   = document.getElementById("schema-modal-type");
+    const loading      = document.getElementById("schema-modal-loading");
+    const pre          = document.getElementById("schema-modal-pre");
+    const code         = document.getElementById("schema-modal-code");
+    const closeBtn     = document.getElementById("schema-modal-close");
+    const cancelBtn    = document.getElementById("schema-modal-cancel");
+    const downloadBtn  = document.getElementById("schema-modal-download");
+    const openBtn      = document.getElementById("view-schema-btn");
+
+    const schemaCache = {};
+    let currentSchema = null;
+
+    async function loadSchema(dataType) {
+      if (schemaCache[dataType]) {
+        currentSchema = schemaCache[dataType];
+        showSchema(currentSchema);
+        return;
+      }
+      loading.style.display = "";
+      pre.style.display = "none";
+      try {
+        const res = await fetch(`/api/schema/${dataType}`);
+        if (!res.ok) throw new Error(await res.text());
+        const json = await res.json();
+        const formatted = JSON.stringify(json, null, 2);
+        schemaCache[dataType] = { json, formatted };
+        currentSchema = schemaCache[dataType];
+        showSchema(currentSchema);
+      } catch (err) {
+        loading.textContent = "Could not load schema: " + err.message;
+      }
+    }
+
+    function showSchema({ formatted }) {
+      code.textContent = formatted;
+      loading.style.display = "none";
+      pre.style.display = "";
+    }
+
+    async function openModal() {
+      loading.textContent = "Loading schema…";
+      loading.style.display = "";
+      pre.style.display = "none";
+      currentSchema = null;
+      overlay.classList.add("open");
+      await loadSchema(typeSelect.value);
+    }
+
+    function closeModal() { overlay.classList.remove("open"); }
+
+    typeSelect.addEventListener("change", () => loadSchema(typeSelect.value));
+
+    downloadBtn.addEventListener("click", () => {
+      if (!currentSchema) return;
+      const blob = new Blob([currentSchema.formatted], { type: "application/json" });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href     = url;
+      a.download = `${typeSelect.value}.schema.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    openBtn.addEventListener("click", openModal);
+    closeBtn.addEventListener("click", closeModal);
+    cancelBtn.addEventListener("click", closeModal);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && overlay.classList.contains("open")) closeModal(); });
+  }
+
+  // ── Validation Results modal ─────────────────────────────────────────────
+  function initValidationModal() {
+    const overlay     = document.getElementById("validation-modal");
+    const body        = document.getElementById("validation-modal-body");
+    const closeBtn    = document.getElementById("validation-modal-close");
+    const cancelBtn   = document.getElementById("validation-modal-cancel");
+    const loadBtn     = document.getElementById("validation-modal-load");
+
+    let pendingData = null;
+    let pendingType = null;
+    let pendingLoadFn = null;
+
+    window.openValidationModal = function(result, data, dataType, loadFn) {
+      pendingData = data;
+      pendingType = dataType;
+      pendingLoadFn = loadFn;
+
+      body.innerHTML = "";
+
+      // Status banner
+      const status = document.createElement("div");
+      status.className = "validation-status " + (result.valid ? (result.recommendations.length ? "warning" : "valid") : "invalid");
+      if (!result.valid) {
+        status.textContent = `✗ ${result.errors.length} error${result.errors.length !== 1 ? "s" : ""} found — JSON does not fully match the ${dataType === "design-system" ? "design-system" : dataType} schema.`;
+      } else if (result.recommendations.length) {
+        status.textContent = `⚠ JSON is structurally valid with ${result.recommendations.length} recommendation${result.recommendations.length !== 1 ? "s" : ""}.`;
+      } else {
+        status.textContent = "✓ JSON is valid.";
+      }
+      body.appendChild(status);
+
+      // Errors
+      if (result.errors.length) {
+        const title = document.createElement("div");
+        title.className = "validation-section-title";
+        title.textContent = "Errors";
+        body.appendChild(title);
+
+        const ul = document.createElement("ul");
+        ul.className = "validation-list errors";
+        for (const err of result.errors) {
+          const li = document.createElement("li");
+          li.textContent = err;
+          ul.appendChild(li);
+        }
+        body.appendChild(ul);
+      }
+
+      // Recommendations
+      if (result.recommendations.length) {
+        const title = document.createElement("div");
+        title.className = "validation-section-title";
+        title.textContent = "Recommendations";
+        body.appendChild(title);
+
+        const ul = document.createElement("ul");
+        ul.className = "validation-list recs";
+        for (const rec of result.recommendations) {
+          const li = document.createElement("li");
+          li.textContent = rec;
+          ul.appendChild(li);
+        }
+        body.appendChild(ul);
+      }
+
+      // Update Load Anyway label
+      loadBtn.textContent = result.valid ? "Load" : "Load Anyway";
+
+      overlay.classList.add("open");
+    };
+
+    function closeModal() { overlay.classList.remove("open"); }
+
+    loadBtn.addEventListener("click", async () => {
+      closeModal();
+      if (pendingLoadFn) {
+        await pendingLoadFn(pendingData, pendingType);
+      }
+    });
+
+    closeBtn.addEventListener("click", closeModal);
+    cancelBtn.addEventListener("click", closeModal);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && overlay.classList.contains("open")) closeModal(); });
+  }
+
   // ── Boot ───────────────────────────────────────────────────────────────
   loadTemplates();
   initInfoModals();
   initLoadJsonModal();
+  initViewSchemaModal();
+  initValidationModal();
 </script>
 </body>
 </html>

@@ -19,7 +19,7 @@ import { dirname, join } from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
 
-export type DataType = "tokens" | "components" | "themes" | "icons";
+export type DataType = "tokens" | "components" | "themes" | "icons" | "changelog" | "deprecations";
 
 function loadJson(filename: string): unknown {
   return JSON.parse(readFileSync(join(__dirname, "data", filename), "utf-8"));
@@ -27,10 +27,12 @@ function loadJson(filename: string): unknown {
 
 // The active data for each type — replaced by setData(), restored by resetData().
 const store: Record<DataType, unknown> = {
-  tokens:     loadJson("tokens.json"),
-  components: loadJson("components.json"),
-  themes:     loadJson("themes.json"),
-  icons:      loadJson("icons.json"),
+  tokens:       loadJson("tokens.json"),
+  components:   loadJson("components.json"),
+  themes:       loadJson("themes.json"),
+  icons:        loadJson("icons.json"),
+  changelog:    loadJson("changelog.json"),
+  deprecations: loadJson("deprecations.json"),
 };
 
 /** Return the active data for the given type. */
@@ -51,7 +53,7 @@ export function resetData(type?: DataType): void {
   if (type) {
     store[type] = loadJson(`${type}.json`);
   } else {
-    (["tokens", "components", "themes", "icons"] as DataType[]).forEach((t) => {
+    (["tokens", "components", "themes", "icons", "changelog", "deprecations"] as DataType[]).forEach((t) => {
       store[t] = loadJson(`${t}.json`);
     });
   }

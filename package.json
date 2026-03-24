@@ -1,6 +1,6 @@
 {
   "name": "designsystem-mcp-demo",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Design System MCP — a queryable context layer that makes design systems machine-readable and usable by AI",
   "author": "Thomas J McLeish",
   "license": "MIT",

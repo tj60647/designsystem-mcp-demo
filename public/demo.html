@@ -919,6 +919,23 @@
       .tools-section { max-height: 140px; }
       .comp-detail { max-height: 55%; }
     }
+
+    /* Preview rendered indicator — replaces html code blocks in chat bubbles */
+    .preview-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(47,129,247,.08);
+      border: 1px solid rgba(47,129,247,.25);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 12px;
+      color: var(--accent);
+      font-style: normal;
+      margin: 4px 0;
+      vertical-align: middle;
+    }
+    .preview-indicator::before { content: "◈"; font-size: 11px; opacity: .8; }
   </style>
 </head>
 <body>
@@ -1430,8 +1447,8 @@
       modelBadge.style.display = "";
     }
 
-    // Extract the first ```html ... ``` block
-    const htmlMatch = text.match(/```html\n([\s\S]*?)```/);
+    // Extract the first ```html ... ``` block (tolerates \r\n, trailing spaces, any casing)
+    const htmlMatch = text.match(/```html[ \t]*\r?\n([\s\S]*?)```/i);
     currentHtmlCode = htmlMatch ? htmlMatch[1].trim() : null;
     showingCode = false;
 
@@ -1528,7 +1545,12 @@
 
   // ── Simple Markdown renderer ────────────────────────────────────────────
   function renderMarkdown(text) {
-    let html = escapeHtml(text);
+    // Strip ```html ... ``` blocks before markdown processing — those go to the Live Preview
+    // panel, not the chat bubble. Replace each one with a subtle pill indicator.
+    const PREVIEW_MARKER = "\x00PREVIEW\x00";
+    const stripped = text.replace(/```html[ \t]*\r?\n[\s\S]*?```/gi, PREVIEW_MARKER);
+
+    let html = escapeHtml(stripped);
 
     // Headings
     html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
@@ -1560,8 +1582,15 @@
       const trimmed = line.trim();
       if (!trimmed) return "";
       if (/^<(h[1-3]|ul|ol|li|pre|hr)/.test(trimmed)) return trimmed;
+      // Preserve the preview marker line as-is so we can replace it below
+      if (trimmed === PREVIEW_MARKER) return PREVIEW_MARKER;
       return `<p>${trimmed}</p>`;
     }).filter(Boolean).join("\n");
+
+    // Replace the preview marker with a styled pill indicator
+    html = html.split(PREVIEW_MARKER).join(
+      '<span class="preview-indicator">UI rendered in Live Preview →</span>'
+    );
 
     return html;
   }

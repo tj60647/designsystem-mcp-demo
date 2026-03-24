@@ -829,11 +829,20 @@ const OPENROUTER_TOOLS = [
 const CHAT_SYSTEM_PROMPT =
   "You are a design system expert assistant. You have access to a design system MCP server with tokens, components, themes, icons, and guidelines. " +
   "When the user asks about UI components, colors, spacing, typography, or design tokens, call the appropriate tools to get accurate data from the design system before answering. " +
-  "Always use the actual token values and component specs from the tools — never guess or invent values. " +
-  "When the user asks you to create, build, design, or show a UI element or component, always include a complete, self-contained HTML snippet " +
-  "in a fenced html code block (opening fence: three backticks followed by html) that can be rendered directly in a browser. " +
-  "The HTML snippet must use inline styles only (no external stylesheets) and apply the exact token values (colors, spacing, font sizes, etc.) " +
-  "returned by the MCP tools. Include only the component markup — no html, head, or body wrappers.\n\n" +
+  "Always use the actual token values and component specs from the tools — never guess or invent values.\n\n" +
+  "## Response structure\n" +
+  "Every response has two clearly separated parts:\n\n" +
+  "**CHAT PART** (always present): A plain prose explanation — what the component is, which tokens are applied, any design rationale. " +
+  "This is what the user reads in the chat. Do NOT include any code here.\n\n" +
+  "**LIVE VIEW PART** (only when generating UI): A single fenced ```html code block placed at the very end of the response, " +
+  "after all prose. This block is automatically extracted and rendered in the Live Preview panel — the user will NOT see it as raw code in the chat. " +
+  "Rules for the html block:\n" +
+  "  • Use inline styles only (no external stylesheets).\n" +
+  "  • Apply exact token values returned by the MCP tools.\n" +
+  "  • Include only the component markup — no <html>, <head>, or <body> wrappers.\n" +
+  "  • The block must appear at the very end, after all explanation text.\n" +
+  "  • Do not include more than one html code block per response.\n\n" +
+  "If the user is only asking a question (no UI generation), omit the html block entirely.\n\n" +
   "You also help users create brand-new design systems through conversation. " +
   "When a user wants to generate a design system:\n" +
   "1. Gather their brand name, product type, aesthetic direction (e.g. modern/minimal, playful, professional, trustworthy, bold), primary color(s), secondary color(s), and typography style preferences.\n" +
@@ -888,6 +897,9 @@ app.post("/api/chat", async (req, res) => {
 
   try {
     for (let i = 0; i < MAX_ITERATIONS; i++) {
+      console.log(`[chat] iteration=${i} model=${model} messages=${loopMessages.length}`);
+      console.log("[chat:prompt]", JSON.stringify(loopMessages, null, 2));
+
       const orResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -947,6 +959,8 @@ app.post("/api/chat", async (req, res) => {
 
           if (!toolCallsUsed.includes(toolName)) toolCallsUsed.push(toolName);
 
+          console.log(`[chat:tool] calling ${toolName}`, JSON.stringify(toolArgs));
+
           let toolResult: string;
 
           // ── Special handling: generate_design_system ───────────────────
@@ -994,6 +1008,7 @@ app.post("/api/chat", async (req, res) => {
             name: toolName,
             content: toolResult,
           });
+          console.log(`[chat:tool] result for ${toolName}:`, toolResult.slice(0, 500));
         }
         // Continue loop to let the model process tool results
         continue;
@@ -1001,6 +1016,7 @@ app.post("/api/chat", async (req, res) => {
 
       // No tool calls — return the final answer
       const responseText = assistantMessage.content ?? "";
+      console.log("[chat:response]", responseText.slice(0, 300));
       res.json({ response: responseText, model, toolCallsUsed, generatedDesignSystem: generatedDesignSystemData });
       return;
     }

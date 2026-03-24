@@ -428,3 +428,74 @@ test.describe("Gallery Refresh button", () => {
     await expect(page.locator("#gallery-body")).not.toContainText("Loading", { timeout: 5000 });
   });
 });
+
+test.describe("View Agents button", () => {
+  test("opens the View Agents modal", async ({ page }) => {
+    await openDemo(page);
+    await page.click("#view-agents-btn");
+    await expect(page.locator("#agents-modal")).toHaveClass(/open/);
+  });
+
+  test("modal shows agent name on Config tab", async ({ page }) => {
+    await openDemo(page);
+    await page.click("#view-agents-btn");
+    // Wait for the agent info to load
+    await expect(page.locator("#agents-modal-body")).not.toContainText("Loading agent info", { timeout: 5000 });
+    await expect(page.locator("#agents-modal-body")).toContainText("Chat Assistant");
+  });
+
+  test("System Prompt tab shows the system instructions", async ({ page }) => {
+    await openDemo(page);
+    await page.click("#view-agents-btn");
+    await expect(page.locator("#agents-modal-body")).not.toContainText("Loading agent info", { timeout: 5000 });
+    await page.click(".agents-tab[data-tab='prompt']");
+    // The system prompt should contain the JSON format instruction
+    await expect(page.locator("#agents-modal-body")).toContainText("message");
+  });
+
+  test("Tools tab lists MCP tool names", async ({ page }) => {
+    await openDemo(page);
+    await page.click("#view-agents-btn");
+    await expect(page.locator("#agents-modal-body")).not.toContainText("Loading agent info", { timeout: 5000 });
+    await page.click(".agents-tab[data-tab='tools']");
+    await expect(page.locator("#agents-modal-body")).toContainText("get_tokens");
+  });
+
+  test("System Diagram tab renders the flow diagram", async ({ page }) => {
+    await openDemo(page);
+    await page.click("#view-agents-btn");
+    await expect(page.locator("#agents-modal-body")).not.toContainText("Loading agent info", { timeout: 5000 });
+    await page.click(".agents-tab[data-tab='diagram']");
+    await expect(page.locator(".diagram")).toBeVisible();
+    await expect(page.locator(".diagram")).toContainText("User Input");
+    await expect(page.locator(".diagram")).toContainText("Live Preview");
+  });
+
+  test("modal closes via × button", async ({ page }) => {
+    await openDemo(page);
+    await page.click("#view-agents-btn");
+    await page.click("#agents-modal-close");
+    await expect(page.locator("#agents-modal")).not.toHaveClass(/open/);
+  });
+
+  test("modal closes via Escape key", async ({ page }) => {
+    await openDemo(page);
+    await page.click("#view-agents-btn");
+    await page.keyboard.press("Escape");
+    await expect(page.locator("#agents-modal")).not.toHaveClass(/open/);
+  });
+});
+
+test.describe("Load JSON — drag-and-drop zone", () => {
+  test("drop zone is visible inside the Load JSON modal", async ({ page }) => {
+    await openDemo(page);
+    await page.click("#load-json-btn");
+    await expect(page.locator("#modal-drop-zone")).toBeVisible();
+  });
+
+  test("file input element is present", async ({ page }) => {
+    await openDemo(page);
+    await page.click("#load-json-btn");
+    await expect(page.locator("#modal-file-input")).toBeAttached();
+  });
+});

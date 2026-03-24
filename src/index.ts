@@ -848,6 +848,35 @@ const CHAT_SYSTEM_PROMPT =
   "3. Once you have enough information (typically after 2–4 exchanges), call the generate_design_system tool with a comprehensive, detailed description.\n" +
   "4. After the tool returns success, briefly summarise what was generated and tell the user it has been loaded and is ready to explore.";
 
+// ── Agent info endpoint ───────────────────────────────────────────────────
+// Returns a machine-readable description of the chat agent's configuration:
+// its name, the exact system instructions it receives, the model in use,
+// agentic loop parameters, and the full set of MCP tools it can call.
+// Used by the "View Agents" modal in the demo UI.
+// ─────────────────────────────────────────────────────────────────────────
+app.get("/api/agent-info", (_req, res) => {
+  res.json({
+    agents: [
+      {
+        name: "Chat Assistant",
+        description: "OpenRouter-backed agentic loop that calls MCP tools to ground answers in live design system data.",
+        model: process.env.OPENROUTER_MODEL ?? "openai/gpt-oss-20b:nitro",
+        parameters: {
+          maxIterations: 8,
+          toolChoice: "auto",
+          endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
+        },
+        systemPrompt: CHAT_SYSTEM_PROMPT,
+        tools: OPENROUTER_TOOLS.map((t) => ({
+          name: t.function.name,
+          description: t.function.description,
+          parameters: t.function.parameters,
+        })),
+      },
+    ],
+  });
+});
+
 // ── Chat endpoint ──────────────────────────────────────────────────────────
 // OpenRouter-backed agentic loop. Calls OpenRouter with the conversation and
 // all 26 design-system tools. Tool calls are executed locally via runMcpTool,

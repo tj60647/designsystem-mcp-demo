@@ -9,17 +9,26 @@ import { test, expect, Page } from "@playwright/test";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
+/** Shape of the structured JSON the server now returns from /api/chat. */
+interface ChatApiResponse {
+  message: string;
+  preview?: string | null;
+  model?: string;
+  toolCallsUsed?: string[];
+  generatedDesignSystem?: unknown;
+}
+
 /** Intercept /api/chat and return a controlled assistant response. */
-async function mockChat(page: Page, responseText: string) {
+async function mockChat(page: Page, payload: ChatApiResponse) {
   await page.route("/api/chat", (route) =>
     route.fulfill({
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({
-        response: responseText,
-        model: "test-model",
         toolCallsUsed: ["get_tokens"],
         generatedDesignSystem: null,
+        model: "test-model",
+        ...payload,
       }),
     })
   );
@@ -41,29 +50,22 @@ async function sendMessage(page: Page, text: string) {
 
 test.describe("Send button", () => {
   test("sends message and displays assistant response in chat", async ({ page }) => {
-    await mockChat(page, "Here are the primary color tokens from the design system.");
+    await mockChat(page, { message: "Here are the primary color tokens from the design system." });
     await openDemo(page);
 
     await sendMessage(page, "What are the primary colors?");
 
-    // The assistant message should appear in the chat
     const msgs = page.locator(".msg.assistant .msg-bubble");
     await expect(msgs.last()).toContainText("primary color tokens");
   });
 
   test("shows loading indicator while waiting for response", async ({ page }) => {
-    // Delay the route so we can check the loading state
     await page.route("/api/chat", async (route) => {
       await new Promise((r) => setTimeout(r, 300));
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify({
-          response: "Done.",
-          model: "test-model",
-          toolCallsUsed: [],
-          generatedDesignSystem: null,
-        }),
+        body: JSON.stringify({ message: "Done.", model: "test-model", toolCallsUsed: [] }),
       });
     });
     await openDemo(page);
@@ -71,9 +73,7 @@ test.describe("Send button", () => {
     await page.fill("#user-input", "hello");
     await page.click("#send-btn");
 
-    // Loading dots should appear briefly
     await expect(page.locator(".loading-bubble")).toBeVisible();
-    // Then disappear once the response arrives
     await expect(page.locator(".loading-bubble")).not.toBeVisible({ timeout: 5000 });
   });
 
@@ -83,7 +83,7 @@ test.describe("Send button", () => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify({ response: "OK", model: "m", toolCallsUsed: [], generatedDesignSystem: null }),
+        body: JSON.stringify({ message: "OK", model: "m", toolCallsUsed: [] }),
       });
     });
     await openDemo(page);
@@ -108,48 +108,41 @@ test.describe("Send button", () => {
 });
 
 test.describe("Send button — two-part response (chat + live preview)", () => {
-  const HTML_RESPONSE = `Here is a primary button using your design tokens.
+  const PREVIEW_HTML = `<button style="background:#2f81f7;color:#fff;padding:8px 16px;border:none;border-radius:4px;cursor:pointer;">Primary</button>`;
 
-\`\`\`html
-<button style="background:#2f81f7;color:#fff;padding:8px 16px;border:none;border-radius:4px;cursor:pointer;">Primary</button>
-\`\`\``;
-
-  test("renders HTML block in the live preview iframe", async ({ page }) => {
-    await mockChat(page, HTML_RESPONSE);
+  test("renders preview HTML in the live preview iframe", async ({ page }) => {
+    await mockChat(page, { message: "Here is a primary button.", preview: PREVIEW_HTML });
     await openDemo(page);
 
     await sendMessage(page, "Show me a primary button");
 
-    // Preview iframe should appear
     await expect(page.locator(".preview-iframe")).toBeVisible({ timeout: 5000 });
   });
 
-  test("shows preview indicator pill in chat bubble, not raw code", async ({ page }) => {
-    await mockChat(page, HTML_RESPONSE);
+  test("shows only prose in chat bubble — no raw HTML code", async ({ page }) => {
+    await mockChat(page, { message: "Here is a primary button.", preview: PREVIEW_HTML });
     await openDemo(page);
 
     await sendMessage(page, "Show me a primary button");
 
     const lastBubble = page.locator(".msg.assistant .msg-bubble").last();
-    // The prose part should be present
     await expect(lastBubble).toContainText("primary button");
-    // The raw code block must NOT appear in the chat bubble
-    await expect(lastBubble).not.toContainText("```html");
-    // The preview indicator pill should be visible
-    await expect(lastBubble.locator(".preview-indicator")).toBeVisible();
+    // No raw markup should appear in the chat bubble
+    await expect(lastBubble).not.toContainText("<button");
+    await expect(lastBubble).not.toContainText("```");
   });
 
-  test("shows 'Show Code' toggle button when HTML was generated", async ({ page }) => {
-    await mockChat(page, HTML_RESPONSE);
+  test("shows 'Show Code' toggle button when preview HTML is present", async ({ page }) => {
+    await mockChat(page, { message: "Here is a card.", preview: `<div style="padding:16px;border:1px solid #ddd;">Card</div>` });
     await openDemo(page);
 
-    await sendMessage(page, "Build a button");
+    await sendMessage(page, "Build a card");
 
     await expect(page.locator("#code-toggle-btn")).toBeVisible({ timeout: 5000 });
   });
 
-  test("shows empty-state placeholder when response has no HTML", async ({ page }) => {
-    await mockChat(page, "The primary color token is color.primary.500.");
+  test("shows empty-state placeholder when no preview is returned", async ({ page }) => {
+    await mockChat(page, { message: "The primary color token is color.primary.500." });
     await openDemo(page);
 
     await sendMessage(page, "What is the primary color?");
@@ -160,10 +153,8 @@ test.describe("Send button — two-part response (chat + live preview)", () => {
 });
 
 test.describe("Show Code / Show Preview toggle button", () => {
-  const HTML_RESPONSE = `Here is a card component.\n\`\`\`html\n<div style="padding:16px;border:1px solid #ddd;">Card</div>\n\`\`\``;
-
   test("toggles from preview to code view and back", async ({ page }) => {
-    await mockChat(page, HTML_RESPONSE);
+    await mockChat(page, { message: "Here is a card.", preview: `<div style="padding:16px;border:1px solid #ddd;">Card</div>` });
     await openDemo(page);
     await sendMessage(page, "Create a card");
     await expect(page.locator(".preview-iframe")).toBeVisible({ timeout: 5000 });
@@ -179,6 +170,79 @@ test.describe("Show Code / Show Preview toggle button", () => {
     await expect(page.locator("#code-toggle-btn")).toHaveText("Show Code");
     await expect(page.locator(".preview-iframe")).toBeVisible();
     await expect(page.locator(".code-view")).not.toBeVisible();
+  });
+});
+
+test.describe("Quick start chip buttons", () => {
+  test("chips are rendered from the /prompt-templates endpoint", async ({ page }) => {
+    await openDemo(page);
+    const chips = page.locator(".chip");
+    await expect(chips.first()).toBeVisible({ timeout: 5000 });
+    const count = await chips.count();
+    expect(count).toBeGreaterThan(0);
+  });
+
+  test("clicking a chip submits its prompt as a user message", async ({ page }) => {
+    await mockChat(page, { message: "Here are the primary colors." });
+    await openDemo(page);
+
+    const chips = page.locator(".chip");
+    await chips.first().waitFor({ state: "visible", timeout: 5000 });
+    await chips.first().click();
+
+    // A user message bubble should appear (the chip's prompt text)
+    await expect(page.locator(".msg.user .msg-bubble").last()).toBeVisible({ timeout: 5000 });
+  });
+
+  test("clicking a chip clears the input field after sending", async ({ page }) => {
+    await mockChat(page, { message: "Done." });
+    await openDemo(page);
+
+    const chips = page.locator(".chip");
+    await chips.first().waitFor({ state: "visible", timeout: 5000 });
+    await chips.first().click();
+
+    // Input should be empty after sending
+    await expect(page.locator("#user-input")).toHaveValue("");
+  });
+
+  test("clicking the 'Create a login form' chip renders a preview", async ({ page }) => {
+    await mockChat(page, {
+      message: "Here is a login form using your design tokens.",
+      preview: `<form style="display:flex;flex-direction:column;gap:10px;padding:18px;"><input type="email" placeholder="Email"/><input type="password" placeholder="Password"/><button type="submit">Sign in</button></form>`,
+    });
+    await openDemo(page);
+
+    const loginChip = page.locator(".chip", { hasText: "Create a login form" });
+    await loginChip.waitFor({ state: "visible", timeout: 5000 });
+    await loginChip.click();
+
+    await expect(page.locator(".preview-iframe")).toBeVisible({ timeout: 5000 });
+  });
+
+  test("clicking a non-UI chip (e.g. 'List primary colors') shows the empty preview state", async ({ page }) => {
+    await mockChat(page, { message: "The primary colors are color.primary.500 and color.primary.600." });
+    await openDemo(page);
+
+    const colorsChip = page.locator(".chip", { hasText: "List primary colors" });
+    await colorsChip.waitFor({ state: "visible", timeout: 5000 });
+    await colorsChip.click();
+
+    await expect(page.locator(".preview-empty")).toBeVisible({ timeout: 5000 });
+  });
+
+  test("each chip title matches its corresponding prompt-template entry", async ({ page }) => {
+    await openDemo(page);
+    // Fetch expected titles from the server
+    const templateRes = await page.request.get("/prompt-templates");
+    const body = await templateRes.json();
+    const templates = Array.isArray(body?.templates) ? (body.templates as Array<{ title?: unknown }>) : [];
+    const expectedTitles = templates.flatMap((t) => (typeof t.title === "string" ? [t.title] : []));
+    expect(expectedTitles.length).toBeGreaterThan(0);
+
+    for (const title of expectedTitles) {
+      await expect(page.locator(".chip", { hasText: title })).toBeVisible({ timeout: 5000 });
+    }
   });
 });
 
@@ -241,7 +305,6 @@ test.describe("View Schema button", () => {
     await openDemo(page);
     await page.click("#view-schema-btn");
     await expect(page.locator("#schema-modal")).toHaveClass(/open/);
-    // Schema content should load
     await expect(page.locator("#schema-modal-pre")).toBeVisible({ timeout: 5000 });
   });
 
@@ -286,7 +349,6 @@ test.describe("Load JSON button", () => {
     await page.click("#load-json-btn");
     page.once("dialog", (dialog) => dialog.accept());
     await page.click("#modal-submit-btn");
-    // Modal should stay open since the input is empty
     await expect(page.locator("#load-json-modal")).toHaveClass(/open/);
   });
 });
@@ -297,7 +359,7 @@ test.describe("Reset button", () => {
     let dialogMessage = "";
     page.once("dialog", (dialog) => {
       dialogMessage = dialog.message();
-      dialog.dismiss(); // cancel
+      dialog.dismiss();
     });
     await page.click("#reset-btn");
     expect(dialogMessage).toContain("Reset");
@@ -305,7 +367,7 @@ test.describe("Reset button", () => {
 
   test("resets data and shows confirmation message when confirmed", async ({ page }) => {
     await openDemo(page);
-    page.once("dialog", (dialog) => dialog.accept()); // confirm
+    page.once("dialog", (dialog) => dialog.accept());
     await page.click("#reset-btn");
     const msgs = page.locator(".msg.assistant .msg-bubble");
     await expect(msgs.last()).toContainText("reset to bundled defaults", { timeout: 5000 });
@@ -345,10 +407,8 @@ test.describe("Explorer Refresh button", () => {
   test("clicking Refresh re-loads the component list", async ({ page }) => {
     await openDemo(page);
     await page.click("#tab-explorer");
-    // Wait for initial load
     await expect(page.locator("#explorer-body")).not.toContainText("Loading", { timeout: 5000 });
     await page.click("#explorer-refresh-btn");
-    // After refresh the explorer body should re-populate
     await expect(page.locator("#explorer-body")).not.toContainText("Loading", { timeout: 5000 });
   });
 });

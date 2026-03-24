@@ -111,6 +111,94 @@ All tool, resource, and prompt handlers read from `src/dataStore.ts` via `getDat
 
 ---
 
+## v0.3.1 — Component Explorer UI
+
+### Demo UI Enhancements
+- [x] `GET /api/data/:type` — New REST endpoint serving active data to the browser (used by Component Explorer)
+- [x] `public/demo.html` — Added right-column tab bar: **Live Preview** | **Component Explorer**
+- [x] Component Explorer grid — card-based gallery of all loaded components with variant and size chips
+- [x] Component detail drawer — tabbed detail view (Overview, Props, Anatomy, Tokens, Accessibility)
+- [x] Explorer auto-reloads when new JSON is loaded or data is reset
+- [x] Filter bar for searching components by name or description
+- [x] `public/sample-design-system.json` — New "Verdigris" design system sample using the current schema (tokens + 6 components + 3 themes + 17 icons)
+- [x] `src/index.ts` — `GET /demo` endpoint description updated; health endpoint includes new REST endpoint
+
+---
+
+## v0.4.0 — Tasks & Persistent Server (Planned)
+
+### Background Tasks
+- [ ] `batch_validate` — Validate multiple components/tokens in a single long-running task
+- [ ] `full_audit` — Comprehensive design system audit with accessibility + deprecation + token compliance
+- [ ] `large_scale_diff` — Diff two design system snapshots across tokens, components, themes
+- [ ] `theme_migration` — Migrate a codebase from one theme to another
+- [ ] `cross_reference_report` — Generate a cross-reference of all token usages across components
+
+Requires:
+1. Persistent task state store (in-memory Map or Redis) across requests
+2. Background worker threads for long-running operations
+3. `/api/tasks/{id}` REST endpoint for polling from the demo UI
+
+### Resource Subscriptions
+- [ ] SSE-based persistent transport for push notifications when data changes
+- [ ] `POST /api/data` triggers subscription notifications to connected clients
+
+---
+
+## v0.5.0 — AI-Generated Design Systems (Planned)
+
+This milestone enables users to generate a complete design system from a natural-language prompt or an existing website URL — dramatically reducing the time-to-first-load for the MCP server.
+
+### Approach A: Prompt-to-Design-System
+
+Users describe their brand and product in plain language. An LLM generates a valid `design-system.json` conforming to the current schema.
+
+**Planned flow:**
+1. User submits a prompt (e.g., _"A fintech app with a clean, trustworthy aesthetic — navy and gold palette, geometric sans-serif type"_) via a new UI panel or CLI command.
+2. The server calls the LLM (via `/api/chat` or a new `/api/generate` endpoint) with:
+   - The full `design-system` JSON schema (retrieved via `GET /api/schema/design-system`)
+   - A system prompt instructing the model to emit valid JSON matching the schema
+   - The user's brand prompt as the generation target
+3. The LLM response is parsed and validated against the schema via the existing `validateAgainstSchema()` function.
+4. If valid (or warnings only), the generated design system is loaded via `POST /api/data`.
+5. The Component Explorer immediately reflects the generated system.
+
+**Implementation tasks:**
+- [ ] `POST /api/generate` — New endpoint accepting `{ prompt: string, style?: object }`, returning a generated `design-system.json`
+- [ ] `src/generator.ts` — Generation logic: schema injection → LLM call → parse → validate → return
+- [ ] Demo UI — New **Generate** tab or button in the Load JSON modal: textarea prompt → Generate button → preview + load
+- [ ] Streaming support — Stream token generation to the UI for perceived responsiveness
+- [ ] Retry logic — If validation fails, re-prompt the LLM with error messages (up to 3 retries)
+
+### Approach B: Website-to-Design-System
+
+Users provide a URL. The system extracts visual design tokens from the live website and generates a matching design system.
+
+**Planned flow:**
+1. User submits a URL (e.g., `https://stripe.com`).
+2. A headless browser (Puppeteer/Playwright) visits the URL and:
+   - Extracts computed CSS custom properties and frequently-used colour/font/spacing values
+   - Captures computed styles from key elements (headings, body text, buttons, cards)
+   - Optionally takes a screenshot for colour palette extraction
+3. Extracted values are normalised into token categories (color, typography, spacing, etc.)
+4. An LLM receives the extracted values + the schema + a synthesis prompt to produce coherent, named design tokens and component specs.
+5. The result is validated and loaded, same as Approach A.
+
+**Implementation tasks:**
+- [ ] `scripts/extract-tokens-from-url.mjs` — Headless browser script to extract CSS values from a URL
+- [ ] `POST /api/generate/from-url` — Endpoint accepting `{ url: string }`, orchestrating extraction + generation
+- [ ] Colour palette deduplication — Group near-identical colours using delta-E distance
+- [ ] Typography stack inference — Map extracted font families to known system-safe stacks
+- [ ] Demo UI — URL input field alongside the prompt textarea in the Generate panel
+
+### Shared Infrastructure
+- [ ] Token value normalisation utilities — Convert hex/rgb/hsl to a common format; round spacing to the nearest 4px step
+- [ ] Schema-aware prompt templates for each data type — Ensures the LLM output matches the expected leaf-node shape
+- [ ] Generation history — Store and name generated design systems in browser `localStorage` for quick switching
+- [ ] Export button — Download the generated `design-system.json` for use outside the demo UI
+
+---
+
 ## What Was NOT Implemented
 
 ### Sampling & Elicitation (Architecture Decision)
@@ -123,13 +211,7 @@ Sampling (`sampling/createMessage`) and Elicitation (`elicitation/create`) requi
 **Decision:** Logging is fully implemented. Sampling and Elicitation are documented in this plan and the spec but not wired into specific tool paths, as they would silently fail in the current stateless architecture without providing value.
 
 ### Tasks (Experimental)
-The SDK's `server.experimental.tasks.registerToolTask()` API is available and functional. Task-eligible operations (`batch_validate`, `full_audit`, `large_scale_diff`, `theme_migration`, `cross_reference_report`) are defined in the spec but require:
-
-1. Persistent task state store (in-memory Map or Redis) across requests
-2. Background worker threads for long-running operations
-3. A `/api/tasks/{id}` REST endpoint for polling from the demo UI
-
-These are intentionally scoped out of v0.3.0 as they require significant infrastructure beyond the stateless server model. They are tracked for a future v0.4.0 milestone.
+The SDK's `server.experimental.tasks.registerToolTask()` API is available and functional. Task-eligible operations (`batch_validate`, `full_audit`, `large_scale_diff`, `theme_migration`, `cross_reference_report`) are defined in the spec but require significant infrastructure (see v0.4.0 above). These are tracked for v0.4.0.
 
 ### Resource Subscriptions
 The MCP `subscribe` mechanism requires persistent client connections (SSE). In stateless HTTP mode, the server cannot push notifications when data changes. The `POST /api/data` endpoint that triggers data changes would need to be extended to notify connected clients via SSE when subscriptions are implemented.
@@ -140,10 +222,11 @@ The MCP `subscribe` mechanism requires persistent client connections (SSE). In s
 
 | Primitive | Spec Count | Implemented | Notes |
 |-----------|-----------|-------------|-------|
-| Tools | 26 | ✅ 26 | All v0.1.0–v0.2.0 tools |
+| Tools | 26 | ✅ 26 | All v0.1.0–v0.3.0 tools |
 | Resources | 14 URIs + 4 templates | ✅ 14 + 4 | All static and template resources |
 | Prompts | 9 | ✅ 10 | 9 specified + 1 bonus (token-rationale) |
 | Logging | 14 events | ✅ 9 event types | Core events; debug events available via log level |
 | Sampling | 5 use cases | 🟡 Documented | Requires persistent transport for activation |
 | Elicitation | 6 scenarios | 🟡 Documented | Requires persistent transport for activation |
 | Tasks | 5 operations | 🔵 Planned v0.4.0 | Requires background worker + task store |
+| AI Generation | Prompt + URL | 🔵 Planned v0.5.0 | Prompt-to-JSON and website scraping approaches |

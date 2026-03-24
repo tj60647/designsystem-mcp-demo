@@ -1,0 +1,749 @@
+{
+  "tokens": {
+    "color": {
+      "primary": {
+        "50":  { "value": "#f0fdf4", "type": "color", "description": "Lightest primary — tinted backgrounds" },
+        "100": { "value": "#dcfce7", "type": "color", "description": "Light primary tint" },
+        "200": { "value": "#bbf7d0", "type": "color", "description": "Soft primary tint" },
+        "300": { "value": "#86efac", "type": "color", "description": "Muted primary" },
+        "400": { "value": "#4ade80", "type": "color", "description": "Mid primary" },
+        "500": { "value": "#22c55e", "type": "color", "description": "Core brand green" },
+        "600": { "value": "#16a34a", "type": "color", "description": "Primary default — buttons, links" },
+        "700": { "value": "#15803d", "type": "color", "description": "Primary pressed / hover" },
+        "800": { "value": "#166534", "type": "color", "description": "Primary dark" },
+        "900": { "value": "#14532d", "type": "color", "description": "Darkest primary" }
+      },
+      "secondary": {
+        "50":  { "value": "#f5f3ff", "type": "color", "description": "Lightest secondary" },
+        "100": { "value": "#ede9fe", "type": "color", "description": "Light secondary tint" },
+        "300": { "value": "#c4b5fd", "type": "color", "description": "Muted secondary" },
+        "500": { "value": "#8b5cf6", "type": "color", "description": "Core violet" },
+        "600": { "value": "#7c3aed", "type": "color", "description": "Secondary default" },
+        "700": { "value": "#6d28d9", "type": "color", "description": "Secondary pressed" },
+        "900": { "value": "#4c1d95", "type": "color", "description": "Darkest secondary" }
+      },
+      "neutral": {
+        "0":   { "value": "#ffffff", "type": "color", "description": "White" },
+        "50":  { "value": "#f8fafc", "type": "color", "description": "Page background" },
+        "100": { "value": "#f1f5f9", "type": "color", "description": "Subtle surface" },
+        "200": { "value": "#e2e8f0", "type": "color", "description": "Default border" },
+        "300": { "value": "#cbd5e1", "type": "color", "description": "Muted border" },
+        "400": { "value": "#94a3b8", "type": "color", "description": "Placeholder text" },
+        "500": { "value": "#64748b", "type": "color", "description": "Secondary text" },
+        "600": { "value": "#475569", "type": "color", "description": "Body text" },
+        "700": { "value": "#334155", "type": "color", "description": "Primary text" },
+        "800": { "value": "#1e293b", "type": "color", "description": "Strong text" },
+        "900": { "value": "#0f172a", "type": "color", "description": "Heading text" },
+        "950": { "value": "#020617", "type": "color", "description": "Near black" }
+      },
+      "success": {
+        "light":   { "value": "#dcfce7", "type": "color", "description": "Success background" },
+        "default": { "value": "#22c55e", "type": "color", "description": "Success default" },
+        "dark":    { "value": "#15803d", "type": "color", "description": "Success dark" }
+      },
+      "warning": {
+        "light":   { "value": "#fef9c3", "type": "color", "description": "Warning background" },
+        "default": { "value": "#eab308", "type": "color", "description": "Warning default" },
+        "dark":    { "value": "#854d0e", "type": "color", "description": "Warning dark" }
+      },
+      "error": {
+        "light":   { "value": "#fee2e2", "type": "color", "description": "Error background" },
+        "default": { "value": "#ef4444", "type": "color", "description": "Error default" },
+        "dark":    { "value": "#991b1b", "type": "color", "description": "Error dark" }
+      },
+      "semantic": {
+        "action": {
+          "primary":      { "value": "{color.primary.600}", "type": "color", "resolvedValue": "#16a34a", "description": "Primary action color" },
+          "primaryHover": { "value": "{color.primary.700}", "type": "color", "resolvedValue": "#15803d", "description": "Primary action hover" }
+        },
+        "background": { "value": "{color.neutral.0}", "type": "color", "resolvedValue": "#ffffff", "description": "Default page background" },
+        "surface":    { "value": "{color.neutral.50}", "type": "color", "resolvedValue": "#f8fafc", "description": "Card / panel surface" },
+        "border":     { "value": "{color.neutral.200}", "type": "color", "resolvedValue": "#e2e8f0", "description": "Default border color" },
+        "text": {
+          "primary":   { "value": "{color.neutral.900}", "type": "color", "resolvedValue": "#0f172a", "description": "Primary text" },
+          "secondary": { "value": "{color.neutral.600}", "type": "color", "resolvedValue": "#475569", "description": "Secondary / muted text" },
+          "disabled":  { "value": "{color.neutral.400}", "type": "color", "resolvedValue": "#94a3b8", "description": "Disabled text" }
+        }
+      }
+    },
+    "typography": {
+      "fontFamily": {
+        "sans": { "value": "Plus Jakarta Sans, system-ui, -apple-system, sans-serif", "type": "fontFamily", "description": "Primary sans-serif stack" },
+        "mono": { "value": "JetBrains Mono, Fira Code, monospace", "type": "fontFamily", "description": "Monospace stack for code" }
+      },
+      "fontSize": {
+        "xs":   { "value": "0.75rem",  "type": "dimension", "description": "12px — captions, labels" },
+        "sm":   { "value": "0.875rem", "type": "dimension", "description": "14px — small body, metadata" },
+        "base": { "value": "1rem",     "type": "dimension", "description": "16px — default body" },
+        "lg":   { "value": "1.125rem", "type": "dimension", "description": "18px — large body, subheadings" },
+        "xl":   { "value": "1.25rem",  "type": "dimension", "description": "20px — small headings" },
+        "2xl":  { "value": "1.5rem",   "type": "dimension", "description": "24px — section headings" },
+        "3xl":  { "value": "1.875rem", "type": "dimension", "description": "30px — page headings" },
+        "4xl":  { "value": "2.25rem",  "type": "dimension", "description": "36px — display headings" }
+      },
+      "fontWeight": {
+        "regular":   { "value": "400", "type": "fontWeight", "description": "Normal body text" },
+        "medium":    { "value": "500", "type": "fontWeight", "description": "Slightly emphasised text" },
+        "semibold":  { "value": "600", "type": "fontWeight", "description": "Labels and subheadings" },
+        "bold":      { "value": "700", "type": "fontWeight", "description": "Strong emphasis and headings" }
+      },
+      "lineHeight": {
+        "tight":  { "value": "1.25", "type": "number", "description": "Compact headings" },
+        "snug":   { "value": "1.375", "type": "number", "description": "Dense body text" },
+        "normal": { "value": "1.5",   "type": "number", "description": "Default body line height" },
+        "relaxed": { "value": "1.625", "type": "number", "description": "Readable long-form text" }
+      }
+    },
+    "spacing": {
+      "0":  { "value": "0px",   "type": "dimension", "description": "No spacing" },
+      "1":  { "value": "4px",   "type": "dimension", "description": "Extra-tight spacing" },
+      "2":  { "value": "8px",   "type": "dimension", "description": "Tight spacing" },
+      "3":  { "value": "12px",  "type": "dimension", "description": "Compact spacing" },
+      "4":  { "value": "16px",  "type": "dimension", "description": "Default element spacing" },
+      "5":  { "value": "20px",  "type": "dimension", "description": "Comfortable spacing" },
+      "6":  { "value": "24px",  "type": "dimension", "description": "Section spacing" },
+      "8":  { "value": "32px",  "type": "dimension", "description": "Large spacing" },
+      "10": { "value": "40px",  "type": "dimension", "description": "XL spacing" },
+      "12": { "value": "48px",  "type": "dimension", "description": "2XL spacing" },
+      "16": { "value": "64px",  "type": "dimension", "description": "3XL / section gap" },
+      "20": { "value": "80px",  "type": "dimension", "description": "Page-section padding" }
+    },
+    "borderRadius": {
+      "none": { "value": "0px",    "type": "dimension", "description": "No rounding" },
+      "sm":   { "value": "4px",    "type": "dimension", "description": "Slight rounding for inputs" },
+      "md":   { "value": "8px",    "type": "dimension", "description": "Default card / button radius" },
+      "lg":   { "value": "12px",   "type": "dimension", "description": "Larger surfaces" },
+      "xl":   { "value": "16px",   "type": "dimension", "description": "Modals, dialogs" },
+      "2xl":  { "value": "24px",   "type": "dimension", "description": "Pill / large-radius cards" },
+      "full": { "value": "9999px", "type": "dimension", "description": "Pill / fully-rounded badges" }
+    },
+    "shadow": {
+      "none": { "value": "none",                                                                          "type": "shadow", "description": "No shadow" },
+      "xs":   { "value": "0 1px 2px 0 rgba(0,0,0,0.05)",                                                 "type": "shadow", "description": "Hairline shadow" },
+      "sm":   { "value": "0 1px 3px 0 rgba(0,0,0,0.10), 0 1px 2px -1px rgba(0,0,0,0.10)",               "type": "shadow", "description": "Subtle card shadow" },
+      "md":   { "value": "0 4px 6px -1px rgba(0,0,0,0.10), 0 2px 4px -2px rgba(0,0,0,0.10)",            "type": "shadow", "description": "Default shadow" },
+      "lg":   { "value": "0 10px 15px -3px rgba(0,0,0,0.10), 0 4px 6px -4px rgba(0,0,0,0.10)",          "type": "shadow", "description": "Elevated surfaces" },
+      "xl":   { "value": "0 20px 25px -5px rgba(0,0,0,0.10), 0 8px 10px -6px rgba(0,0,0,0.10)",         "type": "shadow", "description": "Floating menus / popovers" },
+      "2xl":  { "value": "0 25px 50px -12px rgba(0,0,0,0.25)",                                           "type": "shadow", "description": "Modals / dialogs" }
+    },
+    "motion": {
+      "duration": {
+        "instant": { "value": "0ms",   "type": "duration", "description": "No animation" },
+        "fast":    { "value": "100ms", "type": "duration", "description": "Micro-interactions" },
+        "base":    { "value": "150ms", "type": "duration", "description": "Default transitions" },
+        "slow":    { "value": "250ms", "type": "duration", "description": "Entrances and exits" },
+        "slower":  { "value": "400ms", "type": "duration", "description": "Complex layout transitions" }
+      },
+      "easing": {
+        "linear":      { "value": "linear",                    "type": "cubicBezier", "description": "Uniform motion" },
+        "easeIn":      { "value": "cubic-bezier(0.4,0,1,1)",   "type": "cubicBezier", "description": "Accelerate" },
+        "easeOut":     { "value": "cubic-bezier(0,0,0.2,1)",   "type": "cubicBezier", "description": "Decelerate (default exits)" },
+        "easeInOut":   { "value": "cubic-bezier(0.4,0,0.2,1)", "type": "cubicBezier", "description": "Standard transitions" },
+        "spring":      { "value": "cubic-bezier(0.34,1.56,0.64,1)", "type": "cubicBezier", "description": "Bouncy spring effect" }
+      }
+    },
+    "layout": {
+      "breakpoints": {
+        "sm":  { "value": "640px",  "type": "dimension", "description": "Small — mobile landscape" },
+        "md":  { "value": "768px",  "type": "dimension", "description": "Medium — tablet" },
+        "lg":  { "value": "1024px", "type": "dimension", "description": "Large — small desktop" },
+        "xl":  { "value": "1280px", "type": "dimension", "description": "XL — desktop" },
+        "2xl": { "value": "1536px", "type": "dimension", "description": "2XL — wide desktop" }
+      },
+      "grid": {
+        "columns":    { "value": "12",    "type": "number", "description": "12-column grid system" },
+        "gutter":     { "value": "24px",  "type": "dimension", "description": "Default column gutter" },
+        "margin":     { "value": "16px",  "type": "dimension", "description": "Page edge margin (mobile)" },
+        "marginLg":   { "value": "32px",  "type": "dimension", "description": "Page edge margin (desktop)" }
+      },
+      "container": {
+        "maxWidth": { "value": "1280px", "type": "dimension", "description": "Content container max-width" }
+      },
+      "zIndex": {
+        "base":    { "value": "0",    "type": "number", "description": "Default stacking context" },
+        "raised":  { "value": "10",   "type": "number", "description": "Slightly elevated" },
+        "dropdown": { "value": "100", "type": "number", "description": "Dropdown menus" },
+        "sticky":  { "value": "200",  "type": "number", "description": "Sticky headers" },
+        "modal":   { "value": "300",  "type": "number", "description": "Modal overlays" },
+        "toast":   { "value": "400",  "type": "number", "description": "Toast notifications" }
+      }
+    }
+  },
+  "components": {
+    "button": {
+      "name": "Button",
+      "description": "Primary interactive element for triggering actions. Use for form submissions, confirmations, and navigation.",
+      "variants": ["primary", "secondary", "outline", "ghost", "destructive"],
+      "sizes": ["sm", "md", "lg"],
+      "states": ["default", "hover", "active", "focus", "disabled", "loading"],
+      "props": {
+        "variant": {
+          "type": "enum",
+          "values": ["primary", "secondary", "outline", "ghost", "destructive"],
+          "default": "primary",
+          "description": "Visual style of the button"
+        },
+        "size": {
+          "type": "enum",
+          "values": ["sm", "md", "lg"],
+          "default": "md"
+        },
+        "disabled": { "type": "boolean", "default": false },
+        "loading":  { "type": "boolean", "default": false, "description": "Shows a loading spinner and prevents interaction" },
+        "fullWidth": { "type": "boolean", "default": false },
+        "leftIcon":  { "type": "ReactNode", "optional": true },
+        "rightIcon": { "type": "ReactNode", "optional": true },
+        "children":  { "type": "ReactNode", "required": true, "description": "Button label or content" }
+      },
+      "tokens": {
+        "background": {
+          "primary":            "{color.primary.600}",
+          "primary-hover":      "{color.primary.700}",
+          "secondary":          "{color.neutral.100}",
+          "secondary-hover":    "{color.neutral.200}",
+          "outline":            "transparent",
+          "ghost":              "transparent",
+          "ghost-hover":        "{color.neutral.100}",
+          "destructive":        "{color.error.default}",
+          "disabled":           "{color.neutral.100}"
+        },
+        "text": {
+          "primary":    "{color.neutral.0}",
+          "secondary":  "{color.neutral.900}",
+          "outline":    "{color.primary.600}",
+          "ghost":      "{color.neutral.700}",
+          "destructive": "{color.neutral.0}",
+          "disabled":   "{color.neutral.400}"
+        },
+        "padding": {
+          "sm": "{spacing.2} {spacing.3}",
+          "md": "{spacing.3} {spacing.4}",
+          "lg": "{spacing.4} {spacing.6}"
+        },
+        "fontSize": {
+          "sm": "{typography.fontSize.sm}",
+          "md": "{typography.fontSize.base}",
+          "lg": "{typography.fontSize.lg}"
+        },
+        "borderRadius": "{borderRadius.md}",
+        "focusRing": "{color.primary.500}"
+      },
+      "constraints": [
+        "Button label must be concise — 1–4 words. Use tooltips for additional context.",
+        "Destructive buttons must be separated from non-destructive actions by at least 8px.",
+        "Loading state must disable interaction and show a spinner.",
+        "Icon-only buttons must include an aria-label.",
+        "Do not use ghost variant as the sole primary action on a page.",
+        "Maximum one primary button per visible viewport region."
+      ],
+      "accessibility": {
+        "role": "button",
+        "keyboardSupport": ["Enter — activate", "Space — activate"],
+        "ariaAttributes": ["aria-disabled when disabled", "aria-busy when loading", "aria-label for icon-only buttons"],
+        "focusManagement": "Must be included in the natural tab order. Focus ring must meet 3:1 contrast ratio."
+      },
+      "anatomy": {
+        "root": "button[type='button']",
+        "slots": {
+          "leftIcon": "Optional leading icon (16px for sm/md, 20px for lg)",
+          "label": "Required text content",
+          "rightIcon": "Optional trailing icon",
+          "spinner": "Visible only when loading=true"
+        },
+        "validChildren": ["Icon", "text"],
+        "compositionNotes": "Icon size should match text size. Use the Icon component for leftIcon and rightIcon slots."
+      },
+      "relationships": {
+        "parent": ["Form", "Toolbar", "ButtonGroup"],
+        "siblings": ["IconButton", "LinkButton"],
+        "relatedComponents": ["IconButton", "LinkButton", "Fab"]
+      },
+      "variantGuidance": {
+        "primary": "Default action. One per context.",
+        "secondary": "Alternative or less prominent actions alongside a primary.",
+        "outline": "Bordered but low-fill — good for secondary actions in white backgrounds.",
+        "ghost": "Tertiary actions, toolbars. No background until hover.",
+        "destructive": "Irreversible actions (delete, revoke). Separate visually from other actions."
+      }
+    },
+    "input": {
+      "name": "Input",
+      "description": "Single-line text field for capturing user input. Supports validation states, icons, and prefix/suffix slots.",
+      "variants": ["default", "filled"],
+      "sizes": ["sm", "md", "lg"],
+      "states": ["default", "focus", "error", "success", "disabled", "readonly"],
+      "props": {
+        "type":        { "type": "string", "default": "text", "description": "HTML input type" },
+        "label":       { "type": "string", "required": true, "description": "Visible label text" },
+        "placeholder": { "type": "string", "optional": true },
+        "helperText":  { "type": "string", "optional": true, "description": "Hint text below the input" },
+        "errorMessage": { "type": "string", "optional": true, "description": "Error message (shown when invalid)" },
+        "size":        { "type": "enum", "values": ["sm", "md", "lg"], "default": "md" },
+        "disabled":    { "type": "boolean", "default": false },
+        "readonly":    { "type": "boolean", "default": false },
+        "required":    { "type": "boolean", "default": false },
+        "leadingIcon": { "type": "ReactNode", "optional": true },
+        "trailingIcon": { "type": "ReactNode", "optional": true }
+      },
+      "tokens": {
+        "border":          "{color.neutral.300}",
+        "borderFocus":     "{color.primary.500}",
+        "borderError":     "{color.error.default}",
+        "background":      "{color.neutral.0}",
+        "backgroundFilled": "{color.neutral.100}",
+        "text":            "{color.neutral.900}",
+        "placeholder":     "{color.neutral.400}",
+        "label":           "{color.neutral.700}",
+        "helperText":      "{color.neutral.500}",
+        "errorText":       "{color.error.default}",
+        "borderRadius":    "{borderRadius.sm}"
+      },
+      "constraints": [
+        "Every input must have an associated label — either visible or via aria-label.",
+        "Error messages must describe what went wrong and how to fix it.",
+        "Do not rely solely on color to communicate validation state.",
+        "Passwords must use type='password'."
+      ],
+      "accessibility": {
+        "role": "textbox",
+        "ariaAttributes": ["aria-invalid when in error state", "aria-describedby for helperText and errorMessage", "aria-required when required"],
+        "labelAssociation": "Label must be linked via htmlFor/id or aria-labelledby."
+      },
+      "anatomy": {
+        "root": "div.input-wrapper",
+        "slots": {
+          "label": "Visible label above the field",
+          "leadingIcon": "Optional icon at field start",
+          "input": "The native input element",
+          "trailingIcon": "Optional icon or action at field end",
+          "helperText": "Supporting text below the field",
+          "errorMessage": "Error text (replaces helperText when invalid)"
+        },
+        "validChildren": ["Icon", "text", "input[native]"],
+        "compositionNotes": "Always wrap in a label or connect via htmlFor. Do not nest inputs."
+      },
+      "relationships": {
+        "parent": ["Form", "FilterBar"],
+        "siblings": ["Textarea", "Select"],
+        "relatedComponents": ["Textarea", "Select", "Autocomplete", "Combobox"]
+      },
+      "variantGuidance": {
+        "default": "Outlined border on white backgrounds — general forms.",
+        "filled": "Light background fill — use on coloured page backgrounds."
+      }
+    },
+    "badge": {
+      "name": "Badge",
+      "description": "Small status indicator or label for categorising or highlighting content. Non-interactive.",
+      "variants": ["neutral", "primary", "success", "warning", "error", "info"],
+      "sizes": ["sm", "md"],
+      "props": {
+        "variant": { "type": "enum", "values": ["neutral", "primary", "success", "warning", "error", "info"], "default": "neutral" },
+        "size":    { "type": "enum", "values": ["sm", "md"], "default": "md" },
+        "dot":     { "type": "boolean", "default": false, "description": "Shows a coloured dot instead of text" },
+        "children": { "type": "ReactNode", "required": true }
+      },
+      "tokens": {
+        "background": {
+          "neutral": "{color.neutral.100}",
+          "primary": "{color.primary.50}",
+          "success": "{color.success.light}",
+          "warning": "{color.warning.light}",
+          "error":   "{color.error.light}",
+          "info":    "{color.secondary.100}"
+        },
+        "text": {
+          "neutral": "{color.neutral.700}",
+          "primary": "{color.primary.700}",
+          "success": "{color.success.dark}",
+          "warning": "{color.warning.dark}",
+          "error":   "{color.error.dark}",
+          "info":    "{color.secondary.700}"
+        },
+        "borderRadius": "{borderRadius.full}",
+        "fontSize": { "sm": "{typography.fontSize.xs}", "md": "{typography.fontSize.sm}" }
+      },
+      "constraints": [
+        "Badges must not be interactive — use a Tag or Chip for interactive labels.",
+        "Limit to 2–3 words or a short alphanumeric string.",
+        "Do not rely solely on colour to convey meaning — include a label or icon."
+      ],
+      "accessibility": {
+        "role": "status or none depending on context",
+        "ariaAttributes": ["aria-label when dot-only variant is used"]
+      },
+      "anatomy": {
+        "root": "span.badge",
+        "slots": {
+          "dot": "Optional leading dot indicator",
+          "label": "Text content"
+        },
+        "validChildren": ["text", "Icon"],
+        "compositionNotes": "Place inside table cells, list items, or card headers. Do not nest badges."
+      },
+      "relationships": {
+        "siblings": ["Tag", "Chip"],
+        "relatedComponents": ["Tag", "Chip", "StatusIndicator"]
+      },
+      "variantGuidance": {
+        "neutral": "Default — unclassified or inactive status.",
+        "primary": "Active or selected items.",
+        "success": "Completed, approved, or healthy.",
+        "warning": "Pending review, degraded, or at risk.",
+        "error":   "Failed, rejected, or critical issues.",
+        "info":    "Informational or in-progress."
+      }
+    },
+    "card": {
+      "name": "Card",
+      "description": "Contained surface for grouping related content. Cards can be static or interactive (clickable).",
+      "variants": ["default", "outlined", "elevated", "filled"],
+      "props": {
+        "variant":     { "type": "enum", "values": ["default", "outlined", "elevated", "filled"], "default": "default" },
+        "interactive": { "type": "boolean", "default": false, "description": "Makes the card focusable and clickable" },
+        "padding":     { "type": "enum", "values": ["none", "sm", "md", "lg"], "default": "md" },
+        "href":        { "type": "string", "optional": true, "description": "Converts the card to a link" },
+        "children":    { "type": "ReactNode", "required": true }
+      },
+      "tokens": {
+        "background": {
+          "default":  "{color.neutral.0}",
+          "outlined": "{color.neutral.0}",
+          "elevated": "{color.neutral.0}",
+          "filled":   "{color.neutral.50}"
+        },
+        "border": {
+          "default":  "{color.neutral.200}",
+          "outlined": "{color.neutral.300}"
+        },
+        "shadow": {
+          "default":  "{shadow.sm}",
+          "elevated": "{shadow.lg}"
+        },
+        "borderRadius": "{borderRadius.xl}",
+        "padding": {
+          "sm": "{spacing.4}",
+          "md": "{spacing.6}",
+          "lg": "{spacing.8}"
+        }
+      },
+      "constraints": [
+        "Cards should group tightly related content only.",
+        "Interactive cards must have a visible focus state.",
+        "Do not nest interactive cards inside other interactive cards.",
+        "Card titles should use the Heading component, not plain text."
+      ],
+      "accessibility": {
+        "role": "article (informational) or link (interactive)",
+        "ariaAttributes": ["aria-label when the card has no visible title"],
+        "keyboardSupport": ["Enter / Space to activate if interactive"]
+      },
+      "anatomy": {
+        "root": "div.card or a.card",
+        "slots": {
+          "header": "Optional top section (image, icon, badge row)",
+          "body": "Main content area",
+          "footer": "Optional action row"
+        },
+        "validChildren": ["CardHeader", "CardBody", "CardFooter", "any"],
+        "compositionNotes": "Use CardHeader, CardBody, CardFooter sub-components for structured layout."
+      },
+      "relationships": {
+        "parent": ["Grid", "List"],
+        "relatedComponents": ["CardHeader", "CardBody", "CardFooter", "Modal"]
+      },
+      "variantGuidance": {
+        "default":  "Standard bordered card — use in most contexts.",
+        "outlined": "Stronger border, no shadow — tabular lists.",
+        "elevated": "Drop-shadow emphasis — feature cards, CTAs.",
+        "filled":   "Subtle background fill — secondary content areas."
+      }
+    },
+    "modal": {
+      "name": "Modal",
+      "description": "Overlay dialog for focused tasks or confirmations that interrupt the user workflow.",
+      "variants": ["default", "alert"],
+      "sizes": ["sm", "md", "lg", "fullscreen"],
+      "states": ["closed", "open", "loading"],
+      "props": {
+        "isOpen":      { "type": "boolean", "required": true },
+        "onClose":     { "type": "function", "required": true },
+        "title":       { "type": "string", "required": true },
+        "size":        { "type": "enum", "values": ["sm", "md", "lg", "fullscreen"], "default": "md" },
+        "variant":     { "type": "enum", "values": ["default", "alert"], "default": "default" },
+        "isDismissible": { "type": "boolean", "default": true, "description": "Whether clicking the backdrop closes the modal" },
+        "children":    { "type": "ReactNode", "required": true }
+      },
+      "tokens": {
+        "background":    "{color.neutral.0}",
+        "overlay":       "rgba(15,23,42,0.55)",
+        "borderRadius":  "{borderRadius.xl}",
+        "shadow":        "{shadow.2xl}",
+        "maxWidth": {
+          "sm":         "380px",
+          "md":         "560px",
+          "lg":         "840px",
+          "fullscreen": "100vw"
+        },
+        "zIndex": "{layout.zIndex.modal}"
+      },
+      "constraints": [
+        "Modals must trap focus while open.",
+        "Modals must close on Escape key.",
+        "Avoid stacking more than one modal at a time.",
+        "Alert modals must not be dismissible via backdrop click.",
+        "The modal trigger must regain focus when the modal closes."
+      ],
+      "accessibility": {
+        "role": "dialog",
+        "ariaAttributes": ["aria-modal='true'", "aria-labelledby pointing to modal title", "aria-describedby for modal body if needed"],
+        "keyboardSupport": ["Escape — close", "Tab — cycle focus within modal", "Shift+Tab — reverse focus cycle"],
+        "focusManagement": "First focusable element receives focus on open. Trigger element receives focus on close."
+      },
+      "anatomy": {
+        "root": "div[role='dialog']",
+        "slots": {
+          "overlay": "Full-screen backdrop",
+          "container": "Centred modal container",
+          "header": "Title + close button row",
+          "body": "Scrollable content area",
+          "footer": "Action buttons row"
+        },
+        "validChildren": ["ModalHeader", "ModalBody", "ModalFooter"],
+        "compositionNotes": "Always include a visible title in ModalHeader. ModalFooter should contain primary and secondary actions."
+      },
+      "relationships": {
+        "parent": ["App root"],
+        "relatedComponents": ["Dialog", "Drawer", "Popover", "AlertDialog"]
+      },
+      "variantGuidance": {
+        "default": "Standard task-completion dialogs, forms, confirmations.",
+        "alert": "Critical confirmations (e.g., delete, destructive actions). Not dismissible by backdrop."
+      }
+    },
+    "toast": {
+      "name": "Toast",
+      "description": "Ephemeral notification that appears in a corner of the screen. Used for non-blocking status feedback.",
+      "variants": ["info", "success", "warning", "error"],
+      "states": ["entering", "visible", "exiting"],
+      "props": {
+        "message":   { "type": "string", "required": true },
+        "variant":   { "type": "enum", "values": ["info", "success", "warning", "error"], "default": "info" },
+        "duration":  { "type": "number", "default": 5000, "description": "Auto-dismiss duration in ms. 0 = persist." },
+        "action":    { "type": "object", "optional": true, "description": "Optional { label: string, onClick: fn } action button" },
+        "onDismiss": { "type": "function", "optional": true }
+      },
+      "tokens": {
+        "background": {
+          "info":    "{color.neutral.900}",
+          "success": "{color.success.dark}",
+          "warning": "{color.warning.dark}",
+          "error":   "{color.error.dark}"
+        },
+        "text":         "{color.neutral.0}",
+        "borderRadius": "{borderRadius.lg}",
+        "shadow":       "{shadow.xl}",
+        "zIndex":       "{layout.zIndex.toast}",
+        "animation":    "{motion.duration.slow} {motion.easing.easeOut}"
+      },
+      "constraints": [
+        "Toasts must auto-dismiss (default 5 seconds) unless they contain an action.",
+        "Display no more than 3 toasts simultaneously.",
+        "Do not use toasts for errors that require user action — use an inline error instead.",
+        "Toast messages must be concise (max 80 characters).",
+        "Toasts must pause auto-dismiss on hover."
+      ],
+      "accessibility": {
+        "role": "status (info/success) or alert (warning/error)",
+        "ariaAttributes": ["aria-live='polite' for info/success", "aria-live='assertive' for warning/error"],
+        "keyboardSupport": ["Dismiss button must be keyboard-accessible"]
+      },
+      "anatomy": {
+        "root": "div[role='status'] or div[role='alert']",
+        "slots": {
+          "icon": "Leading status icon",
+          "message": "Notification text",
+          "action": "Optional text button",
+          "dismiss": "Close button"
+        },
+        "validChildren": ["Icon", "text", "Button"],
+        "compositionNotes": "Rendered in a ToastProvider portal at the app root. Do not position manually."
+      },
+      "relationships": {
+        "parent": ["ToastProvider"],
+        "relatedComponents": ["Alert", "Banner", "Snackbar"]
+      },
+      "variantGuidance": {
+        "info":    "Neutral updates — item saved, process started.",
+        "success": "Completed actions — file uploaded, changes saved.",
+        "warning": "Soft warnings that don't block the user.",
+        "error":   "Recoverable errors where context is lost — use inline errors for form failures."
+      }
+    }
+  },
+  "themes": {
+    "light": {
+      "name": "Light",
+      "description": "Default light theme — white backgrounds with slate text.",
+      "semantic": {
+        "color.semantic.background":      "#ffffff",
+        "color.semantic.surface":         "#f8fafc",
+        "color.semantic.border":          "#e2e8f0",
+        "color.semantic.text.primary":    "#0f172a",
+        "color.semantic.text.secondary":  "#475569",
+        "color.semantic.text.disabled":   "#94a3b8",
+        "color.semantic.action.primary":  "#16a34a",
+        "color.semantic.action.primaryHover": "#15803d"
+      }
+    },
+    "dark": {
+      "name": "Dark",
+      "description": "Dark theme — dark slate backgrounds with light text.",
+      "semantic": {
+        "color.semantic.background":      "#0f172a",
+        "color.semantic.surface":         "#1e293b",
+        "color.semantic.border":          "#334155",
+        "color.semantic.text.primary":    "#f8fafc",
+        "color.semantic.text.secondary":  "#94a3b8",
+        "color.semantic.text.disabled":   "#475569",
+        "color.semantic.action.primary":  "#22c55e",
+        "color.semantic.action.primaryHover": "#4ade80"
+      }
+    },
+    "forest": {
+      "name": "Forest",
+      "description": "Deep nature-inspired theme — dark green backgrounds with warm cream text.",
+      "semantic": {
+        "color.semantic.background":      "#0d1f13",
+        "color.semantic.surface":         "#132b1a",
+        "color.semantic.border":          "#1e4027",
+        "color.semantic.text.primary":    "#ecf5e9",
+        "color.semantic.text.secondary":  "#a3c99b",
+        "color.semantic.text.disabled":   "#4a7a52",
+        "color.semantic.action.primary":  "#4ade80",
+        "color.semantic.action.primaryHover": "#86efac"
+      }
+    }
+  },
+  "icons": {
+    "check": {
+      "name": "Check",
+      "category": "status",
+      "keywords": ["success", "done", "complete", "confirm", "tick", "valid"],
+      "sizes": [16, 20, 24],
+      "description": "Checkmark for confirming selection or successful completion"
+    },
+    "x": {
+      "name": "X",
+      "category": "action",
+      "keywords": ["close", "dismiss", "remove", "clear", "cancel", "delete"],
+      "sizes": [16, 20, 24],
+      "description": "Close or dismiss an element"
+    },
+    "plus": {
+      "name": "Plus",
+      "category": "action",
+      "keywords": ["add", "create", "new", "insert", "expand"],
+      "sizes": [16, 20, 24],
+      "description": "Add or create a new item"
+    },
+    "minus": {
+      "name": "Minus",
+      "category": "action",
+      "keywords": ["remove", "subtract", "delete", "reduce", "collapse"],
+      "sizes": [16, 20, 24],
+      "description": "Remove or subtract an item"
+    },
+    "search": {
+      "name": "Search",
+      "category": "action",
+      "keywords": ["find", "magnify", "query", "filter", "lookup"],
+      "sizes": [16, 20, 24],
+      "description": "Initiate a search"
+    },
+    "chevron-down": {
+      "name": "Chevron Down",
+      "category": "navigation",
+      "keywords": ["expand", "open", "dropdown", "accordion", "arrow", "down"],
+      "sizes": [16, 20, 24],
+      "description": "Expand, open, or indicate downward direction"
+    },
+    "chevron-up": {
+      "name": "Chevron Up",
+      "category": "navigation",
+      "keywords": ["collapse", "close", "accordion", "arrow", "up"],
+      "sizes": [16, 20, 24],
+      "description": "Collapse or indicate upward direction"
+    },
+    "chevron-right": {
+      "name": "Chevron Right",
+      "category": "navigation",
+      "keywords": ["next", "forward", "breadcrumb", "arrow", "right"],
+      "sizes": [16, 20, 24],
+      "description": "Navigate forward or indicate a nested item"
+    },
+    "arrow-left": {
+      "name": "Arrow Left",
+      "category": "navigation",
+      "keywords": ["back", "previous", "return", "arrow"],
+      "sizes": [16, 20, 24],
+      "description": "Go back or navigate to a previous state"
+    },
+    "info": {
+      "name": "Info",
+      "category": "status",
+      "keywords": ["information", "help", "about", "detail", "hint"],
+      "sizes": [16, 20, 24],
+      "description": "General informational indicator"
+    },
+    "warning": {
+      "name": "Warning",
+      "category": "status",
+      "keywords": ["alert", "caution", "attention", "risk", "hazard"],
+      "sizes": [16, 20, 24],
+      "description": "Warning or caution indicator"
+    },
+    "error": {
+      "name": "Error",
+      "category": "status",
+      "keywords": ["alert", "danger", "critical", "fail", "invalid"],
+      "sizes": [16, 20, 24],
+      "description": "Error or critical failure indicator"
+    },
+    "user": {
+      "name": "User",
+      "category": "social",
+      "keywords": ["person", "account", "profile", "avatar", "member"],
+      "sizes": [16, 20, 24],
+      "description": "Represents a user or account"
+    },
+    "settings": {
+      "name": "Settings",
+      "category": "action",
+      "keywords": ["gear", "cog", "configure", "preferences", "options"],
+      "sizes": [16, 20, 24],
+      "description": "Access settings or configuration"
+    },
+    "upload": {
+      "name": "Upload",
+      "category": "action",
+      "keywords": ["send", "share", "export", "attach", "file", "up"],
+      "sizes": [16, 20, 24],
+      "description": "Upload a file or send data"
+    },
+    "download": {
+      "name": "Download",
+      "category": "action",
+      "keywords": ["save", "export", "receive", "file", "down"],
+      "sizes": [16, 20, 24],
+      "description": "Download or save a file"
+    },
+    "leaf": {
+      "name": "Leaf",
+      "category": "nature",
+      "keywords": ["nature", "eco", "green", "environment", "organic", "plant"],
+      "sizes": [16, 20, 24],
+      "description": "Nature or eco-friendly indicator — brand icon for this design system"
+    }
+  }
+}

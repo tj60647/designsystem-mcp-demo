@@ -432,6 +432,30 @@
       min-width: 0;
     }
 
+    /* ── Right-column tab bar ── */
+    .right-tabs {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 0 16px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .right-tab {
+      font-size: 13px; font-weight: 500;
+      padding: 10px 14px;
+      color: var(--text-muted);
+      cursor: pointer;
+      border: none; background: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color .15s, border-color .15s;
+      white-space: nowrap;
+    }
+    .right-tab:hover { color: var(--text); }
+    .right-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
     /* ── Live Preview section (top) ── */
     .preview-section {
       flex: 1;
@@ -440,6 +464,189 @@
       overflow: hidden;
       border-bottom: 1px solid var(--border);
     }
+
+    /* ── Component Explorer section ── */
+    .explorer-section {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border);
+    }
+    .explorer-section.active { display: flex; }
+
+    .explorer-toolbar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 14px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border-soft);
+      flex-shrink: 0;
+    }
+    .explorer-search {
+      flex: 1; background: var(--bg-input); color: var(--text);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 5px 10px; font-size: 12px; font-family: inherit;
+      outline: none; transition: border-color .15s;
+    }
+    .explorer-search:focus { border-color: var(--accent); }
+    .explorer-search::placeholder { color: var(--text-dim); }
+    .explorer-refresh-btn {
+      font-size: 11px; padding: 4px 10px;
+      background: var(--bg-input); color: var(--text-muted);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      cursor: pointer; transition: color .15s;
+      white-space: nowrap;
+    }
+    .explorer-refresh-btn:hover { color: var(--text); }
+
+    .explorer-body {
+      flex: 1; overflow-y: auto; padding: 14px;
+    }
+    .explorer-body::-webkit-scrollbar { width: 6px; }
+    .explorer-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .explorer-empty {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; height: 100%;
+      gap: 10px; color: var(--text-dim); text-align: center;
+    }
+    .explorer-empty-icon { font-size: 36px; opacity: .3; }
+    .explorer-empty-text { font-size: 13px; }
+
+    .explorer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+    }
+
+    .comp-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .comp-card:hover { border-color: var(--accent); background: rgba(47,129,247,.04); }
+    .comp-card.selected { border-color: var(--accent); background: rgba(47,129,247,.08); }
+
+    .comp-card-name {
+      font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px;
+    }
+    .comp-card-desc {
+      font-size: 11px; color: var(--text-muted); line-height: 1.5;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .comp-card-chips {
+      display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;
+    }
+    .comp-card-chip {
+      font-size: 10px; padding: 1px 7px;
+      border-radius: 20px; font-weight: 500;
+    }
+    .comp-card-chip.variant {
+      background: rgba(47,129,247,.12); color: var(--accent);
+      border: 1px solid rgba(47,129,247,.2);
+    }
+    .comp-card-chip.size {
+      background: rgba(63,185,80,.1); color: var(--green);
+      border: 1px solid rgba(63,185,80,.2);
+    }
+
+    /* Component detail drawer */
+    .comp-detail {
+      display: none;
+      flex-direction: column;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      overflow: hidden;
+      flex-shrink: 0;
+      max-height: 50%;
+    }
+    .comp-detail.open { display: flex; }
+
+    .comp-detail-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border-soft);
+      flex-shrink: 0;
+    }
+    .comp-detail-title { font-size: 13px; font-weight: 600; }
+    .comp-detail-close {
+      background: none; border: none; color: var(--text-muted);
+      font-size: 16px; cursor: pointer; padding: 2px 6px; line-height: 1;
+    }
+    .comp-detail-close:hover { color: var(--text); }
+
+    .comp-detail-tabs {
+      display: flex; gap: 0; padding: 0 14px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border-soft);
+      flex-shrink: 0;
+    }
+    .comp-detail-tab {
+      font-size: 11px; font-weight: 500;
+      padding: 7px 12px; color: var(--text-muted);
+      cursor: pointer; border: none; background: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px; transition: color .15s;
+    }
+    .comp-detail-tab:hover { color: var(--text); }
+    .comp-detail-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .comp-detail-body {
+      flex: 1; overflow-y: auto; padding: 12px 14px;
+      font-size: 12px; color: var(--text-muted);
+    }
+    .comp-detail-body::-webkit-scrollbar { width: 6px; }
+    .comp-detail-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .comp-detail-pane { display: none; }
+    .comp-detail-pane.active { display: block; }
+
+    .detail-section { margin-bottom: 14px; }
+    .detail-section-title {
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .5px; color: var(--text-dim); margin-bottom: 6px;
+    }
+    .detail-chip-row { display: flex; flex-wrap: wrap; gap: 5px; }
+    .detail-chip {
+      font-size: 11px; padding: 2px 8px; border-radius: 20px;
+      background: var(--bg-input); color: var(--text-muted);
+      border: 1px solid var(--border-soft);
+    }
+    .detail-chip.variant { background: rgba(47,129,247,.1); color: var(--accent); border-color: rgba(47,129,247,.2); }
+    .detail-chip.size { background: rgba(63,185,80,.08); color: var(--green); border-color: rgba(63,185,80,.2); }
+    .detail-chip.state { background: rgba(210,153,34,.08); color: var(--orange); border-color: rgba(210,153,34,.2); }
+
+    .props-table { width: 100%; border-collapse: collapse; }
+    .props-table th, .props-table td {
+      text-align: left; padding: 5px 8px; font-size: 11px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .props-table th { color: var(--text-dim); font-weight: 600; }
+    .props-table td { color: var(--text-muted); }
+    .props-table td:first-child { color: var(--purple); font-family: "SFMono-Regular", Consolas, monospace; }
+    .props-table td.prop-required { color: var(--red); font-size: 10px; }
+
+    .anatomy-slot { margin-bottom: 6px; }
+    .anatomy-slot-name {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      color: var(--accent); font-size: 11px;
+    }
+    .anatomy-slot-desc { color: var(--text-muted); font-size: 11px; }
+
+    .token-ref-row { display: flex; flex-direction: column; gap: 4px; }
+    .token-ref {
+      display: flex; align-items: flex-start; gap: 8px; font-size: 11px;
+    }
+    .token-ref-key {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      color: var(--purple); min-width: 120px; flex-shrink: 0;
+    }
+    .token-ref-val { color: var(--text-muted); word-break: break-all; }
 
     .preview-model-badge {
       font-size: 11px; color: var(--text-dim);
@@ -587,7 +794,9 @@
       .chat-panel { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid var(--border); height: 55vh; }
       .right-column { height: auto; min-height: 45vh; }
       .preview-section { flex: none; height: 40vh; }
+      .explorer-section { flex: none; height: 40vh; }
       .tools-section { max-height: 140px; }
+      .comp-detail { max-height: 55%; }
     }
   </style>
 </head>
@@ -733,8 +942,14 @@
   <!-- Right column -->
   <div class="right-column">
 
+    <!-- Tab bar -->
+    <div class="right-tabs" role="tablist">
+      <button class="right-tab active" id="tab-preview" role="tab" aria-selected="true" aria-controls="panel-preview">Live Preview</button>
+      <button class="right-tab" id="tab-explorer" role="tab" aria-selected="false" aria-controls="panel-explorer">Component Explorer</button>
+    </div>
+
     <!-- Live Preview section -->
-    <section class="preview-section" aria-label="Live Preview">
+    <section class="preview-section" id="panel-preview" role="tabpanel" aria-labelledby="tab-preview">
       <div class="panel-header">
         <h2>Live Preview</h2>
         <div class="panel-header-actions">
@@ -748,6 +963,35 @@
           <div class="preview-empty-icon">✦</div>
           <div class="preview-empty-text">Generated UI will appear here.<br>Try a prompt like <em>"Create a login form"</em> to get started.</div>
         </div>
+      </div>
+    </section>
+
+    <!-- Component Explorer section -->
+    <section class="explorer-section" id="panel-explorer" role="tabpanel" aria-labelledby="tab-explorer">
+      <div class="explorer-toolbar">
+        <input class="explorer-search" id="explorer-search" type="search" placeholder="Filter components…" aria-label="Filter components" />
+        <button class="explorer-refresh-btn" id="explorer-refresh-btn" title="Reload component data from the server">&#8635; Refresh</button>
+      </div>
+      <div class="explorer-body" id="explorer-body">
+        <div class="explorer-empty">
+          <div class="explorer-empty-icon">&#9647;</div>
+          <div class="explorer-empty-text">Loading components…</div>
+        </div>
+      </div>
+      <!-- Component detail drawer -->
+      <div class="comp-detail" id="comp-detail">
+        <div class="comp-detail-header">
+          <span class="comp-detail-title" id="comp-detail-title"></span>
+          <button class="comp-detail-close" id="comp-detail-close" aria-label="Close detail">&#x2715;</button>
+        </div>
+        <div class="comp-detail-tabs" role="tablist">
+          <button class="comp-detail-tab active" data-pane="overview" role="tab">Overview</button>
+          <button class="comp-detail-tab" data-pane="props" role="tab">Props</button>
+          <button class="comp-detail-tab" data-pane="anatomy" role="tab">Anatomy</button>
+          <button class="comp-detail-tab" data-pane="tokens" role="tab">Tokens</button>
+          <button class="comp-detail-tab" data-pane="a11y" role="tab">Accessibility</button>
+        </div>
+        <div class="comp-detail-body" id="comp-detail-body"></div>
       </div>
     </section>
 
@@ -1316,6 +1560,7 @@
           : `✓ ${dataType} data loaded. MCP tools now reflect the new data.`;
         appendMessage("assistant", msg);
         scrollToBottom();
+        if (typeof window.notifyDataReloaded === "function") window.notifyDataReloaded();
       } catch (err) {
         alert("Network error: " + err.message);
       }
@@ -1335,6 +1580,7 @@
         for (const k in schemaCache) { delete schemaCache[k]; }
         appendMessage("assistant", "✓ All data reset to bundled defaults. MCP tools now reflect the original design system.");
         scrollToBottom();
+        if (typeof window.notifyDataReloaded === "function") window.notifyDataReloaded();
       } catch (err) {
         alert("Network error: " + err.message);
       } finally {
@@ -1502,12 +1748,300 @@
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && overlay.classList.contains("open")) closeModal(); });
   }
 
+  // ── Right-column tab switching ──────────────────────────────────────────
+  function initRightTabs() {
+    const tabPreview  = document.getElementById("tab-preview");
+    const tabExplorer = document.getElementById("tab-explorer");
+    const panelPreview  = document.getElementById("panel-preview");
+    const panelExplorer = document.getElementById("panel-explorer");
+
+    function activateTab(tab) {
+      const isExplorer = tab === tabExplorer;
+      tabPreview.classList.toggle("active", !isExplorer);
+      tabExplorer.classList.toggle("active", isExplorer);
+      tabPreview.setAttribute("aria-selected", String(!isExplorer));
+      tabExplorer.setAttribute("aria-selected", String(isExplorer));
+      panelPreview.style.display   = isExplorer ? "none" : "";
+      panelExplorer.classList.toggle("active", isExplorer);
+      if (isExplorer && !explorerLoaded) loadExplorer();
+    }
+
+    tabPreview.addEventListener("click",  () => activateTab(tabPreview));
+    tabExplorer.addEventListener("click", () => activateTab(tabExplorer));
+  }
+
+  // ── Component Explorer ──────────────────────────────────────────────────
+  let explorerLoaded    = false;
+  let explorerData      = {};  // { componentKey: componentObj }
+  let selectedCompKey   = null;
+  let activeDetailPane  = "overview";
+
+  async function loadExplorer() {
+    const body = document.getElementById("explorer-body");
+    body.innerHTML = '<div class="explorer-empty"><div class="explorer-empty-icon">&#9647;</div><div class="explorer-empty-text">Loading components…</div></div>';
+    try {
+      const res = await fetch("/api/data/components");
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      explorerData = await res.json();
+      explorerLoaded = true;
+      renderExplorerGrid(document.getElementById("explorer-search").value);
+    } catch (err) {
+      body.innerHTML = `<div class="explorer-empty"><div class="explorer-empty-icon">&#9888;</div><div class="explorer-empty-text">Could not load components: ${escapeHtml(err.message)}</div></div>`;
+    }
+  }
+
+  function renderExplorerGrid(filter) {
+    const body = document.getElementById("explorer-body");
+    const keys = Object.keys(explorerData).filter(k => {
+      if (!filter) return true;
+      const f = filter.toLowerCase();
+      const c = explorerData[k];
+      return k.toLowerCase().includes(f) || (c.name || "").toLowerCase().includes(f) || (c.description || "").toLowerCase().includes(f);
+    });
+
+    if (keys.length === 0) {
+      body.innerHTML = `<div class="explorer-empty"><div class="explorer-empty-icon">&#9647;</div><div class="explorer-empty-text">${filter ? "No components match your filter." : "No components loaded."}</div></div>`;
+      return;
+    }
+
+    const grid = document.createElement("div");
+    grid.className = "explorer-grid";
+
+    for (const key of keys) {
+      const comp = explorerData[key];
+      const card = document.createElement("div");
+      card.className = "comp-card" + (key === selectedCompKey ? " selected" : "");
+      card.dataset.key = key;
+
+      const name = document.createElement("div");
+      name.className = "comp-card-name";
+      name.textContent = comp.name || key;
+      card.appendChild(name);
+
+      const desc = document.createElement("div");
+      desc.className = "comp-card-desc";
+      desc.textContent = comp.description || "";
+      card.appendChild(desc);
+
+      const chips = document.createElement("div");
+      chips.className = "comp-card-chips";
+      for (const v of (comp.variants || []).slice(0, 4)) {
+        const chip = document.createElement("span");
+        chip.className = "comp-card-chip variant";
+        chip.textContent = v;
+        chips.appendChild(chip);
+      }
+      for (const s of (comp.sizes || []).slice(0, 3)) {
+        const chip = document.createElement("span");
+        chip.className = "comp-card-chip size";
+        chip.textContent = s;
+        chips.appendChild(chip);
+      }
+      card.appendChild(chips);
+
+      card.addEventListener("click", () => openCompDetail(key));
+      grid.appendChild(card);
+    }
+
+    body.innerHTML = "";
+    body.appendChild(grid);
+  }
+
+  function openCompDetail(key) {
+    selectedCompKey = key;
+    // Refresh card selection
+    document.querySelectorAll(".comp-card").forEach(c => {
+      c.classList.toggle("selected", c.dataset.key === key);
+    });
+
+    const comp = explorerData[key];
+    document.getElementById("comp-detail-title").textContent = comp.name || key;
+    activeDetailPane = "overview";
+    renderDetailPane(comp, activeDetailPane);
+
+    const detail = document.getElementById("comp-detail");
+    detail.classList.add("open");
+
+    // Activate first tab
+    document.querySelectorAll(".comp-detail-tab").forEach(t => {
+      t.classList.toggle("active", t.dataset.pane === "overview");
+    });
+  }
+
+  function renderDetailPane(comp, pane) {
+    const body = document.getElementById("comp-detail-body");
+
+    if (pane === "overview") {
+      let html = "";
+      if (comp.description) {
+        html += `<div class="detail-section"><div class="detail-section-title">Description</div><div>${escapeHtml(comp.description)}</div></div>`;
+      }
+      if (comp.variants?.length) {
+        html += `<div class="detail-section"><div class="detail-section-title">Variants</div><div class="detail-chip-row">`;
+        html += comp.variants.map(v => `<span class="detail-chip variant">${escapeHtml(v)}</span>`).join("");
+        html += `</div></div>`;
+      }
+      if (comp.sizes?.length) {
+        html += `<div class="detail-section"><div class="detail-section-title">Sizes</div><div class="detail-chip-row">`;
+        html += comp.sizes.map(s => `<span class="detail-chip size">${escapeHtml(s)}</span>`).join("");
+        html += `</div></div>`;
+      }
+      if (comp.states?.length) {
+        html += `<div class="detail-section"><div class="detail-section-title">States</div><div class="detail-chip-row">`;
+        html += comp.states.map(s => `<span class="detail-chip state">${escapeHtml(s)}</span>`).join("");
+        html += `</div></div>`;
+      }
+      if (comp.constraints?.length) {
+        html += `<div class="detail-section"><div class="detail-section-title">Constraints</div><ul style="padding-left:1.2em;line-height:1.8">`;
+        html += comp.constraints.map(c => `<li>${escapeHtml(c)}</li>`).join("");
+        html += `</ul></div>`;
+      }
+      if (comp.variantGuidance) {
+        html += `<div class="detail-section"><div class="detail-section-title">Variant Guidance</div>`;
+        for (const [k, v] of Object.entries(comp.variantGuidance)) {
+          html += `<div style="margin-bottom:5px"><span class="detail-chip variant" style="margin-right:6px">${escapeHtml(k)}</span>${escapeHtml(String(v))}</div>`;
+        }
+        html += `</div>`;
+      }
+      body.innerHTML = html || "<em>No overview data.</em>";
+
+    } else if (pane === "props") {
+      const props = comp.props || {};
+      const keys = Object.keys(props);
+      if (!keys.length) { body.innerHTML = "<em>No props defined.</em>"; return; }
+      let html = `<table class="props-table"><thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Req?</th></tr></thead><tbody>`;
+      for (const k of keys) {
+        const p = props[k] || {};
+        const type = p.type || (p.values ? p.values.join(" | ") : "—");
+        const def  = p.default !== undefined ? String(p.default) : "—";
+        const req  = p.required ? "✓" : "";
+        html += `<tr>
+          <td>${escapeHtml(k)}</td>
+          <td>${escapeHtml(type)}</td>
+          <td>${escapeHtml(def)}</td>
+          <td class="prop-required">${req}</td>
+        </tr>`;
+        if (p.description) {
+          html += `<tr><td colspan="4" style="color:var(--text-dim);padding-top:0;font-size:10.5px;padding-bottom:6px">${escapeHtml(p.description)}</td></tr>`;
+        }
+      }
+      html += `</tbody></table>`;
+      body.innerHTML = html;
+
+    } else if (pane === "anatomy") {
+      const anatomy = comp.anatomy || {};
+      let html = "";
+      if (anatomy.root) {
+        html += `<div class="detail-section"><div class="detail-section-title">Root Element</div><code style="font-family:monospace;color:var(--accent)">${escapeHtml(anatomy.root)}</code></div>`;
+      }
+      const slots = anatomy.slots || {};
+      if (Object.keys(slots).length) {
+        html += `<div class="detail-section"><div class="detail-section-title">Slots</div>`;
+        for (const [name, desc] of Object.entries(slots)) {
+          html += `<div class="anatomy-slot"><span class="anatomy-slot-name">${escapeHtml(name)}</span> — <span class="anatomy-slot-desc">${escapeHtml(String(desc))}</span></div>`;
+        }
+        html += `</div>`;
+      }
+      if (anatomy.validChildren?.length) {
+        html += `<div class="detail-section"><div class="detail-section-title">Valid Children</div><div class="detail-chip-row">`;
+        html += anatomy.validChildren.map(c => `<span class="detail-chip">${escapeHtml(c)}</span>`).join("");
+        html += `</div></div>`;
+      }
+      if (anatomy.compositionNotes) {
+        html += `<div class="detail-section"><div class="detail-section-title">Composition Notes</div>${escapeHtml(anatomy.compositionNotes)}</div>`;
+      }
+      body.innerHTML = html || "<em>No anatomy data.</em>";
+
+    } else if (pane === "tokens") {
+      const tokens = comp.tokens || {};
+      if (!Object.keys(tokens).length) { body.innerHTML = "<em>No token references.</em>"; return; }
+      let html = "";
+      function renderTokenObj(obj, prefix) {
+        for (const [k, v] of Object.entries(obj)) {
+          const fullKey = prefix ? `${prefix}.${k}` : k;
+          if (v && typeof v === "object") {
+            renderTokenObj(v, fullKey);
+          } else {
+            html += `<div class="token-ref"><span class="token-ref-key">${escapeHtml(fullKey)}</span><span class="token-ref-val">${escapeHtml(String(v))}</span></div>`;
+          }
+        }
+      }
+      renderTokenObj(tokens, "");
+      body.innerHTML = `<div class="token-ref-row">${html}</div>`;
+
+    } else if (pane === "a11y") {
+      const a11y = comp.accessibility || {};
+      if (!Object.keys(a11y).length) { body.innerHTML = "<em>No accessibility data.</em>"; return; }
+      let html = "";
+      for (const [section, val] of Object.entries(a11y)) {
+        html += `<div class="detail-section"><div class="detail-section-title">${escapeHtml(section)}</div>`;
+        if (Array.isArray(val)) {
+          html += `<ul style="padding-left:1.2em;line-height:1.8">` + val.map(i => `<li>${escapeHtml(String(i))}</li>`).join("") + `</ul>`;
+        } else if (val && typeof val === "object") {
+          for (const [k, v] of Object.entries(val)) {
+            html += `<div style="margin-bottom:4px"><span style="color:var(--text-dim);font-size:10px;text-transform:uppercase">${escapeHtml(k)}: </span>${escapeHtml(String(v))}</div>`;
+          }
+        } else {
+          html += escapeHtml(String(val));
+        }
+        html += `</div>`;
+      }
+      body.innerHTML = html;
+    }
+  }
+
+  function initComponentExplorer() {
+    const searchEl  = document.getElementById("explorer-search");
+    const refreshBtn = document.getElementById("explorer-refresh-btn");
+    const closeBtn  = document.getElementById("comp-detail-close");
+
+    searchEl.addEventListener("input", () => {
+      if (explorerLoaded) renderExplorerGrid(searchEl.value);
+    });
+
+    refreshBtn.addEventListener("click", () => {
+      explorerLoaded = false;
+      selectedCompKey = null;
+      document.getElementById("comp-detail").classList.remove("open");
+      loadExplorer();
+    });
+
+    closeBtn.addEventListener("click", () => {
+      document.getElementById("comp-detail").classList.remove("open");
+      selectedCompKey = null;
+      document.querySelectorAll(".comp-card").forEach(c => c.classList.remove("selected"));
+    });
+
+    document.querySelectorAll(".comp-detail-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".comp-detail-tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        activeDetailPane = tab.dataset.pane;
+        if (selectedCompKey && explorerData[selectedCompKey]) {
+          renderDetailPane(explorerData[selectedCompKey], activeDetailPane);
+        }
+      });
+    });
+
+    // Register the global hook so load/reset events trigger an explorer refresh
+    window.notifyDataReloaded = function() {
+      if (explorerLoaded) {
+        explorerLoaded = false;
+        selectedCompKey = null;
+        document.getElementById("comp-detail").classList.remove("open");
+        loadExplorer();
+      }
+    };
+  }
+
   // ── Boot ───────────────────────────────────────────────────────────────
   loadTemplates();
   initInfoModals();
   initLoadJsonModal();
   initViewSchemaModal();
   initValidationModal();
+  initRightTabs();
+  initComponentExplorer();
 </script>
 </body>
 </html>

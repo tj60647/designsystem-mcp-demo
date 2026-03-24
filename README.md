@@ -12,7 +12,7 @@
 2. [Why this matters](#2-why-this-matters)
 3. [Core concepts](#3-core-concepts)
 4. [How it works end-to-end](#4-how-it-works-end-to-end)
-5. [The 13 MCP tools — and when to use them](#5-the-13-mcp-tools--and-when-to-use-them)
+5. [The 26 MCP tools — and when to use them](#5-the-26-mcp-tools--and-when-to-use-them)
 6. [Using the demo](#6-using-the-demo)
 7. [Connecting an AI client](#7-connecting-an-ai-client)
 8. [Key design considerations](#8-key-design-considerations)
@@ -81,7 +81,7 @@ This MCP exposes tokens across these categories:
 
 ### Components
 
-A **component** is a reusable UI element with a defined spec: allowed variants, sizes, props, token dependencies, constraints, and accessibility requirements. This MCP includes 11 components: Button, Input, Card, Badge, Modal, Select, Checkbox, Toast, Navigation, Table, Form.
+A **component** is a reusable UI element with a defined spec: allowed variants, sizes, props, token dependencies, constraints, anatomy, and accessibility requirements. This MCP includes 11 components: Button, Input, Card, Badge, Modal, Select, Checkbox, Toast, Navigation, Table, Form.
 
 ### Themes
 
@@ -129,7 +129,7 @@ The key distinction: the AI's output is anchored to the real design system defin
 
 ---
 
-## 5. The 13 MCP tools — and when to use them
+## 5. The 26 MCP tools — and when to use them
 
 AI clients call these tools via `POST /mcp` using the JSON-RPC protocol.
 
@@ -138,69 +138,106 @@ AI clients call these tools via `POST /mcp` using the JSON-RPC protocol.
 | Tool | When to use |
 |---|---|
 | `list_token_categories` | Get a top-level map of the design system — useful as a first call to orient the AI |
-| `get_tokens` | Fetch all tokens in a category (e.g. `"color"`, `"spacing"`) — use when generating a UI that needs to pick from a range of values |
-| `get_token` | Look up one specific token by path (e.g. `color.primary.600`) — use for precise value lookup or validation |
-| `suggest_token` | Describe an intent in plain language (e.g. `"error text color"`) and get the best matching token back — use when the AI or user doesn't know the exact token name |
-| `validate_color` | Check whether a hex or RGB value matches a named token — use to catch hardcoded colors that should be token references |
-| `diff_against_system` | Compare a set of CSS property values against the token set — flags any value that doesn't correspond to a token — use in code review or linting workflows |
+| `get_tokens` | Fetch all tokens in a category (e.g. `"color"`, `"spacing"`) |
+| `get_token` | Look up one specific token by path (e.g. `color.primary.600`) |
+| `suggest_token` | Describe an intent in plain language (e.g. `"error text color"`) and get the best matching token |
+| `validate_color` | Check whether a hex or RGB value matches a named token |
+| `diff_against_system` | Compare CSS property values against the token set — flags non-token values |
+| `get_spacing_scale` | Get the structured spacing scale with semantic usage hints |
 
 ### Component tools
 
 | Tool | When to use |
 |---|---|
-| `list_components` | Get names, descriptions, variants, and sizes for every component — use as a starting point when generating a UI |
-| `get_component` | Get the full spec for one component — props, token dependencies, constraints, accessibility rules — use before generating any component instance |
-| `get_component_tokens` | Get every token a component depends on — use when auditing token coverage or tracing a style change |
-| `get_component_constraints` | Get the usage rules for a component — do's and don'ts, when not to use it, required props — use to validate AI-generated usage before shipping |
-| `validate_component_usage` | Check whether a specific variant/size/props combination is valid per the spec — use in CI or before rendering |
+| `list_components` | Get names, descriptions, variants, and sizes for every component |
+| `get_component` | Full spec for one component — props, tokens, constraints, accessibility |
+| `get_component_tokens` | Every token a component depends on |
+| `get_component_constraints` | Usage rules, do's and don'ts, required props |
+| `validate_component_usage` | Check whether a variant/size/props combo is valid |
+| `get_component_variants` | Variant list with when-to-use guidance |
+| `get_component_anatomy` | Internal slots, valid children, composition patterns |
+| `get_component_relationships` | Parent, sibling, and related components |
 
-### Search and schema
+### Theme & icon tools
 
 | Tool | When to use |
 |---|---|
-| `search` | Full-text search across all tokens, components, and icons by keyword — use when you don't know the exact path or component name |
-| `get_schema` | Get the JSON Schema for a data file (`tokens`, `components`, `themes`, or `icons`) — use to understand the expected structure before loading custom data via `POST /api/data` |
+| `list_themes` | List all available themes |
+| `get_theme` | Full theme definition with semantic token overrides |
+| `list_icons` | List icons, optionally filtered by category or tag |
+| `get_icon` | Single icon by name with metadata and usage guidance |
+| `search_icons` | Semantic search across the icon set |
+
+### Accessibility & layout tools
+
+| Tool | When to use |
+|---|---|
+| `check_contrast` | WCAG 2.1 AA/AAA contrast ratio checker |
+| `get_accessibility_guidance` | Per-component ARIA, keyboard, focus-order spec |
+| `get_layout_guidance` | Page gutters, max-widths, breakpoints, region spacing |
+
+### History & search tools
+
+| Tool | When to use |
+|---|---|
+| `get_changelog` | Version history filterable by version range |
+| `get_deprecations` | Deprecations with migration paths and removal timelines |
+| `search` | Full-text search across all tokens, components, and icons |
+| `get_schema` | JSON Schema for a data file — use before loading custom JSON |
 
 ---
 
 ## 6. Using the demo
 
-The demo UI is a **split-panel chatbot** — chat on the left, live preview on the right.
+The demo UI is a **split-panel interface** — chat on the left, preview and component explorer on the right.
 
 ```
 ┌─────────────────────────────┬──────────────────────────────┐
-│  Chat                       │  Preview                     │
+│  Chat                       │  [Live Preview] [Explorer]   │
 │                             │                              │
 │  User: "Create a login      │  ┌─────────────────────────┐ │
 │  form with email, password, │  │  [Email input]          │ │
 │  and a primary submit       │  │  [Password input]       │ │
 │  button"                    │  │  [Submit button]        │ │
 │                             │  └─────────────────────────┘ │
-│  AI: Here's a login form    │  Token refs used:            │
-│  using the design system…   │  · color.semantic.action…   │
-│                             │  · spacing.4 / spacing.16   │
+│  AI: Here's a login form    │  MCP tools used:            │
+│  using the design system…   │  · get_component(button)    │
+│                             │  · get_tokens(spacing)      │
 └─────────────────────────────┴──────────────────────────────┘
 ```
+
+### Component Explorer tab
+
+Switch to the **Component Explorer** tab in the right column to browse all loaded components as a card gallery. Each card shows the component name, description, and its variant and size chips. Clicking a card opens a detail drawer with five tabs:
+
+- **Overview** — description, variants, sizes, states, constraints, and variant guidance
+- **Props** — full props table with types, defaults, and descriptions
+- **Anatomy** — root element, named slots, valid children, composition notes
+- **Tokens** — all design token references used by the component
+- **Accessibility** — ARIA roles, keyboard support, and focus management rules
+
+The Explorer reflects the live data — if you load a custom `components.json` via **Load JSON**, the Explorer updates immediately.
 
 ### Prompt ideas to try
 
 | Prompt | What the AI does |
 |---|---|
-| "Create a login form with email, password, and a primary submit button" | Calls `get_component` for input and button, fetches spacing tokens, returns grounded JSX and a live preview |
-| "What primary color tokens are available?" | Calls `get_tokens("color")` and presents the full color palette with values |
+| "Create a login form with email, password, and a primary submit button" | Calls `get_component` for input and button, fetches spacing tokens, returns grounded HTML |
+| "What primary color tokens are available?" | Calls `get_tokens("color")` and presents the palette with values |
 | "Show me all button variants and their token usage" | Calls `get_component("button")` and `get_component_tokens("button")` |
-| "What token overrides are needed to implement dark mode?" | Calls the themes endpoint and explains semantic token swaps |
-| "Create an accessible input field with error state and helper text" | Calls `get_component("input")` and `get_component_constraints("input")`, applies accessibility rules |
-| "Is `background-color: #2f81f7` a valid design token?" | Calls `validate_color` and maps the hex to `color.primary.600` if it matches |
+| "What token overrides are needed for dark mode?" | Calls `get_theme("dark")` and explains semantic token swaps |
+| "Create an accessible input with error state and helper text" | Calls `get_component("input")` and `get_accessibility_guidance("input")` |
+| "Is `background-color: #2f81f7` a valid design token?" | Calls `validate_color` — maps the hex to `color.primary.600` if it matches |
+| "Do primary and neutral/0 pass WCAG AA contrast?" | Calls `check_contrast` with the two color tokens |
 
-### Watching the tool calls
+### Loading a sample design system
 
-The demo UI shows each MCP tool call the AI makes in real time — the tool name, the arguments sent, and the response received. This is the most useful part of the demo: you can see exactly how the AI uses the design system as a live context source rather than relying on training data.
+The repository ships with a sample `design-system.json` at `public/sample-design-system.json`. This is a full-featured "Verdigris" design system (green palette, Plus Jakarta Sans typography, 3 themes, 6 components, 17 icons) that you can load via the **Load JSON** button to test the full workflow with a fresh data set.
 
 ### Requirements
 
 - An [OpenRouter API key](https://openrouter.ai/keys) must be set as `OPENROUTER_API_KEY` in your environment (or Vercel project settings)
-- The demo uses `google/gemini-flash-1.5:free` via OpenRouter by default (free tier, no credits needed), but any model with tool-calling support works — set `OPENROUTER_MODEL` in your environment to override
+- The demo uses `google/gemini-flash-1.5:free` via OpenRouter by default (free tier, no credits needed), but any model with tool-calling support works — set `OPENROUTER_MODEL` to override
 
 ---
 
@@ -346,13 +383,16 @@ The server starts at `http://localhost:3000` and opens the demo UI automatically
 | Endpoint | Description |
 |---|---|
 | `GET /` | Redirects to `/demo` |
-| `GET /demo` | Split-panel chatbot demo UI |
-| `GET /health` | JSON health check — server info and available tools |
+| `GET /demo` | Split-panel demo UI (Chat + Live Preview + Component Explorer) |
+| `GET /health` | JSON health check — server info, tools, resources, and prompts |
 | `POST /mcp` | MCP JSON-RPC endpoint for AI clients |
 | `POST /api/chat` | OpenRouter-backed agentic chat endpoint |
-| `GET /prompt-templates` | Pre-built prompt templates for the demo UI |
-| `POST /api/data` | Load custom JSON for a data type (`tokens`, `components`, `themes`, or `icons`) |
+| `GET /api/data/:type` | Read active data for a type (`tokens`, `components`, `themes`, `icons`) |
+| `POST /api/data` | Load custom JSON for a data type |
 | `POST /api/data/reset` | Reset all (or one) data type back to bundled defaults |
+| `GET /api/schema/:type` | Download the JSON Schema for a data type |
+| `POST /api/validate` | Validate custom JSON against a schema without loading it |
+| `GET /prompt-templates` | _(Deprecated v0.3.0)_ Pre-built prompt templates — use MCP Prompts instead |
 
 ### Loading custom data at runtime
 
@@ -448,18 +488,21 @@ Use the ngrok HTTPS URL as the MCP server URL in your AI client config.
 ```
 src/
   index.ts            — Express server (routes, MCP endpoint, /api/chat, /api/data)
-  mcp-server.ts       — MCP server factory; all 13 tool definitions
+  mcp-server.ts       — MCP server factory; all 26 tool definitions + resources + prompts + logging
   toolRunner.ts       — Local tool executor for the /api/chat agentic loop
   dataStore.ts        — Shared in-memory data store; getData/setData/resetData
   schemas.ts          — JSON Schema definitions for each data file (tokens/components/themes/icons)
   data/
-    tokens.json       — Design tokens (color, typography, spacing, motion, layout…)
-    components.json   — Component specs (11 components)
+    tokens.json       — Design tokens (color, typography, spacing, borderRadius, shadow, motion, layout)
+    components.json   — Component specs (11 components with anatomy, variants, tokens, accessibility)
     themes.json       — Light and dark theme semantic token overrides
     icons.json        — Icon metadata (34 icons, 7 categories)
+    changelog.json    — Version history (v0.1.0 → v0.3.0)
+    deprecations.json — Deprecation entries with migration paths
 
 public/
-  demo.html           — Split-panel chatbot demo UI (vanilla HTML/CSS/JS)
+  demo.html                  — Split-panel demo UI (Chat, Live Preview, Component Explorer tabs)
+  sample-design-system.json  — "Verdigris" sample design system (green palette, 6 components, 3 themes, 17 icons)
 
 figma-export.json     — Simulated Figma export (upstream data shape reference)
 scripts/

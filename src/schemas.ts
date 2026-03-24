@@ -1,0 +1,110 @@
+/**
+ * Design System MCP — JSON Schemas for each data file
+ *
+ * Single source of truth for the JSON Schema (draft-07) definitions used by:
+ *   - the `get_schema` MCP tool in mcp-server.ts
+ *   - the `get_schema` case in toolRunner.ts
+ *
+ * Schemas describe the expected shape of each data file so that MCP clients
+ * and the demo UI's Load JSON modal can validate custom data before loading.
+ */
+
+const TOKEN_ENTRY_SCHEMA = {
+  type: "object",
+  required: ["value", "type"],
+  properties: {
+    value:         { type: "string", description: "The raw token value, e.g. '#2563eb' or '16px'." },
+    type:          { type: "string", description: "Token type, e.g. 'color', 'dimension', 'fontFamily'." },
+    description:   { type: "string", description: "Human-readable description of the token's intent." },
+    resolvedValue: { type: "string", description: "Optional resolved alias value." },
+  },
+  additionalProperties: false,
+};
+
+export const DATA_SCHEMAS: Record<string, unknown> = {
+  tokens: {
+    $schema: "http://json-schema.org/draft-07/schema#",
+    title: "tokens.json",
+    description:
+      "Design token file. Top-level keys are token categories (color, typography, spacing, …). " +
+      "Each category is a nested object whose leaf nodes follow the token-entry shape.",
+    type: "object",
+    properties: {
+      color:        { type: "object", description: "Color tokens — primary, neutral, semantic…" },
+      typography:   { type: "object", description: "Typography tokens — fontFamily, fontSize, fontWeight, lineHeight…" },
+      spacing:      { type: "object", description: "Spacing tokens — numeric step keys (1–16) mapped to px values." },
+      borderRadius: { type: "object", description: "Border-radius tokens — sm, md, lg, full…" },
+      shadow:       { type: "object", description: "Box-shadow tokens — sm, md, lg…" },
+      motion:       { type: "object", description: "Motion tokens — duration, easing…" },
+      layout:       { type: "object", description: "Layout tokens — grid columns, breakpoints, z-index…" },
+    },
+    additionalProperties: {
+      type: "object",
+      description: "Custom token category. Leaf nodes must follow the token-entry shape.",
+    },
+    definitions: { tokenEntry: TOKEN_ENTRY_SCHEMA },
+  },
+
+  components: {
+    $schema: "http://json-schema.org/draft-07/schema#",
+    title: "components.json",
+    description: "Component specifications. Each key is a lowercase component name (e.g. 'button', 'input').",
+    type: "object",
+    additionalProperties: {
+      type: "object",
+      required: ["name", "description"],
+      properties: {
+        name:          { type: "string", description: "Display name, e.g. 'Button'." },
+        description:   { type: "string", description: "One-sentence description of the component." },
+        variants:      { type: "array", items: { type: "string" }, description: "Allowed variant values, e.g. ['primary','secondary','ghost']." },
+        sizes:         { type: "array", items: { type: "string" }, description: "Allowed size values, e.g. ['sm','md','lg']." },
+        states:        { type: "array", items: { type: "string" }, description: "Allowed state values, e.g. ['default','hover','disabled']." },
+        props:         { type: "object", description: "Prop definitions keyed by prop name." },
+        tokens:        { type: "object", description: "Token references used by this component. Values use '{token.path}' syntax." },
+        constraints:   { type: "array", items: { type: "string" }, description: "Usage rules for this component." },
+        accessibility: { type: "object", description: "Accessibility requirements for this component." },
+      },
+      additionalProperties: false,
+    },
+  },
+
+  themes: {
+    $schema: "http://json-schema.org/draft-07/schema#",
+    title: "themes.json",
+    description: "Theme definitions. Each key is a theme identifier (e.g. 'light', 'dark').",
+    type: "object",
+    additionalProperties: {
+      type: "object",
+      required: ["name", "description", "semantic"],
+      properties: {
+        name:        { type: "string", description: "Display name, e.g. 'Dark Mode'." },
+        description: { type: "string", description: "What this theme is for." },
+        semantic: {
+          type: "object",
+          description: "Semantic token overrides. Keys are semantic token paths; values are resolved CSS values.",
+          additionalProperties: { type: "string" },
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+
+  icons: {
+    $schema: "http://json-schema.org/draft-07/schema#",
+    title: "icons.json",
+    description: "Icon metadata. Each key is a lowercase icon identifier.",
+    type: "object",
+    additionalProperties: {
+      type: "object",
+      required: ["name", "category", "keywords", "sizes", "description"],
+      properties: {
+        name:        { type: "string", description: "Display name of the icon." },
+        category:    { type: "string", description: "Icon category, e.g. 'action', 'navigation'." },
+        keywords:    { type: "array", items: { type: "string" }, description: "Search keywords for the icon." },
+        sizes:       { type: "array", items: { type: "number" }, description: "Supported sizes in px, e.g. [16, 24, 32]." },
+        description: { type: "string", description: "Short description of what the icon represents." },
+      },
+      additionalProperties: false,
+    },
+  },
+};

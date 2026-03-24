@@ -70,6 +70,61 @@
       text-decoration: none; transition: color .15s;
     }
     .topbar-link:hover { color: var(--text); }
+    .topbar-btn {
+      font-size: 12px; font-weight: 500; padding: 5px 12px;
+      background: var(--bg-input); color: var(--text-muted);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      cursor: pointer; transition: color .15s, border-color .15s;
+    }
+    .topbar-btn:hover { color: var(--text); border-color: var(--text-muted); }
+
+    /* ── Load JSON Modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.6); z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg-panel); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px 24px; width: 540px;
+      max-width: calc(100vw - 32px); max-height: calc(100vh - 80px);
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; }
+    .modal-title { font-size: 14px; font-weight: 600; }
+    .modal-close {
+      background: none; border: none; color: var(--text-muted);
+      font-size: 18px; cursor: pointer; line-height: 1; padding: 2px 6px;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal label { font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px; }
+    .modal select, .modal textarea {
+      width: 100%; background: var(--bg-input); color: var(--text);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 8px 10px; font-size: 13px; font-family: inherit;
+    }
+    .modal select { margin-bottom: 4px; }
+    .modal textarea { resize: vertical; min-height: 220px; font-family: "SF Mono", Consolas, monospace; font-size: 12px; }
+    .modal-hint {
+      font-size: 11px; color: var(--text-dim); background: var(--bg);
+      border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+      padding: 6px 10px; max-height: 80px; overflow-y: auto; white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .modal-actions .btn-primary {
+      background: var(--accent); color: #fff; border: none;
+      border-radius: var(--radius-sm); padding: 7px 16px;
+      font-size: 13px; font-weight: 500; cursor: pointer;
+    }
+    .modal-actions .btn-primary:hover { opacity: .9; }
+    .modal-actions .btn-secondary {
+      background: none; color: var(--text-muted); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 7px 16px;
+      font-size: 13px; cursor: pointer;
+    }
+    .modal-actions .btn-secondary:hover { color: var(--text); }
 
     /* ── Main layout ── */
     .main {
@@ -412,8 +467,41 @@
   <span class="topbar-title">Design System AI</span>
   <span class="mcp-badge">MCP</span>
   <div class="topbar-spacer"></div>
+  <button class="topbar-btn" id="load-json-btn" title="Replace a data file (tokens, components, themes, icons) with custom JSON">Load JSON</button>
+  <button class="topbar-btn" id="reset-btn" title="Reset all data back to bundled defaults">Reset</button>
   <a href="/" class="topbar-link">API status ↗</a>
 </header>
+
+<!-- Load JSON Modal -->
+<div class="modal-overlay" id="load-json-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">Load custom JSON</span>
+      <button class="modal-close" id="modal-close-btn" aria-label="Close">✕</button>
+    </div>
+    <div>
+      <label for="modal-type-select">Data type</label>
+      <select id="modal-type-select">
+        <option value="tokens">tokens</option>
+        <option value="components">components</option>
+        <option value="themes">themes</option>
+        <option value="icons">icons</option>
+      </select>
+    </div>
+    <div>
+      <label for="modal-json-input">JSON</label>
+      <textarea id="modal-json-input" placeholder="Paste your JSON here…" spellcheck="false"></textarea>
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Expected schema <span id="schema-loading" style="font-size:10px;opacity:.6"></span></div>
+      <div class="modal-hint" id="schema-hint">Select a type to load its schema…</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="modal-cancel-btn">Cancel</button>
+      <button class="btn-primary" id="modal-submit-btn">Load</button>
+    </div>
+  </div>
+</div>
 
 <!-- Main split-panel -->
 <div class="main">
@@ -759,8 +847,129 @@
       .replace(/"/g, "&quot;");
   }
 
+  // ── Load JSON modal & Reset ─────────────────────────────────────────────
+  function initLoadJsonModal() {
+    const overlay      = document.getElementById("load-json-modal");
+    const typeSelect   = document.getElementById("modal-type-select");
+    const jsonInput    = document.getElementById("modal-json-input");
+    const schemaHint   = document.getElementById("schema-hint");
+    const schemaLoading = document.getElementById("schema-loading");
+    const openBtn      = document.getElementById("load-json-btn");
+    const closeBtn     = document.getElementById("modal-close-btn");
+    const cancelBtn    = document.getElementById("modal-cancel-btn");
+    const submitBtn    = document.getElementById("modal-submit-btn");
+    const resetBtn     = document.getElementById("reset-btn");
+
+    // Cache fetched schemas to avoid repeated MCP calls
+    const schemaCache = {};
+
+    async function fetchSchema(dataType) {
+      if (schemaCache[dataType]) return schemaCache[dataType];
+      try {
+        schemaLoading.textContent = "(loading…)";
+        const res = await fetch("/mcp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jsonrpc: "2.0", id: 1, method: "tools/call",
+            params: { name: "get_schema", arguments: { dataType } },
+          }),
+        });
+        const data = await res.json();
+        schemaLoading.textContent = "";
+        // MCP returns result.content[0].text
+        const text = data?.result?.content?.[0]?.text ?? "";
+        schemaCache[dataType] = text;
+        return text;
+      } catch {
+        schemaLoading.textContent = "";
+        return "(could not load schema)";
+      }
+    }
+
+    async function openModal() {
+      jsonInput.value = "";
+      overlay.classList.add("open");
+      jsonInput.focus();
+      const schema = await fetchSchema(typeSelect.value);
+      schemaHint.textContent = schema;
+    }
+
+    function closeModal() {
+      overlay.classList.remove("open");
+    }
+
+    typeSelect.addEventListener("change", async () => {
+      const schema = await fetchSchema(typeSelect.value);
+      schemaHint.textContent = schema;
+    });
+
+    openBtn.addEventListener("click", openModal);
+    closeBtn.addEventListener("click", closeModal);
+    cancelBtn.addEventListener("click", closeModal);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+    submitBtn.addEventListener("click", async () => {
+      const raw = jsonInput.value.trim();
+      if (!raw) { alert("Please paste JSON before loading."); return; }
+
+      let parsed;
+      try { parsed = JSON.parse(raw); }
+      catch (e) { alert("Invalid JSON: " + e.message); return; }
+
+      if (typeof parsed !== "object" || Array.isArray(parsed) || parsed === null) {
+        alert("JSON must be an object (not an array or primitive).");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Loading…";
+      try {
+        const res = await fetch("/api/data", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: typeSelect.value, data: parsed }),
+        });
+        const result = await res.json();
+        if (!res.ok) { alert("Error: " + (result.error ?? "Unknown error")); return; }
+        closeModal();
+        appendMessage("assistant", `✓ ${typeSelect.value} data loaded. MCP tools now reflect the new data.`);
+        scrollToBottom();
+      } catch (err) {
+        alert("Network error: " + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Load";
+      }
+    });
+
+    resetBtn.addEventListener("click", async () => {
+      if (!confirm("Reset all design system data back to bundled defaults?")) return;
+      resetBtn.disabled = true;
+      try {
+        const res = await fetch("/api/data/reset", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        const result = await res.json();
+        if (!res.ok) { alert("Error: " + (result.error ?? "Unknown error")); return; }
+        // Clear schema cache so schemas are re-fetched after reset
+        for (const k in schemaCache) { delete schemaCache[k]; }
+        appendMessage("assistant", "✓ All data reset to bundled defaults. MCP tools now reflect the original design system.");
+        scrollToBottom();
+      } catch (err) {
+        alert("Network error: " + err.message);
+      } finally {
+        resetBtn.disabled = false;
+      }
+    });
+  }
+
   // ── Boot ───────────────────────────────────────────────────────────────
   loadTemplates();
+  initLoadJsonModal();
 </script>
 </body>
 </html>

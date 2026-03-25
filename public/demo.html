@@ -3227,22 +3227,22 @@
       <div class="diagram-wrap">
         <div class="diagram">
           <div class="diag-row">
-            <div class="diag-node accent">👤 User Input</div>
+            <div class="diag-node accent">User Input</div>
           </div>
           <div class="diag-arrow-down">↓</div>
           <div class="diag-label">POST /api/chat  { messages[] }</div>
           <div class="diag-row">
-            <div class="diag-node accent">🖥 Chat API  <small style="opacity:.7;font-weight:400">/api/chat</small></div>
+            <div class="diag-node accent">Chat API  <small style="opacity:.7;font-weight:400">/api/chat</small></div>
           </div>
           <div class="diag-arrow-down">↓</div>
           <div class="diag-label">system + conversation + tool defs</div>
           <div class="diag-row">
-            <div class="diag-node purple">🤖 OpenRouter LLM</div>
+            <div class="diag-node purple">OpenRouter LLM</div>
           </div>
           <div class="diag-arrow-down">↓</div>
           <div class="diag-label">tool_calls[ ]  or  final JSON</div>
           <div class="diag-row" style="gap:32px">
-            <div class="diag-node orange" style="font-size:11px">⚙ MCP Tool Calls<br><small style="opacity:.7;font-weight:400">runMcpTool()</small></div>
+            <div class="diag-node orange" style="font-size:11px">MCP Tool Calls<br><small style="opacity:.7;font-weight:400">runMcpTool()</small></div>
             <div class="diag-arrow" style="align-self:center">↺</div>
             <div class="diag-node" style="font-size:11px">loop up to<br>8 iterations</div>
           </div>
@@ -3254,10 +3254,10 @@
           <div class="diag-arrow-down">↓</div>
           <div class="diag-split">
             <div class="diag-branch">
-              <div class="diag-node accent" style="font-size:11px">💬 message<br><small style="opacity:.7;font-weight:400">Chat bubble</small></div>
+              <div class="diag-node accent" style="font-size:11px">message<br><small style="opacity:.7;font-weight:400">Chat bubble</small></div>
             </div>
             <div class="diag-branch">
-              <div class="diag-node green" style="font-size:11px">🖼 preview<br><small style="opacity:.7;font-weight:400">Live Preview iframe</small></div>
+              <div class="diag-node green" style="font-size:11px">preview<br><small style="opacity:.7;font-weight:400">Live Preview iframe</small></div>
               <div class="diag-arrow-down">↓</div>
               <div class="diag-node" style="font-size:11px">Show Code ⟷ Show Preview toggle</div>
             </div>

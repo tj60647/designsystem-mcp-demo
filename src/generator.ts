@@ -77,6 +77,33 @@ function extractJson(text: string): string {
 }
 
 /**
+ * Parse JSON with lightweight repair fallbacks for common model formatting glitches.
+ */
+function parseGeneratedJson(raw: string): Record<string, unknown> {
+  const candidate = extractJson(raw);
+  const attempts = [
+    candidate,
+    candidate.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'"),
+    candidate.replace(/,\s*([}\]])/g, "$1"),
+    candidate
+      .replace(/[\u201C\u201D]/g, '"')
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(/,\s*([}\]])/g, "$1"),
+  ];
+
+  let lastErr: unknown = new Error("Unknown JSON parse failure.");
+  for (const text of attempts) {
+    try {
+      return JSON.parse(text) as Record<string, unknown>;
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+
+  throw lastErr;
+}
+
+/**
  * Lightweight structural validation of the generated data.
  * Returns errors (hard failures) and warnings (soft suggestions).
  */
@@ -139,11 +166,16 @@ export async function generateDesignSystem(
   description: string,
   apiKey: string,
   model: string,
+  signal?: AbortSignal,
 ): Promise<GeneratedDesignSystem> {
   const MAX_RETRIES = 3;
   let lastErrors: string[] = [];
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    if (signal?.aborted) {
+      throw new Error("Generation aborted: request timed out.");
+    }
+
     const retryContext = attempt > 0
       ? `\n\nYour previous attempt failed validation. Fix these errors:\n${lastErrors.map(e => `- ${e}`).join("\n")}\n\nThen regenerate the complete JSON.`
       : "";
@@ -165,9 +197,11 @@ export async function generateDesignSystem(
           { role: "system",  content: GENERATION_SYSTEM_PROMPT },
           { role: "user",    content: userMessage },
         ],
+        response_format: { type: "json_object" },
         temperature: 0.4,
         max_tokens:  8000,
       }),
+      signal,
     });
 
     if (!response.ok) {
@@ -187,8 +221,7 @@ export async function generateDesignSystem(
 
     let parsed: Record<string, unknown>;
     try {
-      const jsonStr = extractJson(rawContent);
-      parsed = JSON.parse(jsonStr) as Record<string, unknown>;
+      parsed = parseGeneratedJson(rawContent);
     } catch (e) {
       lastErrors = [`JSON parse error: ${String(e)}`];
       continue;

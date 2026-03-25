@@ -993,6 +993,13 @@ app.post("/api/chat", async (req, res) => {
   const toolCallsUsed: string[] = [];
   const MAX_ITERATIONS = 8; // extra headroom: generate_design_system is slow and the conversation flow needs additional turns
 
+  // Abort the whole agentic loop if it exceeds the platform request timeout.
+  // Default 25 s — safely under Heroku's 30 s hard limit and Vercel's 30 s limit.
+  // Override with CHAT_TIMEOUT_MS env var for other hosts.
+  const CHAT_TIMEOUT_MS = Number(process.env.CHAT_TIMEOUT_MS ?? 25_000);
+  const chatAbort = new AbortController();
+  const chatTimer = setTimeout(() => chatAbort.abort(), CHAT_TIMEOUT_MS);
+
   // Collects thinking steps to surface in the UI
   type ThinkingStep =
     | { type: "reasoning"; content: string }
@@ -1027,6 +1034,7 @@ app.post("/api/chat", async (req, res) => {
           tools: OPENROUTER_TOOLS,
           tool_choice: "auto",
         }),
+        signal: chatAbort.signal,
       });
 
       if (!orResponse.ok) {
@@ -1103,7 +1111,7 @@ app.post("/api/chat", async (req, res) => {
           if (toolName === "generate_design_system") {
             try {
               const description = (toolArgs.description as string) ?? "";
-              const result = await generateDesignSystem(description, apiKey, model);
+              const result = await generateDesignSystem(description, apiKey, model, chatAbort.signal);
 
               // Auto-load each present section into the data store
               const VALID_TYPES: DataType[] = ["tokens", "components", "themes", "icons"];
@@ -1127,7 +1135,13 @@ app.post("/api/chat", async (req, res) => {
                 warnings:         result.warnings,
               });
             } catch (genErr) {
-              toolResult = JSON.stringify({ success: false, error: String(genErr) });
+              clearTimeout(chatTimer);
+              res.status(422).json({
+                error: "Design system generation failed.",
+                details: String(genErr),
+                tool: "generate_design_system",
+              });
+              return;
             }
           } else {
             // ── Standard tool execution ────────────────────────────────
@@ -1154,6 +1168,7 @@ app.post("/api/chat", async (req, res) => {
       const rawResponse = assistantTextContent ?? "";
       const { message, preview } = parseChatResponse(rawResponse);
       console.log("[chat:response]", message.slice(0, 300));
+      clearTimeout(chatTimer);
       res.json({ message, preview, model, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
       return;
     }
@@ -1162,11 +1177,18 @@ app.post("/api/chat", async (req, res) => {
     const lastAssistant = [...loopMessages].reverse().find((m: OpenRouterMessage) => m.role === "assistant" && m.content);
     const rawLast = String(lastAssistant?.content ?? "");
     const { message: lastMessage, preview: lastPreview } = parseChatResponse(rawLast);
+    clearTimeout(chatTimer);
     res.json({ message: lastMessage, preview: lastPreview, model, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
   } catch (err) {
+    clearTimeout(chatTimer);
     console.error("Chat error:", err);
     if (!res.headersSent) {
-      res.status(500).json({ error: "Internal server error during chat." });
+      const isTimeout = (err as { name?: string }).name === "AbortError";
+      res.status(isTimeout ? 504 : 500).json({
+        error: isTimeout
+          ? "The AI took too long to respond. Please try a simpler question or try again."
+          : "Internal server error during chat.",
+      });
     }
   }
 });

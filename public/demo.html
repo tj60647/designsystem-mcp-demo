@@ -86,6 +86,34 @@
     }
     .topbar-btn:hover { color: var(--text); border-color: var(--text-muted); }
 
+    .topbar-model-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .topbar-model-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .topbar-model-select {
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 8px;
+      background: var(--bg-input);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      min-width: 270px;
+      outline: none;
+    }
+    .topbar-model-select:hover,
+    .topbar-model-select:focus {
+      color: var(--text);
+      border-color: var(--text-muted);
+    }
+
     .topbar-btn-download {
       color: var(--green) !important;
       border-color: rgba(63,185,80,.4) !important;
@@ -1092,6 +1120,16 @@
   <span class="topbar-title">Design System AI</span>
   <span class="mcp-badge">MCP</span>
   <div class="topbar-spacer"></div>
+  <div class="topbar-model-wrap">
+    <label class="topbar-model-label" for="model-select">Model</label>
+    <select class="topbar-model-select" id="model-select" title="Select the OpenRouter model for this chat session">
+      <option value="openai/gpt-oss-20b:nitro">openai/gpt-oss-20b:nitro</option>
+      <option value="anthropic/claude-sonnet-4.6">anthropic/claude-sonnet-4.6</option>
+      <option value="anthropic/claude-3.7-sonnet">anthropic/claude-3.7-sonnet</option>
+      <option value="openai/gpt-4.1">openai/gpt-4.1</option>
+      <option value="google/gemini-2.5-pro">google/gemini-2.5-pro</option>
+    </select>
+  </div>
   <button class="topbar-btn topbar-btn-download" id="download-ds-btn" title="Download the AI-generated design system as JSON" style="display:none">⬇ Download Design System JSON</button>
   <button class="topbar-btn" id="gen-from-web-btn" title="Generate a design system by extracting design tokens from a website URL" aria-label="Generate design system from website">Generate from Website</button>
   <button class="topbar-btn" id="view-schema-btn" title="View and download the JSON schema for any data type">View Schema</button>
@@ -1441,6 +1479,8 @@
 
   // ── State ──────────────────────────────────────────────────────────────
   const conversationHistory = [];
+  const MODEL_STORAGE_KEY = "designsystem-mcp-demo.chat.model";
+  const DEFAULT_CHAT_MODEL = "openai/gpt-oss-20b:nitro";
   let isLoading = false;
   let currentHtmlCode = null;   // latest extracted HTML block
   let showingCode = false;       // toggle state: false = preview, true = code
@@ -1455,8 +1495,35 @@
   const previewBody   = document.getElementById("preview-body");
   const toolsBody     = document.getElementById("tools-body");
   const modelBadge    = document.getElementById("model-badge");
+  const modelSelect   = document.getElementById("model-select");
   const codeToggleBtn = document.getElementById("code-toggle-btn");
   const downloadDsBtn = document.getElementById("download-ds-btn");
+
+  function getSelectedModel() {
+    return modelSelect?.value || DEFAULT_CHAT_MODEL;
+  }
+
+  function restoreModelSelection() {
+    const savedModel = localStorage.getItem(MODEL_STORAGE_KEY);
+    const nextModel = savedModel || DEFAULT_CHAT_MODEL;
+
+    if (!modelSelect) return;
+
+    const exists = Array.from(modelSelect.options).some((opt) => opt.value === nextModel);
+    if (!exists && nextModel) {
+      const custom = document.createElement("option");
+      custom.value = nextModel;
+      custom.textContent = `${nextModel} (saved)`;
+      modelSelect.appendChild(custom);
+    }
+
+    modelSelect.value = nextModel;
+  }
+
+  restoreModelSelection();
+  modelSelect?.addEventListener("change", () => {
+    localStorage.setItem(MODEL_STORAGE_KEY, getSelectedModel());
+  });
 
   // ── Auto-resize textarea ───────────────────────────────────────────────
   inputEl.addEventListener("input", () => {
@@ -1565,13 +1632,32 @@
     scrollToBottom();
 
     try {
-      const res  = await fetch("/api/chat", {
+      // Abort after 90 s as a client-side safety net (server times out at 25 s first).
+      const chatController = new AbortController();
+      const chatTimeout = setTimeout(() => chatController.abort(), 90_000);
+
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: conversationHistory }),
+        body: JSON.stringify({
+          messages: conversationHistory,
+          model: getSelectedModel(),
+        }),
+        signal: chatController.signal,
       });
+      clearTimeout(chatTimeout);
 
-      const data = await res.json();
+      // Platform-level errors (e.g. Heroku timeout page) arrive as plain text / HTML,
+      // not JSON — parse safely so we always get a clean error message.
+      let data;
+      const contentType = res.headers.get("content-type") ?? "";
+      if (contentType.includes("application/json")) {
+        data = await res.json();
+      } else {
+        const raw = await res.text();
+        data = { error: "Server returned an unexpected response.", details: raw.slice(0, 300) };
+      }
+
       loadingEl.remove();
 
       if (!res.ok) {
@@ -1599,7 +1685,11 @@
       }
     } catch (err) {
       loadingEl.remove();
-      appendMessage("error", "⚠ Network error: " + err.message);
+      if (err.name === "AbortError") {
+        appendMessage("error", "⚠ Request timed out — the AI took too long to respond. Please try again.");
+      } else {
+        appendMessage("error", "⚠ Network error: " + err.message);
+      }
     } finally {
       isLoading = false;
       sendBtn.disabled = false;

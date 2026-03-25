@@ -170,6 +170,7 @@ export async function generateDesignSystem(
 ): Promise<GeneratedDesignSystem> {
   const MAX_RETRIES = 3;
   let lastErrors: string[] = [];
+  let lastPartial: Record<string, unknown> | null = null;
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     if (signal?.aborted) {
@@ -230,10 +231,53 @@ export async function generateDesignSystem(
     const { errors, warnings } = validateGeneratedData(parsed);
     if (errors.length > 0) {
       lastErrors = errors;
+      // Keep the best partial result we've seen so far so we can fall back to it
+      // rather than returning nothing if all retries exhaust.
+      if (!lastPartial || Object.keys(parsed).length > Object.keys(lastPartial).length) {
+        lastPartial = parsed;
+      }
       continue;
     }
 
     return { data: parsed, warnings };
+  }
+
+  // ── Partial-fill fallback ────────────────────────────────────────────────
+  // After all retries the AI still couldn't produce a fully-valid result.
+  // If we have any partial parse, fill in the missing top-level sections with
+  // minimal stubs so callers get usable data with warnings instead of an error.
+  if (lastPartial) {
+    const REQUIRED = ["tokens", "components", "themes", "icons"] as const;
+    const filled: string[] = [];
+    for (const key of REQUIRED) {
+      if (!(key in lastPartial) || typeof lastPartial[key] !== "object" || lastPartial[key] === null) {
+        lastPartial[key] = key === "themes"
+          ? {
+              light: {
+                name: "Light",
+                description: "Default light theme (auto-generated fallback)",
+                semantic: {
+                  background: "#ffffff",
+                  surface: "#f5f5f5",
+                  border: "#e0e0e0",
+                  "text-primary": "#111111",
+                  "text-secondary": "#666666",
+                  "action-primary": "#3b82f6",
+                  "action-primary-hover": "#2563eb",
+                },
+              },
+            }
+          : {};
+        filled.push(key);
+      }
+    }
+    const fillWarnings = filled.map(
+      k => `Section "${k}" was missing from the AI output and was replaced with a minimal stub.`,
+    );
+    return {
+      data: lastPartial,
+      warnings: [...fillWarnings, ...lastErrors.map(e => `Generation warning: ${e}`)],
+    };
   }
 
   throw new Error(

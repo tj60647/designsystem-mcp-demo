@@ -234,6 +234,36 @@ The Explorer reflects the live data — if you load a custom `components.json` v
 
 The repository ships with a sample `design-system.json` at `public/sample-design-system.json`. This is a full-featured "Verdigris" design system (green palette, Plus Jakarta Sans typography, 3 themes, 6 components, 17 icons) that you can load via the **Load JSON** button to test the full workflow with a fresh data set.
 
+### Generate from Website
+
+The **Generate from Website** button lets you point the demo at any public URL and automatically produce a full design system JSON inspired by that site's visual language.
+
+**How it works:**
+
+The extractor runs multiple strategies in order of richness, combining all available signals into a single AI prompt:
+
+| Strategy | What is captured | Works on |
+|---|---|---|
+| **Headless browser (Playwright)** | Computed CSS values after JS runs — colors, fonts, border-radius, CSS custom properties | CSS-in-JS, Tailwind JIT, SPAs, Next.js |
+| **CSS custom properties** | `--token-name: value` declared on `:root` | Any site that publishes a token layer |
+| **External stylesheets** | Up to 5 linked `.css` files parsed for colors, fonts, spacing | Traditional CSS, SCSS, Bootstrap |
+| **`<meta name="theme-color">`** | Browser tab / PWA brand color | Most modern web apps |
+| **Web App Manifest** | `theme_color` and `background_color` from `manifest.json` | PWAs |
+| **CSS framework detection** | Infers Tailwind, Bootstrap, Material, Chakra, Ant Design from class patterns | Class-heavy frameworks |
+| **Brand context** | Page title, `og:site_name`, meta description | All sites |
+| **Sparse-CSS fallback** | When signals are few, instructs the AI to infer from brand name and URL | JS-heavy SPAs |
+
+After extraction the signals are assembled into a context prompt and sent to the AI, which generates a complete `tokens + components + themes + icons` JSON in one pass (with up to 3 self-correcting retry attempts). If the AI still can't produce all four sections, a partial-fill fallback inserts minimal stubs and surfaces warnings rather than returning an error.
+
+**Local setup for Playwright extraction:**
+
+```bash
+# Playwright is already in package.json — just install the browser
+npx playwright install chromium
+```
+
+On platforms where Chromium is unavailable (Vercel serverless), the server automatically falls back to the fetch-based pipeline.
+
 ### Requirements
 
 - An [OpenRouter API key](https://openrouter.ai/keys) must be set as `OPENROUTER_API_KEY` in your environment (or Vercel project settings)
@@ -392,6 +422,7 @@ The server starts at `http://localhost:3000` and opens the demo UI automatically
 | `POST /api/data/reset` | Reset all (or one) data type back to bundled defaults |
 | `GET /api/schema/:type` | Download the JSON Schema for a data type |
 | `POST /api/validate` | Validate custom JSON against a schema without loading it |
+| `POST /api/generate-from-website` | Scrape a public URL and generate a complete design system with AI |
 | `GET /prompt-templates` | _(Deprecated v0.3.0)_ Pre-built prompt templates — use MCP Prompts instead |
 
 ### Loading custom data at runtime
@@ -439,14 +470,16 @@ npm start
 
 The MCP server is a standard Node.js HTTP process. Choose the platform that fits your workflow.
 
-| Platform | Best for | Cost | Config |
-|---|---|---|---|
-| **Vercel** | Serverless, zero-ops (**recommended**) | Generous free tier | ✅ `vercel.json` included |
-| **Heroku** | Simple, long-running server | ~$5/mo Eco dyno | ✅ `Procfile` included |
-| **Railway** | Heroku-like, modern DX | ~$5/mo | Auto-detected |
-| **Render** | Free tier available | Free (sleeps after inactivity) | Auto-detected |
-| **Fly.io** | Persistent, global edge | Free allowance | `fly launch` auto-configures |
-| **Local + ngrok** | Quick AI client demos | Free | `npm run dev` |
+| Platform | Best for | Cost | Config | Playwright? |
+|---|---|---|---|---|
+| **Vercel** | Serverless, zero-ops (**recommended**) | Generous free tier | ✅ `vercel.json` included | ❌ Falls back to fetch |
+| **Heroku** | Simple, long-running server | ~$5/mo Eco dyno | ✅ `Procfile` included | ✅ Add buildpack |
+| **Railway** | Heroku-like, modern DX | ~$5/mo | Auto-detected | ✅ Auto-detected |
+| **Render** | Free tier available | Free (sleeps after inactivity) | Auto-detected | ✅ Auto-detected |
+| **Fly.io** | Persistent, global edge | Free allowance | `fly launch` auto-configures | ✅ Add Chromium layer |
+| **Local + ngrok** | Quick AI client demos | Free | `npm run dev` | ✅ Already installed |
+
+> **Playwright note**: The headless browser extractor runs automatically when the `playwright` package is installed and `npx playwright install chromium` has been run. On platforms where it is unavailable (Vercel serverless), the server falls back to the fetch-based CSS pipeline transparently — no configuration needed.
 
 ### Vercel (recommended)
 
@@ -487,18 +520,21 @@ Use the ngrok HTTPS URL as the MCP server URL in your AI client config.
 
 ```
 src/
-  index.ts            — Express server (routes, MCP endpoint, /api/chat, /api/data)
-  mcp-server.ts       — MCP server factory; all 26 tool definitions + resources + prompts + logging
-  toolRunner.ts       — Local tool executor for the /api/chat agentic loop
-  dataStore.ts        — Shared in-memory data store; getData/setData/resetData
-  schemas.ts          — JSON Schema definitions for each data file (tokens/components/themes/icons)
+  index.ts               — Express server (routes, MCP endpoint, /api/chat, /api/data)
+  mcp-server.ts          — MCP server factory; all 26 tool definitions + resources + prompts + logging
+  toolRunner.ts          — Local tool executor for the /api/chat agentic loop
+  dataStore.ts           — Shared in-memory data store; getData/setData/resetData
+  schemas.ts             — JSON Schema definitions for each data file (tokens/components/themes/icons)
+  generator.ts           — AI design system generator (OpenRouter); 3-retry loop with partial-fill fallback
+  websiteExtractor.ts    — Multi-strategy website design context extractor (CSS, manifest, Playwright)
+  playwrightExtractor.ts — Headless Chromium extractor; captures computed styles after JS runs
   data/
-    tokens.json       — Design tokens (color, typography, spacing, borderRadius, shadow, motion, layout)
-    components.json   — Component specs (11 components with anatomy, variants, tokens, accessibility)
-    themes.json       — Light and dark theme semantic token overrides
-    icons.json        — Icon metadata (34 icons, 7 categories)
-    changelog.json    — Version history (v0.1.0 → v0.3.0)
-    deprecations.json — Deprecation entries with migration paths
+    tokens.json          — Design tokens (color, typography, spacing, borderRadius, shadow, motion, layout)
+    components.json      — Component specs (11 components with anatomy, variants, tokens, accessibility)
+    themes.json          — Light and dark theme semantic token overrides
+    icons.json           — Icon metadata (34 icons, 7 categories)
+    changelog.json       — Version history (v0.1.0 → v0.3.0)
+    deprecations.json    — Deprecation entries with migration paths
 
 public/
   demo.html                  — Split-panel demo UI (Chat, Live Preview, Component Explorer tabs)

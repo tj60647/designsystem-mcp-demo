@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="shortcut icon" href="/favicon.svg" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
+  <link rel="shortcut icon" href="/favicon.svg?v=3" />
   <title>Design System AI — Demo</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -53,11 +53,17 @@
       flex-shrink: 0;
     }
     .topbar-logo {
-      width: 28px; height: 28px;
-      background: linear-gradient(135deg, var(--accent), var(--purple));
+      width: 28px;
+      height: 28px;
       border-radius: 6px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px; font-weight: 700; color: #fff;
+      display: block;
+      flex: 0 0 28px;
+      overflow: hidden;
+    }
+    .topbar-logo img {
+      width: 100%;
+      height: 100%;
+      display: block;
     }
     .topbar-title { font-weight: 600; font-size: 15px; }
     .mcp-badge {
@@ -1080,7 +1086,9 @@
 
 <!-- Top bar -->
 <header class="topbar">
-  <div class="topbar-logo">DS</div>
+  <div class="topbar-logo">
+    <img src="/favicon.svg?v=3" alt="Design System MCP logo" />
+  </div>
   <span class="topbar-title">Design System AI</span>
   <span class="mcp-badge">MCP</span>
   <div class="topbar-spacer"></div>

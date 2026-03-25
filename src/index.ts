@@ -29,7 +29,9 @@ import { dirname, join } from "path";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createMcpServer } from "./mcp-server.js";
 import { runMcpTool } from "./toolRunner.js";
-import { setData, resetData, type DataType } from "./dataStore.js";
+import { setData, getData, resetData, type DataType } from "./dataStore.js";
+import { DATA_SCHEMAS } from "./schemas.js";
+import { generateDesignSystem } from "./generator.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
@@ -62,32 +64,71 @@ app.get("/", (_req, res) => {
 app.get("/health", (_req, res) => {
   res.json({
     name: "Design System MCP",
-    version: "0.1.0",
+    version: "0.3.0",
     status: "running",
     mcpEndpoint: "POST /mcp",
     description:
       "A queryable context layer that makes design systems machine-readable and usable by AI.",
+    primitives: {
+      tools: 26,
+      resources: "14 URIs + 4 templates",
+      prompts: 9,
+      logging: "4 levels, 14 events",
+      sampling: "5 use cases",
+      elicitation: "6 scenarios",
+    },
     availableTools: [
-      "list_token_categories",
-      "get_tokens",
-      "get_token",
-      "list_components",
-      "get_component",
-      "get_component_tokens",
-      "validate_color",
-      "get_component_constraints",
-      "validate_component_usage",
-      "suggest_token",
-      "diff_against_system",
-      "search",
-      "get_schema",
+      // v0.1.0
+      "list_token_categories", "get_tokens", "get_token",
+      "list_components", "get_component", "get_component_tokens",
+      "validate_color", "get_component_constraints", "validate_component_usage",
+      "suggest_token", "diff_against_system", "search", "get_schema",
+      // v0.2.0
+      "list_themes", "get_theme",
+      "list_icons", "get_icon", "search_icons",
+      "check_contrast", "get_accessibility_guidance",
+      "get_component_variants", "get_component_anatomy", "get_component_relationships",
+      "get_layout_guidance", "get_spacing_scale",
+      "get_changelog", "get_deprecations",
+    ],
+    availableResources: [
+      "design-system://tokens",
+      "design-system://tokens/{category}",
+      "design-system://components",
+      "design-system://components/{name}/spec",
+      "design-system://components/{name}/examples",
+      "design-system://themes",
+      "design-system://themes/{name}",
+      "design-system://icons",
+      "design-system://guidelines/accessibility",
+      "design-system://guidelines/layout",
+      "design-system://guidelines/content",
+      "design-system://guidelines/motion",
+      "design-system://changelog",
+      "design-system://changelog/latest",
+      "design-system://deprecations",
+    ],
+    availablePrompts: [
+      "design-system/build-component",
+      "design-system/compose-layout",
+      "design-system/implement-theme",
+      "design-system/review-markup",
+      "design-system/audit-page",
+      "design-system/migrate-deprecated",
+      "design-system/fix-violations",
+      "design-system/explain-component",
+      "design-system/compare-components",
+      "design-system/token-rationale",
     ],
     additionalEndpoints: {
-      "GET /demo": "Split-panel chatbot demo UI",
+      "GET /demo": "Split-panel chatbot demo UI with Component Explorer",
       "POST /api/chat": "OpenRouter-backed agentic chat with MCP tool calling",
-      "GET /prompt-templates": "Pre-built prompt templates for the demo",
+      "GET /prompt-templates": "DEPRECATED in v0.3.0 — use MCP Prompts primitive instead. Retained for backward compatibility.",
+      "GET /api/data/:type": "Read active data for a type (tokens, components, themes, icons) — used by Component Explorer",
       "POST /api/data": "Load custom JSON for a data type (tokens, components, themes, icons)",
       "POST /api/data/reset": "Reset all (or one) data type back to the bundled defaults",
+      "GET /api/schema/:type": "Download the JSON Schema for a data type (tokens, components, themes, icons)",
+      "POST /api/validate": "Validate custom JSON against the schema for a data type without loading it",
     },
   });
 });
@@ -141,6 +182,25 @@ app.post("/mcp", async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────
 
 /**
+ * GET /api/data/:type
+ * Returns the active data for the given type as JSON.
+ * Used by the Component Explorer UI to read live design system data.
+ */
+app.get("/api/data/:type", (req, res) => {
+  const VALID_TYPES: DataType[] = ["tokens", "components", "themes", "icons"];
+  const { type } = req.params;
+
+  if (!VALID_TYPES.includes(type as DataType)) {
+    res.status(404).json({
+      error: `Unknown type "${type}". Must be one of: ${VALID_TYPES.join(", ")}`,
+    });
+    return;
+  }
+
+  res.json(getData(type as DataType));
+});
+
+/**
  * POST /api/data
  * Body: { "type": "tokens"|"components"|"themes"|"icons", "data": <object> }
  * Replaces the active data for the given type with the supplied JSON.
@@ -149,15 +209,38 @@ app.post("/api/data", (req, res) => {
   const VALID_TYPES: DataType[] = ["tokens", "components", "themes", "icons"];
   const { type, data } = req.body as { type?: string; data?: unknown };
 
-  if (!type || !VALID_TYPES.includes(type as DataType)) {
+  if (!type || (!VALID_TYPES.includes(type as DataType) && type !== "design-system")) {
     res.status(400).json({
-      error: `"type" must be one of: ${VALID_TYPES.join(", ")}`,
+      error: `"type" must be one of: ${[...VALID_TYPES, "design-system"].join(", ")}`,
     });
     return;
   }
 
   if (data === null || typeof data !== "object" || Array.isArray(data)) {
     res.status(400).json({ error: '"data" must be a JSON object.' });
+    return;
+  }
+
+  if (type === "design-system") {
+    // Split the combined payload and set each present sub-section.
+    const combined = data as Record<string, unknown>;
+    const loaded: string[] = [];
+    for (const section of VALID_TYPES) {
+      const sectionData = combined[section];
+      if (sectionData !== undefined) {
+        if (sectionData === null || typeof sectionData !== "object" || Array.isArray(sectionData)) {
+          res.status(400).json({ error: `"${section}" must be a JSON object.` });
+          return;
+        }
+        setData(section, sectionData);
+        loaded.push(section);
+      }
+    }
+    if (loaded.length === 0) {
+      res.status(400).json({ error: 'design-system JSON must contain at least one of: tokens, components, themes, icons.' });
+      return;
+    }
+    res.json({ ok: true, type: "design-system", loaded, message: `Design system data loaded (${loaded.join(", ")}). MCP tools now reflect the new data.` });
     return;
   }
 
@@ -187,10 +270,239 @@ app.post("/api/data/reset", (req, res) => {
   res.json({ ok: true, type: type ?? "all", message: `${resetTarget} reset to bundled defaults.` });
 });
 
+// ── Schema endpoints ─────────────────────────────────────────────────────
+// Expose the JSON Schema for each data type so the demo UI can display and
+// download the schema, and validate custom JSON before loading it.
+// ─────────────────────────────────────────────────────────────────────────
+
+/**
+ * GET /api/schema/:type
+ * Returns the JSON Schema for the given data type as downloadable JSON.
+ */
+app.get("/api/schema/:type", (req, res) => {
+  const VALID_TYPES = ["tokens", "components", "themes", "icons", "design-system"];
+  const { type } = req.params;
+
+  if (!VALID_TYPES.includes(type)) {
+    res.status(404).json({ error: `Unknown schema type "${type}". Must be one of: ${VALID_TYPES.join(", ")}` });
+    return;
+  }
+
+  const schema = DATA_SCHEMAS[type];
+  if (!schema) {
+    res.status(500).json({ error: `Schema not found for type "${type}".` });
+    return;
+  }
+  res.setHeader("Content-Disposition", `attachment; filename="${type}.schema.json"`);
+  res.json(schema);
+});
+
+/**
+ * POST /api/validate
+ * Body: { "type": "tokens"|"components"|"themes"|"icons", "data": <object> }
+ * Validates the supplied JSON against the schema for the given type.
+ * Returns { valid, errors, recommendations } without loading the data.
+ */
+app.post("/api/validate", (req, res) => {
+  const VALID_TYPES: DataType[] = ["tokens", "components", "themes", "icons"];
+  const { type, data } = req.body as { type?: string; data?: unknown };
+
+  if (!type || (!VALID_TYPES.includes(type as DataType) && type !== "design-system")) {
+    res.status(400).json({ error: `"type" must be one of: ${[...VALID_TYPES, "design-system"].join(", ")}` });
+    return;
+  }
+
+  if (data === null || typeof data !== "object" || Array.isArray(data)) {
+    res.status(400).json({ error: '"data" must be a JSON object.' });
+    return;
+  }
+
+  const result = validateAgainstSchema(type as DataType | "design-system", data as Record<string, unknown>);
+  res.json(result);
+});
+
+/** Lightweight structural validator for each design-system data type. */
+function validateAgainstSchema(
+  type: DataType | "design-system",
+  data: Record<string, unknown>,
+): { valid: boolean; errors: string[]; recommendations: string[] } {
+  const errors: string[] = [];
+  const recommendations: string[] = [];
+
+  if (type === "design-system") {
+    const SECTIONS: DataType[] = ["tokens", "components", "themes", "icons"];
+    const keys = Object.keys(data);
+
+    // Warn about unexpected top-level keys
+    const unknown = keys.filter(k => !SECTIONS.includes(k as DataType));
+    if (unknown.length > 0) {
+      recommendations.push(
+        `Unexpected top-level keys: ${unknown.map(k => `"${k}"`).join(", ")}. ` +
+        `Expected keys are: ${SECTIONS.join(", ")}.`,
+      );
+    }
+
+    // Recommend adding any missing sections
+    for (const section of SECTIONS) {
+      if (!(section in data)) {
+        recommendations.push(`Section "${section}" is missing. Add it to include ${section} data.`);
+      }
+    }
+
+    // Validate each present sub-section, prefixing messages with the section name
+    for (const section of SECTIONS) {
+      if (section in data) {
+        const sectionData = data[section];
+        if (sectionData === null || typeof sectionData !== "object" || Array.isArray(sectionData)) {
+          errors.push(`"${section}" must be a JSON object.`);
+        } else {
+          const sub = validateAgainstSchema(section, sectionData as Record<string, unknown>);
+          for (const e of sub.errors) errors.push(`[${section}] ${e}`);
+          for (const r of sub.recommendations) recommendations.push(`[${section}] ${r}`);
+        }
+      }
+    }
+
+    return { valid: errors.length === 0, errors, recommendations };
+  }
+
+  if (type === "tokens") {
+    const KNOWN_CATEGORIES = ["color", "typography", "spacing", "borderRadius", "shadow", "motion", "layout"];
+    const keys = Object.keys(data);
+    if (keys.length === 0) {
+      errors.push("tokens.json must have at least one token category.");
+    }
+    const unknown = keys.filter(k => !KNOWN_CATEGORIES.includes(k));
+    if (unknown.length > 0) {
+      recommendations.push(
+        `Unknown token categories: ${unknown.map(k => `"${k}"`).join(", ")}. ` +
+        `Standard categories are: ${KNOWN_CATEGORIES.join(", ")}.`,
+      );
+    }
+    for (const cat of KNOWN_CATEGORIES) {
+      if (!(cat in data)) {
+        recommendations.push(`Standard category "${cat}" is missing. Add it if your design system uses ${cat} tokens.`);
+      }
+    }
+    // Spot-check leaf nodes for {value, type}
+    function checkLeaves(obj: unknown, path: string) {
+      if (obj === null || typeof obj !== "object" || Array.isArray(obj)) return;
+      const o = obj as Record<string, unknown>;
+      const isLeaf = "value" in o || "type" in o;
+      if (isLeaf) {
+        if (!("value" in o)) errors.push(`Token at "${path}" is missing required property "value".`);
+        if (!("type" in o))  errors.push(`Token at "${path}" is missing required property "type".`);
+        if ("value" in o && typeof o.value !== "string") errors.push(`Token at "${path}".value must be a string.`);
+        if ("type"  in o && typeof o.type  !== "string") errors.push(`Token at "${path}".type must be a string.`);
+      } else {
+        for (const k of Object.keys(o)) checkLeaves(o[k], `${path}.${k}`);
+      }
+    }
+    for (const cat of keys) checkLeaves(data[cat], cat);
+  }
+
+  if (type === "components") {
+    const REQUIRED_PROPS = ["name", "description"] as const;
+    const keys = Object.keys(data);
+    if (keys.length === 0) {
+      errors.push("components.json must have at least one component entry.");
+    }
+    for (const key of keys) {
+      const comp = data[key] as Record<string, unknown> | null;
+      if (comp === null || typeof comp !== "object" || Array.isArray(comp)) {
+        errors.push(`Component "${key}" must be an object.`);
+        continue;
+      }
+      for (const prop of REQUIRED_PROPS) {
+        if (!(prop in comp)) errors.push(`Component "${key}" is missing required property "${prop}".`);
+        else if (typeof comp[prop] !== "string") errors.push(`Component "${key}".${prop} must be a string.`);
+      }
+      for (const arr of ["variants", "sizes", "states", "constraints"] as const) {
+        if (arr in comp && !Array.isArray(comp[arr])) {
+          errors.push(`Component "${key}".${arr} must be an array if present.`);
+        }
+      }
+    }
+    if (keys.length > 0 && !("button" in data) && !("input" in data)) {
+      recommendations.push(
+        'No "button" or "input" component found. Most design systems include these core interactive components.',
+      );
+    }
+  }
+
+  if (type === "themes") {
+    const REQUIRED_PROPS = ["name", "description", "semantic"] as const;
+    const keys = Object.keys(data);
+    if (keys.length === 0) {
+      errors.push("themes.json must have at least one theme entry.");
+    }
+    for (const key of keys) {
+      const theme = data[key] as Record<string, unknown> | null;
+      if (theme === null || typeof theme !== "object" || Array.isArray(theme)) {
+        errors.push(`Theme "${key}" must be an object.`);
+        continue;
+      }
+      for (const prop of REQUIRED_PROPS) {
+        if (!(prop in theme)) errors.push(`Theme "${key}" is missing required property "${prop}".`);
+      }
+      if ("semantic" in theme && (typeof theme.semantic !== "object" || Array.isArray(theme.semantic) || theme.semantic === null)) {
+        errors.push(`Theme "${key}".semantic must be an object.`);
+      } else if (theme.semantic) {
+        for (const [k, v] of Object.entries(theme.semantic as object)) {
+          if (typeof v !== "string") {
+            errors.push(`Theme "${key}".semantic["${k}"] must be a string value.`);
+          }
+        }
+      }
+    }
+    if (keys.length > 0 && !("light" in data)) {
+      recommendations.push('No "light" theme found. A "light" theme is conventional as the default theme.');
+    }
+  }
+
+  if (type === "icons") {
+    const REQUIRED_PROPS = ["name", "category", "keywords", "sizes", "description"] as const;
+    const keys = Object.keys(data);
+    if (keys.length === 0) {
+      errors.push("icons.json must have at least one icon entry.");
+    }
+    for (const key of keys) {
+      const icon = data[key] as Record<string, unknown> | null;
+      if (icon === null || typeof icon !== "object" || Array.isArray(icon)) {
+        errors.push(`Icon "${key}" must be an object.`);
+        continue;
+      }
+      for (const prop of REQUIRED_PROPS) {
+        if (!(prop in icon)) errors.push(`Icon "${key}" is missing required property "${prop}".`);
+      }
+      if ("keywords" in icon && !Array.isArray(icon.keywords)) {
+        errors.push(`Icon "${key}".keywords must be an array.`);
+      }
+      if ("sizes" in icon && !Array.isArray(icon.sizes)) {
+        errors.push(`Icon "${key}".sizes must be an array of numbers.`);
+      } else if ("sizes" in icon && Array.isArray(icon.sizes)) {
+        for (const s of icon.sizes as unknown[]) {
+          if (typeof s !== "number") {
+            errors.push(`Icon "${key}".sizes entries must be numbers (e.g. 16, 24).`);
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  return { valid: errors.length === 0, errors, recommendations };
+}
+
 // ── Prompt templates ──────────────────────────────────────────────────────
-// Returns pre-built prompt templates for the demo UI's quick-start chips.
+// DEPRECATED in v0.3.0 — use MCP Prompts primitive instead.
+// This endpoint is retained for backward compatibility but will be removed
+// in a future version. Use the MCP prompts/list and prompts/get methods to
+// enumerate and retrieve prompt templates via any MCP client.
 // ─────────────────────────────────────────────────────────────────────────
 app.get("/prompt-templates", (_req, res) => {
+  res.setHeader("Deprecation", "true");
+  res.setHeader("Link", '</mcp>; rel="successor-version"');
   res.json({
     templates: [
       {
@@ -473,22 +785,123 @@ const OPENROUTER_TOOLS = [
       },
     },
   },
+  // v0.2.0 tools
+  { type: "function", function: { name: "list_themes", description: "List all available themes (e.g. light, dark). Returns theme keys, names, and descriptions.", parameters: { type: "object", properties: {}, required: [] } } },
+  { type: "function", function: { name: "get_theme", description: 'Get full theme definition including all semantic token overrides. Example: "light", "dark".', parameters: { type: "object", properties: { themeName: { type: "string", description: "The theme key." } }, required: ["themeName"] } } },
+  { type: "function", function: { name: "list_icons", description: "List all icons, optionally filtered by category or tag.", parameters: { type: "object", properties: { category: { type: "string" }, tag: { type: "string" } }, required: [] } } },
+  { type: "function", function: { name: "get_icon", description: "Get a single icon by name with metadata, sizes, and usage guidance.", parameters: { type: "object", properties: { iconName: { type: "string", description: "The icon key, e.g. 'arrow-right'." } }, required: ["iconName"] } } },
+  { type: "function", function: { name: "search_icons", description: "Semantic search across the icon set. E.g. 'warning' returns alert-triangle, exclamation-circle.", parameters: { type: "object", properties: { query: { type: "string" }, limit: { type: "number" } }, required: ["query"] } } },
+  { type: "function", function: { name: "check_contrast", description: "Check WCAG 2.1 contrast ratio between foreground and background hex colors. Returns AA/AAA pass/fail.", parameters: { type: "object", properties: { foreground: { type: "string", description: "Foreground hex color, e.g. '#1e293b'." }, background: { type: "string", description: "Background hex color, e.g. '#ffffff'." } }, required: ["foreground", "background"] } } },
+  { type: "function", function: { name: "get_accessibility_guidance", description: "Get per-component accessibility spec: ARIA roles, keyboard interaction, focus order, screen reader expectations.", parameters: { type: "object", properties: { componentName: { type: "string" } }, required: ["componentName"] } } },
+  { type: "function", function: { name: "get_component_variants", description: "List all variants for a component with when-to-use guidance for each.", parameters: { type: "object", properties: { componentName: { type: "string" } }, required: ["componentName"] } } },
+  { type: "function", function: { name: "get_component_anatomy", description: "Get internal structure of a component: named slots, valid children, and composition patterns.", parameters: { type: "object", properties: { componentName: { type: "string" } }, required: ["componentName"] } } },
+  { type: "function", function: { name: "get_component_relationships", description: "Get component relationships: parent, siblings, related components, and composition contexts.", parameters: { type: "object", properties: { componentName: { type: "string" } }, required: ["componentName"] } } },
+  { type: "function", function: { name: "get_layout_guidance", description: "Get layout rules: page gutters, content max-widths, breakpoints, grid columns, and region spacing.", parameters: { type: "object", properties: { context: { type: "string", description: "Optional context, e.g. 'page', 'form', 'dashboard'." } }, required: [] } } },
+  { type: "function", function: { name: "get_spacing_scale", description: "Get the complete spacing scale with semantic usage hints for each step.", parameters: { type: "object", properties: {}, required: [] } } },
+  { type: "function", function: { name: "get_changelog", description: "Get the design system version history, filterable by version range.", parameters: { type: "object", properties: { fromVersion: { type: "string" }, toVersion: { type: "string" } }, required: [] } } },
+  { type: "function", function: { name: "get_deprecations", description: "List all deprecated tokens, components, patterns, and endpoints with migration paths.", parameters: { type: "object", properties: { type: { type: "string", enum: ["token", "component", "endpoint", "all"] } }, required: [] } } },
+  // AI generation
+  {
+    type: "function",
+    function: {
+      name: "generate_design_system",
+      description:
+        "Generate a complete design system (tokens, components, themes, icons) from a natural-language description and automatically load it for immediate use. " +
+        "Call this once you have gathered sufficient information about the user's brand name, product type, aesthetic direction, primary colors, secondary colors, and typography preferences. " +
+        "The generated design system replaces the currently loaded data and is immediately available in the Component Explorer.",
+      parameters: {
+        type: "object",
+        properties: {
+          description: {
+            type: "string",
+            description:
+              "Comprehensive description including: brand name, product type, aesthetic direction " +
+              "(e.g. modern/minimal, playful, professional, trustworthy, bold/expressive), primary color(s), " +
+              "secondary color(s), typography style, and any other brand characteristics provided by the user.",
+          },
+        },
+        required: ["description"],
+      },
+    },
+  },
 ] as const;
 
 const CHAT_SYSTEM_PROMPT =
-  "You are a design system expert assistant. You have access to a design system MCP server with tokens and components. " +
+  "You are a design system expert assistant. You have access to a design system MCP server with tokens, components, themes, icons, and guidelines. " +
   "When the user asks about UI components, colors, spacing, typography, or design tokens, call the appropriate tools to get accurate data from the design system before answering. " +
-  "Always use the actual token values and component specs from the tools — never guess or invent values. " +
-  "When the user asks you to create, build, design, or show a UI element or component, always include a complete, self-contained HTML snippet " +
-  "in a fenced html code block (opening fence: three backticks followed by html) that can be rendered directly in a browser. " +
-  "The HTML snippet must use inline styles only (no external stylesheets) and apply the exact token values (colors, spacing, font sizes, etc.) " +
-  "returned by the MCP tools. Include only the component markup — no html, head, or body wrappers.";
+  "Always use the actual token values and component specs from the tools — never guess or invent values.\n\n" +
+  "## Response format\n" +
+  "IMPORTANT: Every response must be a single valid JSON object. Output ONLY the JSON — no text, no markdown, no code fences outside it.\n\n" +
+  "When answering a question (no UI to render):\n" +
+  '{"message": "Your prose answer here."}\n\n' +
+  "When generating a UI component:\n" +
+  '{"message": "Your prose explanation here.", "preview": "<button style=\\"...\\">...</button>"}\n\n' +
+  "Field rules:\n" +
+  '  • "message": plain prose text for the chat — no HTML, no code fences. Required.\n' +
+  '  • "preview": raw HTML markup only — no backtick fences, no extra wrappers. ' +
+  "Use inline styles only. Apply exact token values from the MCP tools. " +
+  "Omit this field entirely when no UI is generated.\n\n" +
+  "You also help users create brand-new design systems through conversation. " +
+  "When a user wants to generate a design system:\n" +
+  "1. Gather their brand name, product type, aesthetic direction (e.g. modern/minimal, playful, professional, trustworthy, bold), primary color(s), secondary color(s), and typography style preferences.\n" +
+  "2. Ask clarifying questions one at a time until you have at least a clear brand aesthetic and color direction.\n" +
+  "3. Once you have enough information (typically after 2–4 exchanges), call the generate_design_system tool with a comprehensive, detailed description.\n" +
+  "4. After the tool returns success, briefly summarise what was generated and tell the user it has been loaded and is ready to explore.";
+
+// ── Agent info endpoint ───────────────────────────────────────────────────
+// Returns a machine-readable description of the chat agent's configuration:
+// its name, the exact system instructions it receives, the model in use,
+// agentic loop parameters, and the full set of MCP tools it can call.
+// Used by the "View Agents" modal in the demo UI.
+// ─────────────────────────────────────────────────────────────────────────
+app.get("/api/agent-info", (_req, res) => {
+  res.json({
+    agents: [
+      {
+        name: "Chat Assistant",
+        description: "OpenRouter-backed agentic loop that calls MCP tools to ground answers in live design system data.",
+        model: process.env.OPENROUTER_MODEL ?? "openai/gpt-oss-20b:nitro",
+        parameters: {
+          maxIterations: 8,
+          toolChoice: "auto",
+          endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
+        },
+        systemPrompt: CHAT_SYSTEM_PROMPT,
+        tools: OPENROUTER_TOOLS.map((t) => ({
+          name: t.function.name,
+          description: t.function.description,
+          parameters: t.function.parameters,
+        })),
+      },
+    ],
+  });
+});
 
 // ── Chat endpoint ──────────────────────────────────────────────────────────
 // OpenRouter-backed agentic loop. Calls OpenRouter with the conversation and
-// all 13 design-system tools. Tool calls are executed locally via runMcpTool,
+// all 26 design-system tools. Tool calls are executed locally via runMcpTool,
 // and results are fed back into the loop until the model returns a final answer.
 // ─────────────────────────────────────────────────────────────────────────
+
+/** Parse the LLM's JSON response into {message, preview}.
+ *  Falls back to treating the raw text as the message if JSON parsing fails,
+ *  so a non-compliant model reply still works rather than blowing up. */
+function parseChatResponse(raw: string): { message: string; preview: string | null } {
+  const text = raw.trim();
+  // Strip a possible ```json ... ``` fence — some models add one despite instructions
+  const fenced = text.match(/^```(?:json)?\s*([\s\S]*?)```\s*$/i);
+  const candidate = fenced ? fenced[1].trim() : text;
+  try {
+    const parsed = JSON.parse(candidate) as { message?: unknown; preview?: unknown };
+    const message = typeof parsed.message === "string" ? parsed.message : raw;
+    const preview = typeof parsed.preview === "string" && parsed.preview.trim() ? parsed.preview.trim() : null;
+    return { message, preview };
+  } catch {
+    // Graceful fallback: plain text, no preview
+    return { message: raw, preview: null };
+  }
+}
+
 app.post("/api/chat", async (req, res) => {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
@@ -524,10 +937,28 @@ app.post("/api/chat", async (req, res) => {
   ];
 
   const toolCallsUsed: string[] = [];
-  const MAX_ITERATIONS = 5;
+  const MAX_ITERATIONS = 8; // extra headroom: generate_design_system is slow and the conversation flow needs additional turns
+
+  // Collects thinking steps to surface in the UI
+  type ThinkingStep =
+    | { type: "reasoning"; content: string }
+    | { type: "tool_call"; tool: string; args: string };
+  const thinkingSteps: ThinkingStep[] = [];
+
+  // Holds the generated design system data if generate_design_system is called
+  let generatedDesignSystemData: Record<string, unknown> | null = null;
+
+  // Content block shape returned by thinking-capable models (e.g. Claude)
+  type ContentBlock =
+    | { type: "thinking"; thinking: string }
+    | { type: "text"; text: string }
+    | { type: string; [key: string]: unknown };
 
   try {
     for (let i = 0; i < MAX_ITERATIONS; i++) {
+      console.log(`[chat] iteration=${i} model=${model} messages=${loopMessages.length}`);
+      console.log("[chat:prompt]", JSON.stringify(loopMessages, null, 2));
+
       const orResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -554,7 +985,7 @@ app.post("/api/chat", async (req, res) => {
         choices: Array<{
           message: {
             role: string;
-            content: string | null;
+            content: string | Array<ContentBlock> | null;
             tool_calls?: Array<{
               id: string;
               type: string;
@@ -572,7 +1003,27 @@ app.post("/api/chat", async (req, res) => {
       }
 
       const assistantMessage = choice.message;
-      loopMessages.push(assistantMessage as OpenRouterMessage);
+
+      // Extract text content and any reasoning blocks when content is an array
+      // (thinking-capable models like Claude return an array of content blocks)
+      let assistantTextContent: string | null = null;
+      if (Array.isArray(assistantMessage.content)) {
+        for (const block of assistantMessage.content as ContentBlock[]) {
+          if (block.type === "thinking" && block.thinking) {
+            thinkingSteps.push({ type: "reasoning", content: block.thinking as string });
+          } else if (block.type === "text" && block.text) {
+            assistantTextContent = (assistantTextContent ?? "") + block.text;
+          }
+        }
+      } else {
+        assistantTextContent = assistantMessage.content;
+      }
+
+      // Store the message with normalised string content so the loop continues cleanly
+      loopMessages.push({
+        ...assistantMessage,
+        content: assistantTextContent,
+      } as OpenRouterMessage);
 
       // If the model requested tool calls, execute them and continue the loop
       if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
@@ -587,11 +1038,50 @@ app.post("/api/chat", async (req, res) => {
 
           if (!toolCallsUsed.includes(toolName)) toolCallsUsed.push(toolName);
 
+          // Record as a thinking step so the UI can show it
+          thinkingSteps.push({ type: "tool_call", tool: toolName, args: toolCall.function.arguments });
+
+          console.log(`[chat:tool] calling ${toolName}`, JSON.stringify(toolArgs));
+
           let toolResult: string;
-          try {
-            toolResult = await runMcpTool(toolName, toolArgs);
-          } catch (toolErr) {
-            toolResult = JSON.stringify({ error: String(toolErr) });
+
+          // ── Special handling: generate_design_system ───────────────────
+          if (toolName === "generate_design_system") {
+            try {
+              const description = (toolArgs.description as string) ?? "";
+              const result = await generateDesignSystem(description, apiKey, model);
+
+              // Auto-load each present section into the data store
+              const VALID_TYPES: DataType[] = ["tokens", "components", "themes", "icons"];
+              const loadedSections: string[] = [];
+              for (const section of VALID_TYPES) {
+                if (result.data[section] !== undefined) {
+                  setData(section, result.data[section]);
+                  loadedSections.push(section);
+                }
+              }
+
+              generatedDesignSystemData = result.data;
+
+              toolResult = JSON.stringify({
+                success: true,
+                message:          "Design system generated and loaded successfully.",
+                sectionsLoaded:   loadedSections,
+                componentCount:   Object.keys((result.data.components ?? {}) as object).length,
+                themeCount:       Object.keys((result.data.themes    ?? {}) as object).length,
+                iconCount:        Object.keys((result.data.icons     ?? {}) as object).length,
+                warnings:         result.warnings,
+              });
+            } catch (genErr) {
+              toolResult = JSON.stringify({ success: false, error: String(genErr) });
+            }
+          } else {
+            // ── Standard tool execution ────────────────────────────────
+            try {
+              toolResult = await runMcpTool(toolName, toolArgs);
+            } catch (toolErr) {
+              toolResult = JSON.stringify({ error: String(toolErr) });
+            }
           }
 
           loopMessages.push({
@@ -600,21 +1090,25 @@ app.post("/api/chat", async (req, res) => {
             name: toolName,
             content: toolResult,
           });
+          console.log(`[chat:tool] result for ${toolName}:`, toolResult.slice(0, 500));
         }
         // Continue loop to let the model process tool results
         continue;
       }
 
       // No tool calls — return the final answer
-      const responseText = assistantMessage.content ?? "";
-      res.json({ response: responseText, model, toolCallsUsed });
+      const rawResponse = assistantTextContent ?? "";
+      const { message, preview } = parseChatResponse(rawResponse);
+      console.log("[chat:response]", message.slice(0, 300));
+      res.json({ message, preview, model, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
       return;
     }
 
     // Reached max iterations without a final text response — return whatever is in the last assistant message
     const lastAssistant = [...loopMessages].reverse().find((m: OpenRouterMessage) => m.role === "assistant" && m.content);
-    const lastContent = lastAssistant?.content ?? "";
-    res.json({ response: String(lastContent), model, toolCallsUsed });
+    const rawLast = String(lastAssistant?.content ?? "");
+    const { message: lastMessage, preview: lastPreview } = parseChatResponse(rawLast);
+    res.json({ message: lastMessage, preview: lastPreview, model, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
   } catch (err) {
     console.error("Chat error:", err);
     if (!res.headersSent) {
@@ -637,8 +1131,12 @@ if (!isVercel) {
   const PORT = process.env.PORT ?? "3000";
   app.listen(Number(PORT), () => {
     console.log(`\nDesign System MCP server running on http://localhost:${PORT}`);
-    console.log(`  Health check : GET  /`);
-    console.log(`  MCP endpoint : POST /mcp\n`);
+    console.log(`  Health check  : GET  /health`);
+    console.log(`  MCP endpoint  : POST /mcp`);
+    console.log(`  Version       : 0.3.0`);
+    console.log(`  Tools         : 26`);
+    console.log(`  Resources     : 14 URIs + 4 templates`);
+    console.log(`  Prompts       : 9\n`);
   });
 }
 

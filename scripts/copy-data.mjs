@@ -24,7 +24,7 @@ const distData   = join(root, "dist", "data");
 mkdirSync(distData, { recursive: true });
 
 // Copy each data file
-const files = ["tokens.json", "components.json", "themes.json", "icons.json"];
+const files = ["tokens.json", "components.json", "themes.json", "icons.json", "changelog.json", "deprecations.json"];
 for (const file of files) {
   copyFileSync(join(srcData, file), join(distData, file));
   console.log(`  copied  src/data/${file}  →  dist/data/${file}`);

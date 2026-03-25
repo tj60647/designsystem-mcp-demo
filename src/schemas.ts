@@ -21,90 +21,126 @@ const TOKEN_ENTRY_SCHEMA = {
   additionalProperties: false,
 };
 
+// Schema bodies (without $schema / title) are extracted so they can be
+// reused as nested property schemas inside the combined "design-system" schema.
+
+const TOKENS_SCHEMA_BODY = {
+  description:
+    "Design token file. Top-level keys are token categories (color, typography, spacing, …). " +
+    "Each category is a nested object whose leaf nodes follow the token-entry shape.",
+  type: "object",
+  properties: {
+    color:        { type: "object", description: "Color tokens — primary, neutral, semantic…" },
+    typography:   { type: "object", description: "Typography tokens — fontFamily, fontSize, fontWeight, lineHeight…" },
+    spacing:      { type: "object", description: "Spacing tokens — numeric step keys (1–16) mapped to px values." },
+    borderRadius: { type: "object", description: "Border-radius tokens — sm, md, lg, full…" },
+    shadow:       { type: "object", description: "Box-shadow tokens — sm, md, lg…" },
+    motion:       { type: "object", description: "Motion tokens — duration, easing…" },
+    layout:       { type: "object", description: "Layout tokens — grid columns, breakpoints, z-index…" },
+  },
+  additionalProperties: {
+    type: "object",
+    description: "Custom token category. Leaf nodes must follow the token-entry shape.",
+  },
+  definitions: { tokenEntry: TOKEN_ENTRY_SCHEMA },
+};
+
+const COMPONENTS_SCHEMA_BODY = {
+  description: "Component specifications. Each key is a lowercase component name (e.g. 'button', 'input').",
+  type: "object",
+  additionalProperties: {
+    type: "object",
+    required: ["name", "description"],
+    properties: {
+      name:          { type: "string", description: "Display name, e.g. 'Button'." },
+      description:   { type: "string", description: "One-sentence description of the component." },
+      variants:      { type: "array", items: { type: "string" }, description: "Allowed variant values, e.g. ['primary','secondary','ghost']." },
+      sizes:         { type: "array", items: { type: "string" }, description: "Allowed size values, e.g. ['sm','md','lg']." },
+      states:        { type: "array", items: { type: "string" }, description: "Allowed state values, e.g. ['default','hover','disabled']." },
+      props:         { type: "object", description: "Prop definitions keyed by prop name." },
+      tokens:        { type: "object", description: "Token references used by this component. Values use '{token.path}' syntax." },
+      constraints:   { type: "array", items: { type: "string" }, description: "Usage rules for this component." },
+      accessibility: { type: "object", description: "Accessibility requirements for this component." },
+    },
+    additionalProperties: false,
+  },
+};
+
+const THEMES_SCHEMA_BODY = {
+  description: "Theme definitions. Each key is a theme identifier (e.g. 'light', 'dark').",
+  type: "object",
+  additionalProperties: {
+    type: "object",
+    required: ["name", "description", "semantic"],
+    properties: {
+      name:        { type: "string", description: "Display name, e.g. 'Dark Mode'." },
+      description: { type: "string", description: "What this theme is for." },
+      semantic: {
+        type: "object",
+        description: "Semantic token overrides. Keys are semantic token paths; values are resolved CSS values.",
+        additionalProperties: { type: "string" },
+      },
+    },
+    additionalProperties: false,
+  },
+};
+
+const ICONS_SCHEMA_BODY = {
+  description: "Icon metadata. Each key is a lowercase icon identifier.",
+  type: "object",
+  additionalProperties: {
+    type: "object",
+    required: ["name", "category", "keywords", "sizes", "description"],
+    properties: {
+      name:        { type: "string", description: "Display name of the icon." },
+      category:    { type: "string", description: "Icon category, e.g. 'action', 'navigation'." },
+      keywords:    { type: "array", items: { type: "string" }, description: "Search keywords for the icon." },
+      sizes:       { type: "array", items: { type: "number" }, description: "Supported sizes in px, e.g. [16, 24, 32]." },
+      description: { type: "string", description: "Short description of what the icon represents." },
+    },
+    additionalProperties: false,
+  },
+};
+
 export const DATA_SCHEMAS: Record<string, unknown> = {
   tokens: {
     $schema: "http://json-schema.org/draft-07/schema#",
     title: "tokens.json",
-    description:
-      "Design token file. Top-level keys are token categories (color, typography, spacing, …). " +
-      "Each category is a nested object whose leaf nodes follow the token-entry shape.",
-    type: "object",
-    properties: {
-      color:        { type: "object", description: "Color tokens — primary, neutral, semantic…" },
-      typography:   { type: "object", description: "Typography tokens — fontFamily, fontSize, fontWeight, lineHeight…" },
-      spacing:      { type: "object", description: "Spacing tokens — numeric step keys (1–16) mapped to px values." },
-      borderRadius: { type: "object", description: "Border-radius tokens — sm, md, lg, full…" },
-      shadow:       { type: "object", description: "Box-shadow tokens — sm, md, lg…" },
-      motion:       { type: "object", description: "Motion tokens — duration, easing…" },
-      layout:       { type: "object", description: "Layout tokens — grid columns, breakpoints, z-index…" },
-    },
-    additionalProperties: {
-      type: "object",
-      description: "Custom token category. Leaf nodes must follow the token-entry shape.",
-    },
-    definitions: { tokenEntry: TOKEN_ENTRY_SCHEMA },
+    ...TOKENS_SCHEMA_BODY,
   },
 
   components: {
     $schema: "http://json-schema.org/draft-07/schema#",
     title: "components.json",
-    description: "Component specifications. Each key is a lowercase component name (e.g. 'button', 'input').",
-    type: "object",
-    additionalProperties: {
-      type: "object",
-      required: ["name", "description"],
-      properties: {
-        name:          { type: "string", description: "Display name, e.g. 'Button'." },
-        description:   { type: "string", description: "One-sentence description of the component." },
-        variants:      { type: "array", items: { type: "string" }, description: "Allowed variant values, e.g. ['primary','secondary','ghost']." },
-        sizes:         { type: "array", items: { type: "string" }, description: "Allowed size values, e.g. ['sm','md','lg']." },
-        states:        { type: "array", items: { type: "string" }, description: "Allowed state values, e.g. ['default','hover','disabled']." },
-        props:         { type: "object", description: "Prop definitions keyed by prop name." },
-        tokens:        { type: "object", description: "Token references used by this component. Values use '{token.path}' syntax." },
-        constraints:   { type: "array", items: { type: "string" }, description: "Usage rules for this component." },
-        accessibility: { type: "object", description: "Accessibility requirements for this component." },
-      },
-      additionalProperties: false,
-    },
+    ...COMPONENTS_SCHEMA_BODY,
   },
 
   themes: {
     $schema: "http://json-schema.org/draft-07/schema#",
     title: "themes.json",
-    description: "Theme definitions. Each key is a theme identifier (e.g. 'light', 'dark').",
-    type: "object",
-    additionalProperties: {
-      type: "object",
-      required: ["name", "description", "semantic"],
-      properties: {
-        name:        { type: "string", description: "Display name, e.g. 'Dark Mode'." },
-        description: { type: "string", description: "What this theme is for." },
-        semantic: {
-          type: "object",
-          description: "Semantic token overrides. Keys are semantic token paths; values are resolved CSS values.",
-          additionalProperties: { type: "string" },
-        },
-      },
-      additionalProperties: false,
-    },
+    ...THEMES_SCHEMA_BODY,
   },
 
   icons: {
     $schema: "http://json-schema.org/draft-07/schema#",
     title: "icons.json",
-    description: "Icon metadata. Each key is a lowercase icon identifier.",
+    ...ICONS_SCHEMA_BODY,
+  },
+
+  "design-system": {
+    $schema: "http://json-schema.org/draft-07/schema#",
+    title: "design-system.json",
+    description:
+      "Combined design system file. All four data sets in a single JSON object. " +
+      "Load this instead of individual files to replace all design system data at once.",
     type: "object",
-    additionalProperties: {
-      type: "object",
-      required: ["name", "category", "keywords", "sizes", "description"],
-      properties: {
-        name:        { type: "string", description: "Display name of the icon." },
-        category:    { type: "string", description: "Icon category, e.g. 'action', 'navigation'." },
-        keywords:    { type: "array", items: { type: "string" }, description: "Search keywords for the icon." },
-        sizes:       { type: "array", items: { type: "number" }, description: "Supported sizes in px, e.g. [16, 24, 32]." },
-        description: { type: "string", description: "Short description of what the icon represents." },
-      },
-      additionalProperties: false,
+    required: ["tokens", "components", "themes", "icons"],
+    properties: {
+      tokens:     TOKENS_SCHEMA_BODY,
+      components: COMPONENTS_SCHEMA_BODY,
+      themes:     THEMES_SCHEMA_BODY,
+      icons:      ICONS_SCHEMA_BODY,
     },
+    additionalProperties: false,
   },
 };

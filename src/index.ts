@@ -977,6 +977,19 @@ app.post("/api/chat", async (req, res) => {
 
   const model = requestedModel ?? process.env.OPENROUTER_MODEL ?? "openai/gpt-oss-20b:nitro";
 
+  // Stream progress updates to the client via Server-Sent Events so the user
+  // sees live feedback ("Thinking…", "Calling get_component…") instead of a
+  // silent spinner for the full duration of the agentic loop.
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders();
+
+  const sendEvent = (data: object) => res.write(`data: ${JSON.stringify(data)}\n\n`);
+  const sendProgress = (message: string) => sendEvent({ type: "progress", message });
+  const endWithDone = (payload: object) => { sendEvent({ type: "done", ...payload }); res.end(); };
+  const endWithError = (error: string) => { sendEvent({ type: "error", error }); res.end(); };
+
   // Build the message list for OpenRouter: system + conversation
   type OpenRouterMessage = {
     role: string;
@@ -993,10 +1006,11 @@ app.post("/api/chat", async (req, res) => {
   const toolCallsUsed: string[] = [];
   const MAX_ITERATIONS = 8; // extra headroom: generate_design_system is slow and the conversation flow needs additional turns
 
-  // Abort the whole agentic loop if it exceeds the platform request timeout.
-  // Default 25 s — safely under Heroku's 30 s hard limit and Vercel's 30 s limit.
-  // Override with CHAT_TIMEOUT_MS env var for other hosts.
-  const CHAT_TIMEOUT_MS = Number(process.env.CHAT_TIMEOUT_MS ?? 25_000);
+  // Abort the whole agentic loop after a generous timeout.  Progress is
+  // streamed so the user sees activity; 120 s gives multi-step agentic tasks
+  // (including generate_design_system) time to complete.
+  // Override with CHAT_TIMEOUT_MS env var for tighter platform limits.
+  const CHAT_TIMEOUT_MS = Number(process.env.CHAT_TIMEOUT_MS ?? 120_000);
   const chatAbort = new AbortController();
   const chatTimer = setTimeout(() => chatAbort.abort(), CHAT_TIMEOUT_MS);
 
@@ -1020,6 +1034,8 @@ app.post("/api/chat", async (req, res) => {
       console.log(`[chat] iteration=${i} model=${model} messages=${loopMessages.length}`);
       console.log("[chat:prompt]", JSON.stringify(loopMessages, null, 2));
 
+      sendProgress("Thinking…");
+
       const orResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -1039,7 +1055,8 @@ app.post("/api/chat", async (req, res) => {
 
       if (!orResponse.ok) {
         const errText = await orResponse.text();
-        res.status(502).json({ error: "OpenRouter API error", details: errText });
+        clearTimeout(chatTimer);
+        endWithError(`OpenRouter API error: ${errText}`);
         return;
       }
 
@@ -1060,7 +1077,8 @@ app.post("/api/chat", async (req, res) => {
 
       const choice = orData.choices[0];
       if (!choice) {
-        res.status(502).json({ error: "OpenRouter returned no choices." });
+        clearTimeout(chatTimer);
+        endWithError("OpenRouter returned no choices.");
         return;
       }
 
@@ -1105,6 +1123,13 @@ app.post("/api/chat", async (req, res) => {
 
           console.log(`[chat:tool] calling ${toolName}`, JSON.stringify(toolArgs));
 
+          // Notify the client which tool is being executed
+          if (toolName === "generate_design_system") {
+            sendProgress("Generating design system — this may take a moment…");
+          } else {
+            sendProgress(`Calling \`${toolName}\`…`);
+          }
+
           let toolResult: string;
 
           // ── Special handling: generate_design_system ───────────────────
@@ -1136,11 +1161,7 @@ app.post("/api/chat", async (req, res) => {
               });
             } catch (genErr) {
               clearTimeout(chatTimer);
-              res.status(422).json({
-                error: "Design system generation failed.",
-                details: String(genErr),
-                tool: "generate_design_system",
-              });
+              endWithError(`Design system generation failed: ${String(genErr)}`);
               return;
             }
           } else {
@@ -1169,7 +1190,7 @@ app.post("/api/chat", async (req, res) => {
       const { message, preview } = parseChatResponse(rawResponse);
       console.log("[chat:response]", message.slice(0, 300));
       clearTimeout(chatTimer);
-      res.json({ message, preview, model, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
+      endWithDone({ message, preview, model, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
       return;
     }
 
@@ -1178,18 +1199,16 @@ app.post("/api/chat", async (req, res) => {
     const rawLast = String(lastAssistant?.content ?? "");
     const { message: lastMessage, preview: lastPreview } = parseChatResponse(rawLast);
     clearTimeout(chatTimer);
-    res.json({ message: lastMessage, preview: lastPreview, model, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
+    endWithDone({ message: lastMessage, preview: lastPreview, model, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
   } catch (err) {
     clearTimeout(chatTimer);
     console.error("Chat error:", err);
-    if (!res.headersSent) {
-      const isTimeout = (err as { name?: string }).name === "AbortError";
-      res.status(isTimeout ? 504 : 500).json({
-        error: isTimeout
-          ? "The AI took too long to respond. Please try a simpler question or try again."
-          : "Internal server error during chat.",
-      });
-    }
+    const isTimeout = (err as { name?: string }).name === "AbortError";
+    endWithError(
+      isTimeout
+        ? "The AI took too long to respond. Please try a simpler question or try again."
+        : "Internal server error during chat.",
+    );
   }
 });
 

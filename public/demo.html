@@ -396,6 +396,58 @@
     .dot:nth-child(3) { animation-delay: .3s; }
     @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
 
+    /* Thinking block */
+    .thinking-block {
+      align-self: flex-start;
+      max-width: 92%;
+      margin-bottom: 2px;
+    }
+    .thinking-toggle {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11.5px; color: var(--text-muted);
+      background: none; border: none; cursor: pointer;
+      padding: 3px 0; line-height: 1.4;
+      transition: color .15s;
+    }
+    .thinking-toggle:hover { color: var(--text); }
+    .thinking-toggle-icon {
+      font-size: 10px;
+      transition: transform .2s ease;
+      display: inline-block;
+    }
+    .thinking-block.expanded .thinking-toggle-icon { transform: rotate(90deg); }
+    .thinking-steps {
+      margin-top: 6px;
+      border-left: 2px solid var(--border);
+      padding-left: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .thinking-block:not(.expanded) .thinking-steps { display: none; }
+    .thinking-block.expanded .thinking-steps { display: flex; }
+    .thinking-step {
+      font-size: 11.5px; line-height: 1.5; color: var(--text-muted);
+    }
+    .thinking-step-tool {
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .thinking-step-tool-name {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 11px; color: var(--purple);
+      background: rgba(188,140,255,.1);
+      border: 1px solid rgba(188,140,255,.2);
+      border-radius: 3px; padding: 1px 5px;
+    }
+    .thinking-step-reasoning {
+      font-style: italic;
+      color: var(--text-dim);
+      white-space: pre-wrap;
+      max-height: 120px;
+      overflow-y: auto;
+      font-size: 11px;
+    }
+
     /* Chips */
     .chips-section {
       padding: 8px 12px 6px;
@@ -1501,6 +1553,12 @@
         const preview   = data.preview || null;
         const toolsUsed = data.toolCallsUsed || [];
         conversationHistory.push({ role: "assistant", content: message });
+
+        // Show collapsible thinking block before the reply when steps are present
+        if (data.thinkingSteps && data.thinkingSteps.length > 0) {
+          appendThinkingBlock(data.thinkingSteps);
+        }
+
         appendMessage("assistant", message);
         updateLivePreview(preview, toolsUsed, data.model);
 
@@ -1554,6 +1612,56 @@
 
   function scrollToBottom() {
     requestAnimationFrame(() => { messagesEl.scrollTop = messagesEl.scrollHeight; });
+  }
+
+  // ── Thinking / reasoning block ──────────────────────────────────────────
+  function appendThinkingBlock(steps) {
+    const toolSteps  = steps.filter(s => s.type === "tool_call");
+    const reasonSteps = steps.filter(s => s.type === "reasoning");
+    const totalSteps = steps.length;
+
+    // Build summary label
+    const parts = [];
+    if (toolSteps.length > 0) parts.push(`${toolSteps.length} tool call${toolSteps.length !== 1 ? "s" : ""}`);
+    if (reasonSteps.length > 0) parts.push("model reasoning");
+    const summary = parts.length > 0 ? parts.join(" · ") : `${totalSteps} step${totalSteps !== 1 ? "s" : ""}`;
+
+    const block = document.createElement("div");
+    block.className = "thinking-block";
+
+    const toggle = document.createElement("button");
+    toggle.className = "thinking-toggle";
+    toggle.innerHTML = `<span class="thinking-toggle-icon">▶</span><span>Thought for ${summary}</span>`;
+    toggle.addEventListener("click", () => block.classList.toggle("expanded"));
+
+    const stepsEl = document.createElement("div");
+    stepsEl.className = "thinking-steps";
+
+    for (const step of steps) {
+      const item = document.createElement("div");
+      item.className = "thinking-step";
+
+      if (step.type === "tool_call") {
+        let argsLabel = "";
+        try {
+          const parsed = JSON.parse(step.args || "{}");
+          const keys = Object.keys(parsed);
+          if (keys.length > 0) {
+            const first = String(parsed[keys[0]]).slice(0, 40);
+            argsLabel = ` <span style="color:var(--text-dim);font-size:10.5px">${escapeHtml(keys[0])}: ${escapeHtml(first)}${first.length >= 40 ? "…" : ""}</span>`;
+          }
+        } catch { /* ignore */ }
+        item.innerHTML = `<span class="thinking-step-tool"><span style="color:var(--text-dim)">Called</span> <span class="thinking-step-tool-name">${escapeHtml(step.tool)}</span>${argsLabel}</span>`;
+      } else if (step.type === "reasoning") {
+        item.innerHTML = `<div class="thinking-step-reasoning">${escapeHtml(step.content)}</div>`;
+      }
+
+      stepsEl.appendChild(item);
+    }
+
+    block.appendChild(toggle);
+    block.appendChild(stepsEl);
+    messagesEl.appendChild(block);
   }
 
   // ── Live Preview + Tools panels ─────────────────────────────────────────

@@ -1093,6 +1093,7 @@
   <span class="mcp-badge">MCP</span>
   <div class="topbar-spacer"></div>
   <button class="topbar-btn topbar-btn-download" id="download-ds-btn" title="Download the AI-generated design system as JSON" style="display:none">⬇ Download Design System JSON</button>
+  <button class="topbar-btn" id="gen-from-web-btn" title="Generate a design system by extracting design tokens from a website URL" aria-label="Generate design system from website">Generate from Website</button>
   <button class="topbar-btn" id="view-schema-btn" title="View and download the JSON schema for any data type">View Schema</button>
   <button class="topbar-btn" id="view-agents-btn" title="View the chat agent configuration, system prompt, and tool list">View Agents</button>
   <button class="topbar-btn" id="load-json-btn" title="Replace a data file (tokens, components, themes, icons) with custom JSON">Load JSON</button>
@@ -1136,6 +1137,25 @@
     <div class="modal-actions">
       <button class="btn-secondary" id="modal-cancel-btn">Cancel</button>
       <button class="btn-primary" id="modal-submit-btn">Load</button>
+    </div>
+  </div>
+</div>
+
+<!-- Generate from Website modal -->
+<div class="modal-overlay" id="gen-from-web-modal" role="dialog" aria-modal="true" aria-labelledby="gen-from-web-modal-title">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="gen-from-web-modal-title">Generate from Website</span>
+      <button class="modal-close" id="gen-from-web-modal-close" aria-label="Close">✕</button>
+    </div>
+    <div>
+      <label for="gen-from-web-url">Website URL</label>
+      <input type="url" id="gen-from-web-url" placeholder="https://example.com" autocomplete="off" style="width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;color:var(--text);font-size:13px;outline:none;" />
+    </div>
+    <div class="modal-hint" id="gen-from-web-hint">Enter a public website URL. Design tokens will be extracted from its CSS and used to generate a matching design system.</div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="gen-from-web-cancel">Cancel</button>
+      <button class="btn-primary" id="gen-from-web-submit">Generate</button>
     </div>
   </div>
 </div>
@@ -3371,6 +3391,80 @@
     });
   }
 
+  // ── Generate from Website modal ─────────────────────────────────────────
+  function initGenerateFromWebsiteModal() {
+    const overlay   = document.getElementById("gen-from-web-modal");
+    const openBtn   = document.getElementById("gen-from-web-btn");
+    const closeBtn  = document.getElementById("gen-from-web-modal-close");
+    const cancelBtn = document.getElementById("gen-from-web-cancel");
+    const submitBtn = document.getElementById("gen-from-web-submit");
+    const urlInput  = document.getElementById("gen-from-web-url");
+    const hint      = document.getElementById("gen-from-web-hint");
+
+    const DEFAULT_HINT = "Enter a public website URL. Design tokens will be extracted from its CSS and used to generate a matching design system.";
+
+    function openModal() {
+      urlInput.value = "";
+      hint.textContent = DEFAULT_HINT;
+      hint.style.color = "";
+      overlay.classList.add("open");
+      urlInput.focus();
+    }
+
+    function closeModal() {
+      overlay.classList.remove("open");
+    }
+
+    openBtn.addEventListener("click", openModal);
+    closeBtn.addEventListener("click", closeModal);
+    cancelBtn.addEventListener("click", closeModal);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && overlay.classList.contains("open")) closeModal();
+    });
+
+    submitBtn.addEventListener("click", async () => {
+      const url = urlInput.value.trim();
+      if (!url) {
+        hint.textContent = "Please enter a URL.";
+        hint.style.color = "var(--red)";
+        urlInput.focus();
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Generating…";
+      hint.textContent = "Fetching website and extracting design tokens…";
+      hint.style.color = "var(--text-muted)";
+
+      try {
+        const res = await fetch("/api/generate-from-website", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          hint.textContent = "Error: " + (data.error || "Unknown error");
+          hint.style.color = "var(--red)";
+          return;
+        }
+
+        closeModal();
+        handleGeneratedDesignSystem(data.generatedDesignSystem);
+      } catch (err) {
+        hint.textContent = "Network error. Please check your connection and try again.";
+        hint.style.color = "var(--red)";
+        console.error("Generate from website error:", err);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Generate";
+      }
+    });
+  }
+
   // ── Boot ───────────────────────────────────────────────────────────────
   loadTemplates();
   initInfoModals();
@@ -3379,6 +3473,7 @@
   initViewSchemaModal();
   initAgentsModal();
   initValidationModal();
+  initGenerateFromWebsiteModal();
   initRightTabs();
   initComponentExplorer();
   initGallery();

@@ -32,6 +32,7 @@ import { runMcpTool } from "./toolRunner.js";
 import { setData, getData, resetData, type DataType } from "./dataStore.js";
 import { DATA_SCHEMAS } from "./schemas.js";
 import { generateDesignSystem } from "./generator.js";
+import { extractWebsiteDesignContext, validateWebsiteUrl } from "./websiteExtractor.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
@@ -875,6 +876,59 @@ app.get("/api/agent-info", (_req, res) => {
       },
     ],
   });
+});
+
+// ── Generate from Website endpoint ────────────────────────────────────────
+// Fetches a public website, extracts CSS design tokens, then generates a
+// complete design system JSON using the AI generator.
+// ─────────────────────────────────────────────────────────────────────────
+app.post("/api/generate-from-website", async (req, res) => {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) {
+    res.status(503).json({
+      error: "OpenRouter not configured. Set OPENROUTER_API_KEY environment variable.",
+    });
+    return;
+  }
+
+  const { url, model: requestedModel } = req.body as { url?: string; model?: string };
+
+  if (!url || typeof url !== "string" || !url.trim()) {
+    res.status(400).json({ error: "url is required." });
+    return;
+  }
+
+  try {
+    // Validate URL up-front to return a clear 400 before doing any I/O
+    validateWebsiteUrl(url.trim());
+  } catch (err) {
+    res.status(400).json({ error: String(err) });
+    return;
+  }
+
+  const model = requestedModel ?? process.env.OPENROUTER_MODEL ?? "openai/gpt-oss-20b:nitro";
+
+  try {
+    const description = await extractWebsiteDesignContext(url.trim());
+    const result      = await generateDesignSystem(description, apiKey, model);
+
+    // Auto-load each section into the live data store
+    const VALID_TYPES: DataType[] = ["tokens", "components", "themes", "icons"];
+    for (const section of VALID_TYPES) {
+      if (result.data[section] !== undefined) {
+        setData(section, result.data[section]);
+      }
+    }
+
+    res.json({
+      generatedDesignSystem: result.data,
+      warnings: result.warnings,
+    });
+  } catch (err) {
+    if (!res.headersSent) {
+      res.status(500).json({ error: String(err) });
+    }
+  }
 });
 
 // ── Chat endpoint ──────────────────────────────────────────────────────────

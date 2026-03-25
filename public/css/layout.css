@@ -1,0 +1,35 @@
+/* ── Main layout ── */
+.main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  height: calc(100vh - 53px);
+}
+
+/* ── Panel header (shared) ── */
+.panel-header {
+  padding: 10px 16px 8px;
+  border-bottom: 1px solid var(--border-soft);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.panel-header h2 {
+  font-size: 11px; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: .6px;
+  flex: 1;
+}
+.panel-header-actions {
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* Info button (ℹ) */
+.info-btn {
+  background: none; border: none; color: var(--text-dim);
+  font-size: 13px; cursor: pointer; padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  line-height: 1; transition: color .15s;
+}
+.info-btn:hover { color: var(--text-muted); }
+

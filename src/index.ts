@@ -849,30 +849,140 @@ const CHAT_SYSTEM_PROMPT =
   "3. Once you have enough information (typically after 2–4 exchanges), call the generate_design_system tool with a comprehensive, detailed description.\n" +
   "4. After the tool returns success, briefly summarise what was generated and tell the user it has been loaded and is ready to explore.";
 
+// ── Strategy 3: per-agent system prompts ─────────────────────────────────
+const ORCHESTRATOR_SYSTEM_PROMPT =
+  "You are a routing agent. Your only job is to classify the user's intent and call delegate_to_agent exactly once.\n\n" +
+  'Route to "reader" for: questions, explanations, token lookups, component specs, icon search, theme info, changelog, deprecations, layout and accessibility guidance.\n' +
+  'Route to "builder" for: requests to create, generate, build, render, or code a UI component or HTML preview.\n' +
+  'Route to "generator" for: requests to create a brand-new design system, extract styles from a website, or generate from scratch.\n\n' +
+  "Always call delegate_to_agent. Never answer the user directly.";
+
+const READER_SYSTEM_PROMPT =
+  "You are a design system expert assistant. Answer questions about tokens, components, themes, icons, layout, and accessibility by calling the appropriate read-only tools. " +
+  "Always use actual values from the tools — never guess or invent values.\n\n" +
+  "IMPORTANT: Every response must be a single valid JSON object. Output ONLY the JSON.\n" +
+  'Return: {"message": "Your prose answer here."}\n' +
+  '  • "message": plain prose text — no HTML, no code fences. Required.';
+
+const BUILDER_SYSTEM_PROMPT =
+  "You are a component code generator. For every component request:\n" +
+  "1. Call get_component to fetch the spec and available variants.\n" +
+  "2. Call get_component_tokens to resolve the exact token values.\n" +
+  "3. Optionally call validate_component_usage to verify your configuration.\n" +
+  "Generate clean HTML with inline styles using exact token values from the tools. Never hard-code colors or spacing.\n\n" +
+  "IMPORTANT: Every response must be a single valid JSON object. Output ONLY the JSON.\n" +
+  'Return: {"message": "Brief prose explanation.", "preview": "<html with inline styles>"}\n' +
+  '  • "message": plain prose — no HTML. Required.\n' +
+  '  • "preview": raw HTML only — no fences, no wrappers. Omit when no UI is generated.';
+
+const GENERATOR_SYSTEM_PROMPT =
+  "You are a design system architect. Help users create complete new design systems through conversation.\n" +
+  "1. Gather brand name, product type, aesthetic direction, primary and secondary colors, and typography preferences.\n" +
+  "2. Ask one clarifying question at a time until you have a clear brand direction (typically 2–4 exchanges).\n" +
+  "3. Once you have enough information, call generate_design_system with a comprehensive, detailed description.\n" +
+  "4. After the tool returns success, briefly summarise what was generated and tell the user it is loaded and ready to explore.\n\n" +
+  "IMPORTANT: Every response must be a single valid JSON object. Output ONLY the JSON.\n" +
+  'Return: {"message": "Your prose here."} — or include "preview" if rendering a sample component.';
+
+// ── Strategy 3: tool subsets per specialist agent ────────────────────────
+const READER_TOOL_NAMES = new Set([
+  "list_token_categories", "get_tokens", "get_token", "suggest_token", "get_spacing_scale",
+  "list_components", "get_component", "get_component_tokens", "get_component_constraints",
+  "get_component_variants", "get_component_anatomy", "get_component_relationships",
+  "list_themes", "get_theme", "list_icons", "get_icon", "search_icons", "search",
+  "get_schema", "get_layout_guidance", "get_accessibility_guidance", "get_changelog", "get_deprecations",
+]);
+
+const BUILDER_TOOL_NAMES = new Set([
+  "get_component", "get_component_tokens", "get_component_variants", "get_component_anatomy",
+  "suggest_token", "validate_component_usage", "validate_color", "diff_against_system", "check_contrast",
+]);
+
+const GENERATOR_TOOL_NAMES = new Set([
+  "generate_design_system", "get_deprecations", "get_changelog",
+]);
+
+function filterTools(nameSet: Set<string>) {
+  return OPENROUTER_TOOLS
+    .filter((t) => nameSet.has(t.function.name))
+    .map((t) => ({ name: t.function.name, description: t.function.description, parameters: t.function.parameters }));
+}
+
 // ── Agent info endpoint ───────────────────────────────────────────────────
-// Returns a machine-readable description of the chat agent's configuration:
-// its name, the exact system instructions it receives, the model in use,
-// agentic loop parameters, and the full set of MCP tools it can call.
+// Returns a machine-readable description of all four Strategy-3 agents:
+// Orchestrator, Design System Reader, Component Builder, System Generator.
+// Each entry includes the agent's name, role, system prompt, parameters,
+// and the exact tool subset it is given.
 // Used by the "View Agents" modal in the demo UI.
 // ─────────────────────────────────────────────────────────────────────────
 app.get("/api/agent-info", (_req, res) => {
+  const model = process.env.OPENROUTER_MODEL ?? "openai/gpt-oss-20b:nitro";
   res.json({
     agents: [
       {
-        name: "Chat Assistant",
-        description: "OpenRouter-backed agentic loop that calls MCP tools to ground answers in live design system data.",
-        model: process.env.OPENROUTER_MODEL ?? "openai/gpt-oss-20b:nitro",
+        name: "Orchestrator",
+        description: "Classifies the user's intent in a single LLM call and routes to the correct specialist agent. Never answers the user directly.",
+        model,
         parameters: {
-          maxIterations: 8,
+          maxIterations: 1,
+          toolChoice: "required",
+          endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
+        },
+        systemPrompt: ORCHESTRATOR_SYSTEM_PROMPT,
+        tools: [
+          {
+            name: "delegate_to_agent",
+            description: 'Route the conversation to a specialist. agent must be "reader", "builder", or "generator".',
+            parameters: {
+              type: "object",
+              properties: {
+                agent: {
+                  type: "string",
+                  enum: ["reader", "builder", "generator"],
+                  description: "The specialist agent to delegate to.",
+                },
+                reason: { type: "string", description: "One-sentence rationale for the routing decision." },
+              },
+              required: ["agent", "reason"],
+            },
+          },
+        ],
+      },
+      {
+        name: "Design System Reader",
+        description: "Answers questions about tokens, components, themes, icons, layout, and accessibility using read-only MCP tools. Never mutates the design system.",
+        model,
+        parameters: {
+          maxIterations: 5,
           toolChoice: "auto",
           endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
         },
-        systemPrompt: CHAT_SYSTEM_PROMPT,
-        tools: OPENROUTER_TOOLS.map((t) => ({
-          name: t.function.name,
-          description: t.function.description,
-          parameters: t.function.parameters,
-        })),
+        systemPrompt: READER_SYSTEM_PROMPT,
+        tools: filterTools(READER_TOOL_NAMES),
+      },
+      {
+        name: "Component Builder",
+        description: "Generates HTML/CSS component code grounded in exact design system tokens. Validates all props and token values before emitting code.",
+        model,
+        parameters: {
+          maxIterations: 6,
+          toolChoice: "auto",
+          endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
+        },
+        systemPrompt: BUILDER_SYSTEM_PROMPT,
+        tools: filterTools(BUILDER_TOOL_NAMES),
+      },
+      {
+        name: "System Generator",
+        description: "Gathers brand requirements through conversation then generates a complete new design system (tokens, components, themes, icons) via AI.",
+        model,
+        parameters: {
+          maxIterations: 10,
+          toolChoice: "auto",
+          endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
+        },
+        systemPrompt: GENERATOR_SYSTEM_PROMPT,
+        tools: filterTools(GENERATOR_TOOL_NAMES),
       },
     ],
   });

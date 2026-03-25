@@ -1,16 +1,40 @@
 import { escapeHtml } from '../utils.js';
 
 export function initAgentsModal() {
-  const overlay   = document.getElementById("agents-modal");
-  const body      = document.getElementById("agents-modal-body");
-  const closeBtn  = document.getElementById("agents-modal-close");
-  const cancelBtn = document.getElementById("agents-modal-cancel");
-  const openBtn   = document.getElementById("view-agents-btn");
-  const tabs      = overlay.querySelectorAll(".agents-tab");
+  const overlay    = document.getElementById("agents-modal");
+  const body       = document.getElementById("agents-modal-body");
+  const closeBtn   = document.getElementById("agents-modal-close");
+  const cancelBtn  = document.getElementById("agents-modal-cancel");
+  const openBtn    = document.getElementById("view-agents-btn");
+  const tabs       = overlay.querySelectorAll(".agents-tab");
+  const selectorEl = document.getElementById("agents-selector");
 
-  let agentData = null;
+  let allAgents = [];
+  let selectedAgentIndex = 0;
   let activeTab = "config";
 
+  // Colour tokens for each agent's selector pill (matches diagram nodes)
+  const ROLE_COLORS = ["purple", "accent", "orange", "green"];
+
+  // ── Agent selector pills ──────────────────────────────────────────────
+  function renderSelector() {
+    if (!selectorEl) return;
+    if (allAgents.length === 0) { selectorEl.innerHTML = ""; return; }
+    selectorEl.innerHTML = allAgents.map((a, i) =>
+      `<button class="agents-selector-btn${i === selectedAgentIndex ? " active" : ""}" data-idx="${i}"
+        data-color="${ROLE_COLORS[i] ?? "accent"}"
+      >${escapeHtml(a.name)}</button>`
+    ).join("");
+    selectorEl.querySelectorAll(".agents-selector-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        selectedAgentIndex = parseInt(btn.dataset.idx, 10);
+        renderSelector();
+        if (activeTab !== "diagram") renderPane(activeTab, allAgents[selectedAgentIndex]);
+      });
+    });
+  }
+
+  // ── System Diagram (always shows full 4-agent architecture) ───────────
   function renderDiagram() {
     return `
     <div class="diagram-wrap">
@@ -24,16 +48,29 @@ export function initAgentsModal() {
           <div class="diag-node accent">Chat API  <small style="opacity:.7;font-weight:400">/api/chat</small></div>
         </div>
         <div class="diag-arrow-down">↓</div>
-        <div class="diag-label">system + conversation + tool defs</div>
+        <div class="diag-label">last user message</div>
         <div class="diag-row">
-          <div class="diag-node purple">OpenRouter LLM</div>
+          <div class="diag-node purple">Orchestrator Agent<br><small style="opacity:.7;font-weight:400">classify intent — 1 LLM call</small></div>
         </div>
         <div class="diag-arrow-down">↓</div>
-        <div class="diag-label">tool_calls[ ]  or  final JSON</div>
+        <div class="diag-label">delegate_to_agent("reader" | "builder" | "generator")</div>
+        <div class="diag-row" style="gap:10px;align-items:stretch">
+          <div class="diag-node accent" style="font-size:11px;flex:1;text-align:center">
+            Design System<br>Reader<br><small style="opacity:.7;font-weight:400">up to 5 iters</small>
+          </div>
+          <div class="diag-node orange" style="font-size:11px;flex:1;text-align:center">
+            Component<br>Builder<br><small style="opacity:.7;font-weight:400">up to 6 iters</small>
+          </div>
+          <div class="diag-node green" style="font-size:11px;flex:1;text-align:center">
+            System<br>Generator<br><small style="opacity:.7;font-weight:400">up to 10 iters</small>
+          </div>
+        </div>
+        <div class="diag-arrow-down">↓</div>
+        <div class="diag-label">tool calls (per-agent subset)</div>
         <div class="diag-row" style="gap:32px">
           <div class="diag-node orange" style="font-size:11px">MCP Tool Calls<br><small style="opacity:.7;font-weight:400">runMcpTool()</small></div>
           <div class="diag-arrow" style="align-self:center">↺</div>
-          <div class="diag-node" style="font-size:11px">loop up to<br>8 iterations</div>
+          <div class="diag-node" style="font-size:11px">agentic<br>loop</div>
         </div>
         <div class="diag-arrow-down">↓</div>
         <div class="diag-label">JSON { "message":"…", "preview":"…html…" }</div>
@@ -55,6 +92,7 @@ export function initAgentsModal() {
     </div>`;
   }
 
+  // ── Pane renderer ─────────────────────────────────────────────────────
   function renderPane(tab, agent) {
     body.innerHTML = "";
     const pane = document.createElement("div");
@@ -107,7 +145,10 @@ export function initAgentsModal() {
           <div class="agents-tool-params">${paramHtml}</div>
         </div>`;
       }).join("");
-      pane.innerHTML = `<div class="agents-tools-list">${toolCards}</div>`;
+      const toolCount = agent.tools.length;
+      pane.innerHTML = `
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:10px">${toolCount} tool${toolCount !== 1 ? "s" : ""} available to this agent</div>
+        <div class="agents-tools-list">${toolCards}</div>`;
     } else if (tab === "diagram") {
       pane.innerHTML = renderDiagram();
     }
@@ -118,7 +159,7 @@ export function initAgentsModal() {
   function switchTab(tab) {
     activeTab = tab;
     tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === tab));
-    if (agentData) renderPane(tab, agentData);
+    if (allAgents.length > 0) renderPane(tab, allAgents[selectedAgentIndex]);
   }
 
   async function openModal() {
@@ -126,13 +167,15 @@ export function initAgentsModal() {
     overlay.classList.add("open");
 
     try {
-      if (!agentData) {
+      if (allAgents.length === 0) {
         const res = await fetch("/api/agent-info");
         if (!res.ok) throw new Error("HTTP " + res.status);
         const data = await res.json();
-        agentData = data.agents[0];
+        allAgents = data.agents ?? [];
+        selectedAgentIndex = 0;
       }
-      renderPane(activeTab, agentData);
+      renderSelector();
+      renderPane(activeTab, allAgents[selectedAgentIndex]);
     } catch (err) {
       body.innerHTML = `<div class="agents-loading">Could not load agent info: ${escapeHtml(err.message)}</div>`;
     }

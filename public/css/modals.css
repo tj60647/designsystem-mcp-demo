@@ -121,6 +121,27 @@
 .validation-list.recs li     { background: rgba(210,153,34,.08); color: var(--orange); border-left: 3px solid var(--orange); }
 
 
+/* ── Agent selector (pill row above the tabs) ── */
+.agents-selector {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 10px 14px 0;
+  border-bottom: 1px solid var(--border-soft);
+  flex-shrink: 0;
+}
+.agents-selector-btn {
+  font-size: 11.5px; font-weight: 500; padding: 5px 12px;
+  color: var(--text-muted); cursor: pointer;
+  background: var(--bg-input); border: 1px solid var(--border-soft);
+  border-radius: 20px; transition: color .15s, border-color .15s, background .15s;
+  white-space: nowrap;
+}
+.agents-selector-btn:hover { color: var(--text); border-color: var(--border); }
+.agents-selector-btn.active { color: var(--accent); border-color: var(--accent); background: rgba(47,129,247,.1); }
+.agents-selector-btn.active[data-color="purple"]  { color: var(--purple);  border-color: var(--purple);  background: rgba(188,140,255,.1); }
+.agents-selector-btn.active[data-color="accent"]  { color: var(--accent);  border-color: var(--accent);  background: rgba(47,129,247,.1);  }
+.agents-selector-btn.active[data-color="orange"]  { color: var(--orange);  border-color: var(--orange);  background: rgba(210,153,34,.1);  }
+.agents-selector-btn.active[data-color="green"]   { color: var(--green);   border-color: var(--green);   background: rgba(63,185,80,.1);   }
+
 /* ── Agents modal ── */
 .agents-modal { width: 700px; max-height: calc(100vh - 60px); }
 .agents-modal-tabs {

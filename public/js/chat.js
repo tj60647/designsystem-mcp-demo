@@ -105,34 +105,71 @@ async function handleSend() {
   scrollToBottom();
 
   try {
-    const res  = await fetch("/api/chat", {
+    const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ messages: conversationHistory, model: getSelectedModel() }),
     });
 
-    const data = await res.json();
-    loadingEl.remove();
-
+    // Early validation errors (400, 503) are returned as plain JSON before SSE
+    // headers are set, so we handle them here.
     if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      loadingEl.remove();
       const errMsg = data.error || "Request failed";
-      const details = data.details ? `\n${data.details}` : "";
-      appendMessage("error", "⚠ " + errMsg + details);
-    } else {
-      const message   = data.message || "";
-      const preview   = data.preview || null;
-      const toolsUsed = data.toolCallsUsed || [];
-      conversationHistory.push({ role: "assistant", content: message });
+      appendMessage("error", "⚠ " + errMsg);
+      return;
+    }
 
-      if (data.thinkingSteps && data.thinkingSteps.length > 0) {
-        appendThinkingBlock(data.thinkingSteps);
-      }
+    // Parse the Server-Sent Events stream for live progress + final result
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
 
-      appendMessage("assistant", message);
-      updateLivePreview(preview, toolsUsed, data.model);
+    sseLoop: while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
 
-      if (data.generatedDesignSystem) {
-        handleGeneratedDesignSystem(data.generatedDesignSystem);
+      buffer += decoder.decode(value, { stream: true });
+      // SSE messages are separated by a blank line (\n\n)
+      const parts = buffer.split("\n\n");
+      buffer = parts.pop() ?? "";
+
+      for (const part of parts) {
+        if (!part.startsWith("data: ")) continue;
+        let event;
+        try {
+          event = JSON.parse(part.slice(6));
+        } catch {
+          continue;
+        }
+
+        if (event.type === "progress") {
+          updateLoadingStatus(loadingEl, event.message);
+          scrollToBottom();
+        } else if (event.type === "done") {
+          loadingEl.remove();
+          const message   = event.message || "";
+          const preview   = event.preview || null;
+          const toolsUsed = event.toolCallsUsed || [];
+          conversationHistory.push({ role: "assistant", content: message });
+
+          if (event.thinkingSteps && event.thinkingSteps.length > 0) {
+            appendThinkingBlock(event.thinkingSteps);
+          }
+
+          appendMessage("assistant", message);
+          updateLivePreview(preview, toolsUsed, event.model);
+
+          if (event.generatedDesignSystem) {
+            handleGeneratedDesignSystem(event.generatedDesignSystem);
+          }
+          break sseLoop;
+        } else if (event.type === "error") {
+          loadingEl.remove();
+          appendMessage("error", "⚠ " + (event.error || "Request failed"));
+          break sseLoop;
+        }
       }
     }
   } catch (err) {
@@ -171,10 +208,15 @@ function appendLoading() {
   wrap.className = "msg assistant";
   const bubble = document.createElement("div");
   bubble.className = "loading-bubble";
-  bubble.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+  bubble.innerHTML = '<div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="loading-status"></span>';
   wrap.appendChild(bubble);
   messagesEl.appendChild(wrap);
   return wrap;
+}
+
+function updateLoadingStatus(loadingEl, message) {
+  const statusEl = loadingEl.querySelector(".loading-status");
+  if (statusEl) statusEl.textContent = message;
 }
 
 export function scrollToBottom() {

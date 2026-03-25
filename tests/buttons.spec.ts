@@ -18,18 +18,25 @@ interface ChatApiResponse {
   generatedDesignSystem?: unknown;
 }
 
-/** Intercept /api/chat and return a controlled assistant response. */
+/** Build an SSE body string for a single `done` event. */
+function sseBody(payload: ChatApiResponse & { type?: string }): string {
+  const data = {
+    type: "done",
+    toolCallsUsed: ["get_tokens"],
+    generatedDesignSystem: null,
+    model: "test-model",
+    ...payload,
+  };
+  return `data: ${JSON.stringify(data)}\n\n`;
+}
+
+/** Intercept /api/chat and return a controlled assistant response via SSE. */
 async function mockChat(page: Page, payload: ChatApiResponse) {
   await page.route("/api/chat", (route) =>
     route.fulfill({
       status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        toolCallsUsed: ["get_tokens"],
-        generatedDesignSystem: null,
-        model: "test-model",
-        ...payload,
-      }),
+      contentType: "text/event-stream",
+      body: sseBody(payload),
     })
   );
 }
@@ -64,8 +71,8 @@ test.describe("Send button", () => {
       await new Promise((r) => setTimeout(r, 300));
       await route.fulfill({
         status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ message: "Done.", model: "test-model", toolCallsUsed: [] }),
+        contentType: "text/event-stream",
+        body: sseBody({ message: "Done.", model: "test-model", toolCallsUsed: [] }),
       });
     });
     await openDemo(page);
@@ -82,8 +89,8 @@ test.describe("Send button", () => {
       await new Promise((r) => setTimeout(r, 300));
       await route.fulfill({
         status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ message: "OK", model: "m", toolCallsUsed: [] }),
+        contentType: "text/event-stream",
+        body: sseBody({ message: "OK", model: "m", toolCallsUsed: [] }),
       });
     });
     await openDemo(page);
@@ -97,7 +104,11 @@ test.describe("Send button", () => {
 
   test("displays error message when API call fails", async ({ page }) => {
     await page.route("/api/chat", (route) =>
-      route.fulfill({ status: 502, contentType: "application/json", body: JSON.stringify({ error: "OpenRouter API error" }) })
+      route.fulfill({
+        status: 200,
+        contentType: "text/event-stream",
+        body: `data: ${JSON.stringify({ type: "error", error: "OpenRouter API error" })}\n\n`,
+      })
     );
     await openDemo(page);
 

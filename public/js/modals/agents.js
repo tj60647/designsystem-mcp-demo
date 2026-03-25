@@ -2,41 +2,21 @@ import { escapeHtml } from '../utils.js';
 
 export function initAgentsModal() {
   const overlay    = document.getElementById("agents-modal");
-  const body       = document.getElementById("agents-modal-body");
-  const closeBtn   = document.getElementById("agents-modal-close");
-  const cancelBtn  = document.getElementById("agents-modal-cancel");
-  const openBtn    = document.getElementById("view-agents-btn");
-  const tabs       = overlay.querySelectorAll(".agents-tab");
-  const selectorEl = document.getElementById("agents-selector");
+  const modalBody  = document.getElementById("agents-modal-modalBody");
+  const closeBtn  = document.getElementById("agents-modal-close");
+  const cancelBtn = document.getElementById("agents-modal-cancel");
+  const openBtn   = document.getElementById("view-agents-btn");
+  const lobbyTabs = overlay.querySelectorAll(".agents-lobby-tab");
 
   let allAgents = [];
-  let selectedAgentIndex = 0;
-  let activeTab = "config";
+  let activeTab = "lobby";
 
-  // Colour tokens for each agent's selector pill (matches diagram nodes)
+  // Colour token per agent index — matches diagram node colours
   const ROLE_COLORS = ["purple", "accent", "orange", "green"];
 
-  // ── Agent selector pills ──────────────────────────────────────────────
-  function renderSelector() {
-    if (!selectorEl) return;
-    if (allAgents.length === 0) { selectorEl.innerHTML = ""; return; }
-    selectorEl.innerHTML = allAgents.map((a, i) =>
-      `<button class="agents-selector-btn${i === selectedAgentIndex ? " active" : ""}" data-idx="${i}"
-        data-color="${ROLE_COLORS[i] ?? "accent"}"
-      >${escapeHtml(a.name)}</button>`
-    ).join("");
-    selectorEl.querySelectorAll(".agents-selector-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        selectedAgentIndex = parseInt(btn.dataset.idx, 10);
-        renderSelector();
-        if (activeTab !== "diagram") renderPane(activeTab, allAgents[selectedAgentIndex]);
-      });
-    });
-  }
-
-  // ── System Diagram (always shows full 4-agent architecture) ───────────
+  // ── System Diagram ─────────────────────────────────────────────────────
   function renderDiagram() {
-    return `
+    modalBody.innerHTML = `
     <div class="diagram-wrap">
       <div class="diagram">
         <div class="diag-row">
@@ -92,98 +72,102 @@ export function initAgentsModal() {
     </div>`;
   }
 
-  // ── Pane renderer ─────────────────────────────────────────────────────
-  function renderPane(tab, agent) {
-    body.innerHTML = "";
-    const pane = document.createElement("div");
-    pane.className = "agents-pane active";
-
-    if (tab === "config") {
-      pane.innerHTML = `
-        <div class="agents-field">
-          <div class="agents-field-label">Agent Name</div>
-          <div class="agents-value">${escapeHtml(agent.name)}</div>
-        </div>
-        <div class="agents-field">
-          <div class="agents-field-label">Description</div>
-          <div class="agents-value" style="font-family:inherit;font-size:12px">${escapeHtml(agent.description)}</div>
-        </div>
-        <div class="agents-field">
-          <div class="agents-field-label">Model</div>
-          <div class="agents-value">${escapeHtml(agent.model)}</div>
-        </div>
-        <div class="agents-field">
-          <div class="agents-field-label">Parameters</div>
-          <div class="agents-value">${
-            Object.entries(agent.parameters).map(([k, v]) =>
-              `<div><span style="color:var(--purple)">${escapeHtml(k)}</span>: <span style="color:var(--text)">${escapeHtml(String(v))}</span></div>`
-            ).join("")
-          }</div>
-        </div>
-        <div class="agents-field">
-          <div class="agents-field-label">Prompt Logging</div>
-          <div class="agents-value" style="font-family:inherit;font-size:12px">Server-side <code style="background:rgba(0,0,0,.2);padding:1px 5px;border-radius:3px;font-size:11px">console.log("[chat:prompt]", ...)</code> on every agentic-loop iteration. Check your server process stdout for full prompt traces.</div>
-        </div>`;
-    } else if (tab === "prompt") {
-      pane.innerHTML = `
-        <div class="agents-field">
-          <div class="agents-field-label">Exact System Instructions  <span style="color:var(--text-dim);text-transform:none;font-weight:400;font-size:9px">(sent verbatim as the system message)</span></div>
-          <pre class="agents-prompt-pre">${escapeHtml(agent.systemPrompt)}</pre>
-        </div>`;
-    } else if (tab === "tools") {
-      const toolCards = agent.tools.map(t => {
-        const params = t.parameters && t.parameters.properties
-          ? Object.keys(t.parameters.properties)
-          : [];
-        const required = (t.parameters && t.parameters.required) || [];
-        const paramHtml = params.length
-          ? params.map(p => `<span class="agents-param-chip">${escapeHtml(p)}${required.includes(p) ? "<sup style='color:var(--red)'>*</sup>" : ""}</span>`).join("")
-          : "<span style='font-size:10.5px;color:var(--text-dim);font-style:italic'>no parameters</span>";
-        return `<div class="agents-tool-card">
-          <div class="agents-tool-name">${escapeHtml(t.name)}</div>
-          <div class="agents-tool-desc">${escapeHtml(t.description)}</div>
-          <div class="agents-tool-params">${paramHtml}</div>
-        </div>`;
-      }).join("");
-      const toolCount = agent.tools.length;
-      pane.innerHTML = `
-        <div style="font-size:11px;color:var(--text-dim);margin-bottom:10px">${toolCount} tool${toolCount !== 1 ? "s" : ""} available to this agent</div>
-        <div class="agents-tools-list">${toolCards}</div>`;
-    } else if (tab === "diagram") {
-      pane.innerHTML = renderDiagram();
-    }
-
-    body.appendChild(pane);
+  // ── Agent Lobby ────────────────────────────────────────────────────────
+  function buildToolCards(tools) {
+    return tools.map(t => {
+      const params   = t.parameters && t.parameters.properties ? Object.keys(t.parameters.properties) : [];
+      const required = (t.parameters && t.parameters.required) || [];
+      const paramHtml = params.length
+        ? params.map(p => `<span class="agents-param-chip">${escapeHtml(p)}${required.includes(p) ? "<sup style='color:var(--red)'>*</sup>" : ""}</span>`).join("")
+        : "<span style='font-size:10.5px;color:var(--text-dim);font-style:italic'>no parameters</span>";
+      return `<div class="agents-tool-card">
+        <div class="agents-tool-name">${escapeHtml(t.name)}</div>
+        <div class="agents-tool-desc">${escapeHtml(t.description)}</div>
+        <div class="agents-tool-params">${paramHtml}</div>
+      </div>`;
+    }).join("");
   }
 
+  function renderLobby() {
+    const cards = allAgents.map((agent, i) => {
+      const color = ROLE_COLORS[i] ?? "accent";
+      const toolCount = agent.tools.length;
+      const cardId = `agent-card-${i}`;
+      return `
+      <div class="lobby-card" data-color="${color}">
+        <div class="lobby-card-header">
+          <div class="lobby-card-name">${escapeHtml(agent.name)}</div>
+          <div class="lobby-card-badges">
+            <span class="lobby-badge">${toolCount} tool${toolCount !== 1 ? "s" : ""}</span>
+            <span class="lobby-badge">${escapeHtml(String(agent.parameters.maxIterations))} iter${agent.parameters.maxIterations !== 1 ? "s" : ""}</span>
+          </div>
+        </div>
+        <div class="lobby-card-desc">${escapeHtml(agent.description)}</div>
+        <div class="lobby-card-model">${escapeHtml(agent.model)}</div>
+        <div class="lobby-card-actions">
+          <button class="lobby-toggle-btn" data-target="${cardId}-prompt">System Prompt</button>
+          <button class="lobby-toggle-btn" data-target="${cardId}-tools">Tools</button>
+        </div>
+        <div class="lobby-card-detail" id="${cardId}-prompt">
+          <pre class="agents-prompt-pre lobby-prompt-pre">${escapeHtml(agent.systemPrompt)}</pre>
+        </div>
+        <div class="lobby-card-detail" id="${cardId}-tools">
+          <div class="agents-tools-list">${buildToolCards(agent.tools)}</div>
+        </div>
+      </div>`;
+    }).join("");
+
+    modalBody.innerHTML = `<div class="lobby-grid">${cards}</div>`;
+
+    // Wire up expand/collapse toggles
+    modalBody.querySelectorAll(".lobby-toggle-btn").forEach(btn => {
+      const target = document.getElementById(btn.dataset.target);
+      btn.addEventListener("click", () => {
+        const open = target.classList.toggle("open");
+        btn.classList.toggle("active", open);
+        // Collapse the sibling detail if this one just opened
+        if (open) {
+          const card = btn.closest(".lobby-card");
+          card.querySelectorAll(".lobby-card-detail.open").forEach(el => {
+            if (el !== target) {
+              el.classList.remove("open");
+              const siblingBtn = card.querySelector(`[data-target="${el.id}"]`);
+              if (siblingBtn) siblingBtn.classList.remove("active");
+            }
+          });
+        }
+      });
+    });
+  }
+
+  // ── Tab switching ──────────────────────────────────────────────────────
   function switchTab(tab) {
     activeTab = tab;
-    tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === tab));
-    if (allAgents.length > 0) renderPane(tab, allAgents[selectedAgentIndex]);
+    lobbyTabs.forEach(t => t.classList.toggle("active", t.dataset.tab === tab));
+    if (tab === "diagram") renderDiagram();
+    else if (allAgents.length > 0) renderLobby();
   }
 
+  // ── Open / close ───────────────────────────────────────────────────────
   async function openModal() {
-    body.innerHTML = '<div class="agents-loading">Loading agent info…</div>';
+    modalBody.innerHTML = '<div class="agents-loading">Loading agent info…</div>';
     overlay.classList.add("open");
-
     try {
       if (allAgents.length === 0) {
         const res = await fetch("/api/agent-info");
         if (!res.ok) throw new Error("HTTP " + res.status);
         const data = await res.json();
         allAgents = data.agents ?? [];
-        selectedAgentIndex = 0;
       }
-      renderSelector();
-      renderPane(activeTab, allAgents[selectedAgentIndex]);
+      switchTab(activeTab);
     } catch (err) {
-      body.innerHTML = `<div class="agents-loading">Could not load agent info: ${escapeHtml(err.message)}</div>`;
+      modalBody.innerHTML = `<div class="agents-loading">Could not load agent info: ${escapeHtml(err.message)}</div>`;
     }
   }
 
   function closeModal() { overlay.classList.remove("open"); }
 
-  tabs.forEach(t => t.addEventListener("click", () => switchTab(t.dataset.tab)));
+  lobbyTabs.forEach(t => t.addEventListener("click", () => switchTab(t.dataset.tab)));
   openBtn.addEventListener("click", openModal);
   closeBtn.addEventListener("click", closeModal);
   cancelBtn.addEventListener("click", closeModal);

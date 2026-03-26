@@ -2,7 +2,7 @@ import { escapeHtml } from '../utils.js';
 
 export function initAgentsModal() {
   const overlay    = document.getElementById("agents-modal");
-  const modalBody  = document.getElementById("agents-modal-modalBody");
+  const modalBody  = document.getElementById("agents-modal-body");
   const closeBtn  = document.getElementById("agents-modal-close");
   const cancelBtn = document.getElementById("agents-modal-cancel");
   const openBtn   = document.getElementById("view-agents-btn");
@@ -91,53 +91,28 @@ export function initAgentsModal() {
   function renderLobby() {
     const cards = allAgents.map((agent, i) => {
       const color = ROLE_COLORS[i] ?? "accent";
-      const toolCount = agent.tools.length;
-      const cardId = `agent-card-${i}`;
+      const paramsHtml = Object.entries(agent.parameters).map(([k, v]) =>
+        `<div class="lobby-param-row"><span class="lobby-param-key">${escapeHtml(k)}</span><span class="lobby-param-val">${escapeHtml(String(v))}</span></div>`
+      ).join("");
       return `
       <div class="lobby-card" data-color="${color}">
         <div class="lobby-card-header">
           <div class="lobby-card-name">${escapeHtml(agent.name)}</div>
-          <div class="lobby-card-badges">
-            <span class="lobby-badge">${toolCount} tool${toolCount !== 1 ? "s" : ""}</span>
-            <span class="lobby-badge">${escapeHtml(String(agent.parameters.maxIterations))} iter${agent.parameters.maxIterations !== 1 ? "s" : ""}</span>
-          </div>
+          <div class="lobby-card-model">${escapeHtml(agent.model)}</div>
         </div>
-        <div class="lobby-card-desc">${escapeHtml(agent.description)}</div>
-        <div class="lobby-card-model">${escapeHtml(agent.model)}</div>
-        <div class="lobby-card-actions">
-          <button class="lobby-toggle-btn" data-target="${cardId}-prompt">System Prompt</button>
-          <button class="lobby-toggle-btn" data-target="${cardId}-tools">Tools</button>
-        </div>
-        <div class="lobby-card-detail" id="${cardId}-prompt">
-          <pre class="agents-prompt-pre lobby-prompt-pre">${escapeHtml(agent.systemPrompt)}</pre>
-        </div>
-        <div class="lobby-card-detail" id="${cardId}-tools">
-          <div class="agents-tools-list">${buildToolCards(agent.tools)}</div>
-        </div>
+
+        <div class="lobby-section-label">Parameters</div>
+        <div class="lobby-params">${paramsHtml}</div>
+
+        <div class="lobby-section-label">System Instructions</div>
+        <pre class="agents-prompt-pre lobby-prompt-pre">${escapeHtml(agent.systemPrompt)}</pre>
+
+        <div class="lobby-section-label">${agent.tools.length} Tool${agent.tools.length !== 1 ? "s" : ""}</div>
+        <div class="agents-tools-list">${buildToolCards(agent.tools)}</div>
       </div>`;
     }).join("");
 
-    modalBody.innerHTML = `<div class="lobby-grid">${cards}</div>`;
-
-    // Wire up expand/collapse toggles
-    modalBody.querySelectorAll(".lobby-toggle-btn").forEach(btn => {
-      const target = document.getElementById(btn.dataset.target);
-      btn.addEventListener("click", () => {
-        const open = target.classList.toggle("open");
-        btn.classList.toggle("active", open);
-        // Collapse the sibling detail if this one just opened
-        if (open) {
-          const card = btn.closest(".lobby-card");
-          card.querySelectorAll(".lobby-card-detail.open").forEach(el => {
-            if (el !== target) {
-              el.classList.remove("open");
-              const siblingBtn = card.querySelector(`[data-target="${el.id}"]`);
-              if (siblingBtn) siblingBtn.classList.remove("active");
-            }
-          });
-        }
-      });
-    });
+    modalBody.innerHTML = `<div class="lobby-list">${cards}</div>`;
   }
 
   // ── Tab switching ──────────────────────────────────────────────────────

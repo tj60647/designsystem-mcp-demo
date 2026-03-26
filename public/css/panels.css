@@ -436,6 +436,10 @@
 }
 
 /* Mobile responsive */
+@media (max-width: 900px) {
+  .chat-panel { width: 42%; min-width: 260px; }
+}
+
 @media (max-width: 700px) {
   .main { flex-direction: column; height: auto; overflow: visible; }
   .chat-panel { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid var(--border); height: 55vh; }

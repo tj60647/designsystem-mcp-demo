@@ -260,11 +260,16 @@
 
 /* Suite toolbar */
 .tl-suite-toolbar {
-  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
-  padding: 12px 14px; border-bottom: 1px solid var(--border-soft);
+  padding: 0; border-bottom: 1px solid var(--border-soft);
   background: var(--bg);
   position: sticky; top: 0; z-index: 2;
 }
+.tl-filter-row {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+  padding: 8px 14px;
+}
+.tl-filter-row:first-child { border-bottom: 1px solid var(--border-soft); }
+.tl-filter-row-type { background: var(--bg-input); }
 .tl-filter-tabs { display: flex; gap: 2px; flex-wrap: wrap; }
 .tl-filter-tab {
   font-size: 11.5px; font-weight: 500; padding: 4px 10px;
@@ -326,6 +331,25 @@
 .tl-badge-accent  { background: rgba(47,129,247,.12);  color: var(--accent);  border-color: rgba(47,129,247,.3);  }
 .tl-badge-orange  { background: rgba(210,153,34,.12);  color: var(--orange);  border-color: rgba(210,153,34,.3);  }
 .tl-badge-green   { background: rgba(63,185,80,.12);   color: var(--green);   border-color: rgba(63,185,80,.3);   }
+
+/* Test type tag badges */
+.tl-tag {
+  display: inline-block; font-size: 9px; font-weight: 600; letter-spacing: .04em;
+  padding: 1px 6px; border-radius: 20px; white-space: nowrap;
+  border: 1px solid transparent; text-transform: uppercase;
+}
+.tl-tag-routing     { background: rgba(188,140,255,.1); color: var(--purple);  border-color: rgba(188,140,255,.25); }
+.tl-tag-epistemic   { background: rgba(47,129,247,.1);  color: var(--accent);  border-color: rgba(47,129,247,.25);  }
+.tl-tag-grounding   { background: rgba(63,185,80,.1);   color: var(--green);   border-color: rgba(63,185,80,.25);   }
+.tl-tag-behavioral  { background: rgba(210,153,34,.1);  color: var(--orange);  border-color: rgba(210,153,34,.25);  }
+.tl-tag-mechanistic { background: var(--bg-input);      color: var(--text-dim); border-color: var(--border-soft);   }
+
+/* Type filter tab color accents */
+.tl-type-tab-routing.active     { color: var(--purple);  background: rgba(188,140,255,.12); border-color: rgba(188,140,255,.3); }
+.tl-type-tab-epistemic.active   { color: var(--accent);  background: rgba(47,129,247,.12);  border-color: rgba(47,129,247,.3);  }
+.tl-type-tab-grounding.active   { color: var(--green);   background: rgba(63,185,80,.12);   border-color: rgba(63,185,80,.3);   }
+.tl-type-tab-behavioral.active  { color: var(--orange);  background: rgba(210,153,34,.12);  border-color: rgba(210,153,34,.3);  }
+.tl-type-tab-mechanistic.active { color: var(--text);    background: var(--bg-panel);       border-color: var(--border-soft);   }
 
 /* Status chips */
 .tl-status-chip {

@@ -8,107 +8,116 @@ const PREVIEW_TRUNCATE_LENGTH = 400; // preview HTML truncation in playground
 
 // ── Test Suite Definition ────────────────────────────────────────────────────
 // 100 tests across 4 agent types.
+//
 // Each test has:
 //   id          – unique number
-//   agent       – expected agent to handle the prompt
+//   agent       – expected specialist to handle the prompt
+//   tags        – array from: "routing" | "epistemic" | "grounding" | "behavioral" | "mechanistic"
+//                   routing    → verifies orchestrator routing decision
+//                   epistemic  → verifies a specific factual value from the design system data
+//                   grounding  → verifies the agent called an MCP tool (not hallucinating)
+//                   behavioral → verifies the agent behaves correctly (e.g. asks questions)
+//                   mechanistic→ only structural checks (non-empty, preview present)
 //   prompt      – the user message to send
 //   description – one-sentence description of what is being verified
-//   checks      – array of { type, value? } objects:
-//                   { type:'agentMatch', value:'reader' }  → routedAgent must match
-//                   { type:'contains', value:'keyword' }   → message contains keyword (case-insensitive)
-//                   { type:'hasPreview' }                  → preview HTML must be non-empty
-//                   { type:'notEmpty' }                    → message must be non-empty
-// ────────────────────────────────────────────────────────────────────────────
+//   checks      – array of check objects:
+//     { type: "agentMatch",      value: "reader" }       → routedAgent must match
+//     { type: "contains",        value: "keyword" }       → message contains value (case-insensitive)
+//     { type: "toolUsed",        value: "get_tokens" }    → toolCallsUsed includes the tool name
+//     { type: "hasPreview" }                              → preview HTML must be non-empty
+//     { type: "previewContains", value: "#2563eb" }       → preview HTML contains value (case-insensitive)
+//     { type: "notEmpty" }                                → message must be non-empty
+// ─────────────────────────────────────────────────────────────────────────────
 
 export const TEST_SUITE = [
 
   // ── Orchestrator routing tests (15) ─────────────────────────────────────
   {
-    id: 1, agent: "orchestrator",
+    id: 1, agent: "orchestrator", tags: ["routing"],
     prompt: "What are the primary color tokens?",
     description: "Route color token query to the reader agent",
     checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
   },
   {
-    id: 2, agent: "orchestrator",
+    id: 2, agent: "orchestrator", tags: ["routing"],
     prompt: "Show me all spacing tokens in the design system",
     description: "Route spacing token query to the reader agent",
     checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
   },
   {
-    id: 3, agent: "orchestrator",
+    id: 3, agent: "orchestrator", tags: ["routing"],
     prompt: "Build a card component",
     description: "Route build request to the builder agent",
-    checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }],
+    checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 4, agent: "orchestrator",
+    id: 4, agent: "orchestrator", tags: ["routing"],
     prompt: "Create a brand new design system for my startup",
     description: "Route design-system creation to the generator agent",
     checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
   },
   {
-    id: 5, agent: "orchestrator",
+    id: 5, agent: "orchestrator", tags: ["routing"],
     prompt: "What button variants are available?",
     description: "Route component spec query to the reader agent",
     checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
   },
   {
-    id: 6, agent: "orchestrator",
+    id: 6, agent: "orchestrator", tags: ["routing"],
     prompt: "Render a login form using the design system",
     description: "Route render request to the builder agent",
-    checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }],
+    checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 7, agent: "orchestrator",
+    id: 7, agent: "orchestrator", tags: ["routing"],
     prompt: "Generate a design system for a fintech app",
     description: "Route generate request to the generator agent",
     checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
   },
   {
-    id: 8, agent: "orchestrator",
+    id: 8, agent: "orchestrator", tags: ["routing"],
     prompt: "What accessibility rules apply to the modal component?",
     description: "Route accessibility query to the reader agent",
     checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
   },
   {
-    id: 9, agent: "orchestrator",
+    id: 9, agent: "orchestrator", tags: ["routing"],
     prompt: "Create a primary button with a hover state",
     description: "Route UI creation to the builder agent",
-    checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }],
+    checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 10, agent: "orchestrator",
+    id: 10, agent: "orchestrator", tags: ["routing"],
     prompt: "List all icons in the navigation category",
     description: "Route icon list query to the reader agent",
     checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
   },
   {
-    id: 11, agent: "orchestrator",
+    id: 11, agent: "orchestrator", tags: ["routing"],
     prompt: "I want to create a complete design system from scratch",
     description: "Route new design system request to the generator agent",
     checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
   },
   {
-    id: 12, agent: "orchestrator",
+    id: 12, agent: "orchestrator", tags: ["routing"],
     prompt: "What colors does the dark theme use?",
     description: "Route dark theme query to the reader agent",
     checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
   },
   {
-    id: 13, agent: "orchestrator",
+    id: 13, agent: "orchestrator", tags: ["routing"],
     prompt: "Build a navigation bar component",
     description: "Route nav bar creation to the builder agent",
-    checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }],
+    checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 14, agent: "orchestrator",
+    id: 14, agent: "orchestrator", tags: ["routing"],
     prompt: "What changed in the most recent design system changelog?",
     description: "Route changelog query to the reader agent",
     checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
   },
   {
-    id: 15, agent: "orchestrator",
+    id: 15, agent: "orchestrator", tags: ["routing"],
     prompt: "Generate a new brand design system with a blue primary color",
     description: "Route brand generation to the generator agent",
     checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
@@ -116,518 +125,730 @@ export const TEST_SUITE = [
 
   // ── Reader agent tests (35) ──────────────────────────────────────────────
   {
-    id: 16, agent: "reader",
-    prompt: "What are the primary color tokens in the design system?",
-    description: "Reader returns primary color palette values",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "contains", value: "primary" }, { type: "notEmpty" }],
+    id: 16, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What is the hex value of the primary 600 color token?",
+    description: "Reader returns the exact hex for color.primary.600 (#2563eb)",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_tokens" },
+      { type: "contains", value: "#2563eb" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 17, agent: "reader",
-    prompt: "Show me all spacing tokens",
-    description: "Reader returns the spacing scale",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "contains", value: "spacing" }, { type: "notEmpty" }],
+    id: 17, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What pixel value does spacing token 4 have?",
+    description: "Reader returns 16px for spacing.4",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_tokens" },
+      { type: "contains", value: "16px" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 18, agent: "reader",
-    prompt: "What typography sizes are available?",
-    description: "Reader returns font size tokens",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 18, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What is the base font size in the design system?",
+    description: "Reader returns 1rem / 16px for typography.fontSize.base",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_tokens" },
+      { type: "contains", value: "1rem" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 19, agent: "reader",
-    prompt: "What is the font family used for body text?",
-    description: "Reader returns the body font family token",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 19, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What font family is used for body text?",
+    description: "Reader returns Inter as the sans font family",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_tokens" },
+      { type: "contains", value: "Inter" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 20, agent: "reader",
-    prompt: "What border radius values are defined in the design system?",
-    description: "Reader returns border radius tokens",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 20, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What is the border radius value for fully rounded pill-shaped elements?",
+    description: "Reader returns 9999px for borderRadius.full",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_tokens" },
+      { type: "contains", value: "9999px" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 21, agent: "reader",
-    prompt: "What shadow tokens are available?",
-    description: "Reader returns shadow token definitions",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 21, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What is the CSS box-shadow value of the small shadow token?",
+    description: "Reader returns the shadow.sm value which starts with 0 1px 2px",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_tokens" },
+      { type: "contains", value: "0 1px 2px" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 22, agent: "reader",
-    prompt: "What animation/motion tokens are defined?",
-    description: "Reader returns duration and easing tokens",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 22, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What is the duration of the normal/default motion transition?",
+    description: "Reader returns 200ms for motion.duration.normal",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_tokens" },
+      { type: "contains", value: "200ms" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 23, agent: "reader",
+    id: 23, agent: "reader", tags: ["epistemic", "grounding"],
     prompt: "List all components in the design system",
-    description: "Reader returns a list of available components",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    description: "Reader returns at least button and modal from the component list",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "list_components" },
+      { type: "contains", value: "button" },
+      { type: "contains", value: "modal" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 24, agent: "reader",
-    prompt: "What are the variants for the button component?",
-    description: "Reader returns button variant options",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 24, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What are all the variants for the button component?",
+    description: "Reader returns ghost and destructive among the four button variants",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_component" },
+      { type: "contains", value: "ghost" },
+      { type: "contains", value: "destructive" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 25, agent: "reader",
+    id: 25, agent: "reader", tags: ["epistemic", "grounding"],
     prompt: "What states does the input component support?",
-    description: "Reader returns input states (focus, error, disabled, etc.)",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    description: "Reader returns focus and disabled among the input states",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_component" },
+      { type: "contains", value: "focus" },
+      { type: "contains", value: "disabled" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 26, agent: "reader",
+    id: 26, agent: "reader", tags: ["epistemic", "grounding"],
     prompt: "What ARIA role does the modal component use?",
-    description: "Reader returns the modal ARIA role",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "contains", value: "dialog" }, { type: "notEmpty" }],
+    description: "Reader returns dialog as the modal ARIA role",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_component" },
+      { type: "contains", value: "dialog" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 27, agent: "reader",
+    id: 27, agent: "reader", tags: ["grounding"],
     prompt: "What keyboard interactions does the select component support?",
-    description: "Reader returns keyboard interaction patterns for select",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    description: "Reader uses get_component to look up select keyboard interactions",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_component" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 28, agent: "reader",
-    prompt: "What tokens are used by the card component?",
-    description: "Reader returns token references for the card component",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 28, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What shadow token does an elevated card use?",
+    description: "Reader returns shadow.md as the elevated card shadow token",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_component_tokens" },
+      { type: "contains", value: "shadow" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 29, agent: "reader",
+    id: 29, agent: "reader", tags: ["epistemic", "grounding"],
     prompt: "What are the badge component variants?",
-    description: "Reader returns badge variant options",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    description: "Reader returns warning and error among the badge variants",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_component" },
+      { type: "contains", value: "warning" },
+      { type: "contains", value: "error" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 30, agent: "reader",
+    id: 30, agent: "reader", tags: ["epistemic", "grounding"],
     prompt: "List all available themes",
-    description: "Reader returns the list of themes (light, dark, etc.)",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    description: "Reader returns both light and dark themes",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "list_themes" },
+      { type: "contains", value: "light" },
+      { type: "contains", value: "dark" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 31, agent: "reader",
-    prompt: "What background color does the dark theme use?",
-    description: "Reader returns the dark theme background color value",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 31, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What is the background color value used in the dark theme?",
+    description: "Reader returns #111827 (neutral.900) as the dark theme background",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_theme" },
+      { type: "contains", value: "#111827" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 32, agent: "reader",
-    prompt: "What is the value of the semantic action.primary token?",
-    description: "Reader resolves a semantic token to its value",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 32, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What is the hex value of the semantic action.primary color token?",
+    description: "Reader resolves action.primary to #2563eb (primary.600)",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_tokens" },
+      { type: "contains", value: "#2563eb" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 33, agent: "reader",
+    id: 33, agent: "reader", tags: ["epistemic", "grounding"],
     prompt: "What icons are in the navigation category?",
-    description: "Reader returns navigation icons",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    description: "Reader returns arrow icons from the navigation category",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "list_icons" },
+      { type: "contains", value: "arrow" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 34, agent: "reader",
+    id: 34, agent: "reader", tags: ["grounding"],
     prompt: "Search for icons related to settings",
-    description: "Reader returns settings-related icons via icon search",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    description: "Reader uses search_icons to look up settings-related icons",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "search_icons" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 35, agent: "reader",
-    prompt: "What has changed in the latest design system changelog?",
-    description: "Reader returns recent changelog entries",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 35, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What is the latest version in the design system changelog?",
+    description: "Reader returns version 0.3.0 from the changelog",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_changelog" },
+      { type: "contains", value: "0.3.0" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 36, agent: "reader",
-    prompt: "Which components are currently deprecated?",
-    description: "Reader returns deprecation notices",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 36, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "Which components or tokens are currently deprecated?",
+    description: "Reader returns the deprecated Overlay component",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_deprecations" },
+      { type: "contains", value: "Overlay" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 37, agent: "reader",
-    prompt: "What is the maximum content width in the layout system?",
-    description: "Reader returns layout maxWidth tokens",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 37, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What is the xl container max-width value in the layout system?",
+    description: "Reader returns 1280px for layout.containerMaxWidth.xl",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "contains", value: "1280px" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 38, agent: "reader",
-    prompt: "What is the error color in the design system?",
-    description: "Reader returns the error color token value",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 38, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What is the exact hex value of the default error color token?",
+    description: "Reader returns #ef4444 for color.error.default",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_tokens" },
+      { type: "contains", value: "#ef4444" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 39, agent: "reader",
-    prompt: "What font weight is typically used for headings?",
-    description: "Reader returns heading font weight tokens",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 39, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What numeric value is the bold font weight token?",
+    description: "Reader returns 700 for typography.fontWeight.bold",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_tokens" },
+      { type: "contains", value: "700" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 40, agent: "reader",
-    prompt: "What is the base font size?",
-    description: "Reader returns the base font size token",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 40, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What is the pixel value of the base font size?",
+    description: "Reader returns 16px for typography.fontSize.base",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_tokens" },
+      { type: "contains", value: "16px" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 41, agent: "reader",
-    prompt: "What are the success, warning, and error status colors?",
-    description: "Reader returns all status color tokens",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 41, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What is the hex value of the default success color token?",
+    description: "Reader returns #10b981 for color.success.default",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_tokens" },
+      { type: "contains", value: "#10b981" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 42, agent: "reader",
-    prompt: "What is the normal line height value?",
-    description: "Reader returns the normal/default line height token",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 42, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What is the numeric value of the normal line height token?",
+    description: "Reader returns 1.5 for typography.lineHeight.normal",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_tokens" },
+      { type: "contains", value: "1.5" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 43, agent: "reader",
-    prompt: "What does spacing size 4 equal in pixels?",
-    description: "Reader returns the pixel value for spacing token 4",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 43, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What is the pixel value of spacing token 4?",
+    description: "Reader returns 16px for spacing.4",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_tokens" },
+      { type: "contains", value: "16px" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 44, agent: "reader",
-    prompt: "What constraints apply to the button component?",
-    description: "Reader returns button usage constraints",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 44, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What is the minimum touch target size constraint for the button component?",
+    description: "Reader returns the 44px minimum touch target constraint",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_component_constraints" },
+      { type: "contains", value: "44" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 45, agent: "reader",
-    prompt: "What is the anatomy of the card component?",
-    description: "Reader returns card component anatomy (slots/parts)",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 45, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What are the anatomy slots of the card component?",
+    description: "Reader returns header and footer as card anatomy slots",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_component_anatomy" },
+      { type: "contains", value: "header" },
+      { type: "contains", value: "footer" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 46, agent: "reader",
-    prompt: "What accessibility guidance exists for form components?",
-    description: "Reader returns form accessibility guidelines",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 46, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What accessibility requirements exist for form components regarding labels?",
+    description: "Reader returns label requirements from form accessibility guidance",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_accessibility_guidance" },
+      { type: "contains", value: "label" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 47, agent: "reader",
-    prompt: "What are the mobile layout gutter values?",
-    description: "Reader returns mobile gutter layout tokens",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 47, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What is the grid column gutter value in the layout system?",
+    description: "Reader returns 24px (spacing.6) as the layout grid gutter",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "contains", value: "24px" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 48, agent: "reader",
-    prompt: "What are the secondary color tokens?",
-    description: "Reader returns the secondary color palette",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "contains", value: "secondary" }, { type: "notEmpty" }],
+    id: 48, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What is the hex value of the semantic text.primary color token?",
+    description: "Reader returns #111827 (neutral.900) for the semantic text.primary token",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_tokens" },
+      { type: "contains", value: "#111827" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 49, agent: "reader",
-    prompt: "What is the alert component's accessibility role?",
-    description: "Reader returns the alert ARIA role",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "notEmpty" }],
+    id: 49, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What ARIA role does the toast/alert notification component use?",
+    description: "Reader returns alert as the toast component ARIA role",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_component" },
+      { type: "contains", value: "alert" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 50, agent: "reader",
-    prompt: "What are all the neutral color shades?",
-    description: "Reader returns the neutral color scale",
-    checks: [{ type: "agentMatch", value: "reader" }, { type: "contains", value: "neutral" }, { type: "notEmpty" }],
+    id: 50, agent: "reader", tags: ["epistemic", "grounding"],
+    prompt: "What is the hex value of the lightest neutral color (neutral.0)?",
+    description: "Reader returns #ffffff for color.neutral.0",
+    checks: [
+      { type: "agentMatch", value: "reader" },
+      { type: "toolUsed", value: "get_tokens" },
+      { type: "contains", value: "#ffffff" },
+      { type: "notEmpty" },
+    ],
   },
 
   // ── Builder agent tests (30) ─────────────────────────────────────────────
   {
-    id: 51, agent: "builder",
+    id: 51, agent: "builder", tags: ["epistemic"],
     prompt: "Create a primary button component",
-    description: "Builder generates a styled primary button with a live preview",
-    checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
+    description: "Builder uses the primary action color (#2563eb) in the generated preview",
+    checks: [
+      { type: "agentMatch", value: "builder" },
+      { type: "hasPreview" },
+      { type: "previewContains", value: "#2563eb" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 52, agent: "builder",
+    id: 52, agent: "builder", tags: ["mechanistic"],
     prompt: "Build a text input field",
-    description: "Builder generates a text input with proper design tokens",
+    description: "Builder generates a text input with a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 53, agent: "builder",
+    id: 53, agent: "builder", tags: ["mechanistic"],
     prompt: "Generate a card component",
-    description: "Builder generates a card with token-based styles",
+    description: "Builder generates a card component with a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 54, agent: "builder",
+    id: 54, agent: "builder", tags: ["mechanistic"],
     prompt: "Create a modal dialog component",
-    description: "Builder generates an accessible modal dialog",
+    description: "Builder generates an accessible modal dialog with a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 55, agent: "builder",
+    id: 55, agent: "builder", tags: ["epistemic"],
     prompt: "Build a badge with an error/danger variant",
-    description: "Builder generates an error badge with correct token values",
-    checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
+    description: "Builder uses the error token color (#ef4444) in the error badge preview",
+    checks: [
+      { type: "agentMatch", value: "builder" },
+      { type: "hasPreview" },
+      { type: "previewContains", value: "#ef4444" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 56, agent: "builder",
+    id: 56, agent: "builder", tags: ["mechanistic"],
     prompt: "Create a select dropdown component",
-    description: "Builder generates a styled select dropdown",
+    description: "Builder generates a styled select dropdown with a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 57, agent: "builder",
+    id: 57, agent: "builder", tags: ["mechanistic"],
     prompt: "Build a checkbox component",
-    description: "Builder generates an accessible checkbox",
+    description: "Builder generates an accessible checkbox with a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 58, agent: "builder",
+    id: 58, agent: "builder", tags: ["epistemic"],
     prompt: "Create a warning alert component",
-    description: "Builder generates a warning alert with correct status colors",
-    checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
+    description: "Builder uses the warning token color (#f59e0b) in the alert preview",
+    checks: [
+      { type: "agentMatch", value: "builder" },
+      { type: "hasPreview" },
+      { type: "previewContains", value: "#f59e0b" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 59, agent: "builder",
+    id: 59, agent: "builder", tags: ["mechanistic"],
     prompt: "Generate a login form with email and password fields",
-    description: "Builder generates a complete login form",
+    description: "Builder generates a complete login form with a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 60, agent: "builder",
+    id: 60, agent: "builder", tags: ["mechanistic"],
     prompt: "Build a navigation bar with a logo and links",
-    description: "Builder generates a navigation bar component",
+    description: "Builder generates a navigation bar component with a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 61, agent: "builder",
+    id: 61, agent: "builder", tags: ["mechanistic"],
     prompt: "Create a hero section with a headline and call-to-action button",
-    description: "Builder generates a hero section layout",
+    description: "Builder generates a hero section layout with a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 62, agent: "builder",
+    id: 62, agent: "builder", tags: ["mechanistic"],
     prompt: "Build a pricing card component",
-    description: "Builder generates a pricing card with token-based styles",
+    description: "Builder generates a pricing card with a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 63, agent: "builder",
+    id: 63, agent: "builder", tags: ["mechanistic"],
     prompt: "Create a secondary button",
-    description: "Builder generates a secondary variant button",
+    description: "Builder generates a secondary variant button with a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 64, agent: "builder",
+    id: 64, agent: "builder", tags: ["epistemic"],
     prompt: "Build a disabled text input field",
-    description: "Builder generates a disabled input using the disabled state tokens",
-    checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
+    description: "Builder uses the disabled text color token (#9ca3af) in the preview",
+    checks: [
+      { type: "agentMatch", value: "builder" },
+      { type: "hasPreview" },
+      { type: "previewContains", value: "#9ca3af" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 65, agent: "builder",
+    id: 65, agent: "builder", tags: ["mechanistic"],
     prompt: "Create a button group with three buttons",
-    description: "Builder generates a grouped button layout",
+    description: "Builder generates a grouped button layout with a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 66, agent: "builder",
+    id: 66, agent: "builder", tags: ["mechanistic"],
     prompt: "Create an icon button with a settings icon",
-    description: "Builder generates an icon button component",
+    description: "Builder generates an icon button component with a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 67, agent: "builder",
+    id: 67, agent: "builder", tags: ["mechanistic"],
     prompt: "Generate a toast notification message",
-    description: "Builder generates a toast notification component",
+    description: "Builder generates a toast notification component with a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 68, agent: "builder",
+    id: 68, agent: "builder", tags: ["mechanistic"],
     prompt: "Build a registration form with first name, last name, and email",
-    description: "Builder generates a multi-field form",
+    description: "Builder generates a multi-field registration form with a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 69, agent: "builder",
+    id: 69, agent: "builder", tags: ["mechanistic"],
     prompt: "Create a 3-column card grid layout",
-    description: "Builder generates a card grid layout",
+    description: "Builder generates a card grid layout with a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 70, agent: "builder",
+    id: 70, agent: "builder", tags: ["epistemic"],
     prompt: "Build a success alert with a checkmark icon",
-    description: "Builder generates a success alert component",
-    checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
+    description: "Builder uses the success token color (#10b981) in the alert preview",
+    checks: [
+      { type: "agentMatch", value: "builder" },
+      { type: "hasPreview" },
+      { type: "previewContains", value: "#10b981" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 71, agent: "builder",
+    id: 71, agent: "builder", tags: ["mechanistic"],
     prompt: "Create a search input with a search button",
-    description: "Builder generates a search bar component",
+    description: "Builder generates a search bar component with a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 72, agent: "builder",
+    id: 72, agent: "builder", tags: ["mechanistic"],
     prompt: "Generate a tab bar component with three tabs",
-    description: "Builder generates a tab bar with proper styling",
+    description: "Builder generates a tab bar component with a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 73, agent: "builder",
+    id: 73, agent: "builder", tags: ["mechanistic"],
     prompt: "Build a data table with column headers",
-    description: "Builder generates a styled data table",
+    description: "Builder generates a styled data table with a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 74, agent: "builder",
+    id: 74, agent: "builder", tags: ["mechanistic"],
     prompt: "Create a dropdown menu component",
-    description: "Builder generates a dropdown menu",
+    description: "Builder generates a dropdown menu with a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 75, agent: "builder",
+    id: 75, agent: "builder", tags: ["mechanistic"],
     prompt: "Build a loading spinner component",
-    description: "Builder generates an animated loading spinner",
+    description: "Builder generates an animated loading spinner with a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 76, agent: "builder",
+    id: 76, agent: "builder", tags: ["mechanistic"],
     prompt: "Generate a breadcrumb navigation component",
-    description: "Builder generates a breadcrumb with proper separators",
+    description: "Builder generates a breadcrumb with proper separators in a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 77, agent: "builder",
+    id: 77, agent: "builder", tags: ["mechanistic"],
     prompt: "Create a stepper component with three steps",
-    description: "Builder generates a step wizard/stepper component",
+    description: "Builder generates a step wizard/stepper component with a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 78, agent: "builder",
+    id: 78, agent: "builder", tags: ["mechanistic"],
     prompt: "Build a progress bar at 60% completion",
-    description: "Builder generates a progress bar component",
+    description: "Builder generates a progress bar component with a live preview",
     checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
   },
   {
-    id: 79, agent: "builder",
-    prompt: "Create a profile avatar component with initials",
-    description: "Builder generates an avatar component",
-    checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
+    id: 79, agent: "builder", tags: ["epistemic"],
+    prompt: "Create a profile avatar component using the primary brand color",
+    description: "Builder uses the primary action color (#2563eb) in the avatar preview",
+    checks: [
+      { type: "agentMatch", value: "builder" },
+      { type: "hasPreview" },
+      { type: "previewContains", value: "#2563eb" },
+      { type: "notEmpty" },
+    ],
   },
   {
-    id: 80, agent: "builder",
+    id: 80, agent: "builder", tags: ["epistemic"],
     prompt: "Generate an error state for a form input with a validation message",
-    description: "Builder generates an input in error state with message",
-    checks: [{ type: "agentMatch", value: "builder" }, { type: "hasPreview" }, { type: "notEmpty" }],
+    description: "Builder uses the error token color (#ef4444) in the error input preview",
+    checks: [
+      { type: "agentMatch", value: "builder" },
+      { type: "hasPreview" },
+      { type: "previewContains", value: "#ef4444" },
+      { type: "notEmpty" },
+    ],
   },
 
   // ── Generator agent tests (20) ───────────────────────────────────────────
   {
-    id: 81, agent: "generator",
+    id: 81, agent: "generator", tags: ["behavioral"],
     prompt: "I want to create a brand-new design system for my tech startup",
-    description: "Generator begins the design system creation conversation",
-    checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
+    description: "Generator asks a clarifying question before proceeding",
+    checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
   {
-    id: 82, agent: "generator",
+    id: 82, agent: "generator", tags: ["behavioral"],
     prompt: "Generate a complete design system for a healthcare application",
-    description: "Generator starts gathering brand info for a healthcare design system",
-    checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
+    description: "Generator asks for more brand information before generating",
+    checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
   {
-    id: 83, agent: "generator",
+    id: 83, agent: "generator", tags: ["behavioral"],
     prompt: "Create a dark-first design system for a developer tool",
-    description: "Generator engages with a dark-theme-first design system request",
-    checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
+    description: "Generator asks a clarifying question about brand or aesthetic direction",
+    checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
   {
-    id: 84, agent: "generator",
+    id: 84, agent: "generator", tags: ["behavioral"],
     prompt: "I need a design system for an e-commerce platform",
-    description: "Generator acknowledges and gathers info for e-commerce DS",
-    checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
+    description: "Generator asks a clarifying question before gathering brand direction",
+    checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
   {
-    id: 85, agent: "generator",
+    id: 85, agent: "generator", tags: ["behavioral"],
     prompt: "Build me a design system with purple as the primary brand color",
-    description: "Generator accepts a brand color and requests more info",
-    checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
+    description: "Generator acknowledges the color and asks at least one follow-up question",
+    checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
   {
-    id: 86, agent: "generator",
+    id: 86, agent: "generator", tags: ["behavioral"],
     prompt: "Create a minimal, clean design system for a SaaS dashboard",
-    description: "Generator starts the SaaS dashboard design system conversation",
-    checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
+    description: "Generator asks a clarifying question about typography or brand details",
+    checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
   {
-    id: 87, agent: "generator",
+    id: 87, agent: "generator", tags: ["behavioral"],
     prompt: "Generate a design system for a fintech banking brand",
-    description: "Generator gathers brand direction for a fintech design system",
-    checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
+    description: "Generator asks for brand color or tone information before generating",
+    checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
   {
-    id: 88, agent: "generator",
+    id: 88, agent: "generator", tags: ["behavioral"],
     prompt: "I want to create a design system for a social media platform",
-    description: "Generator engages with a social media design system request",
-    checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
+    description: "Generator asks a clarifying question to gather more brand context",
+    checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
   {
-    id: 89, agent: "generator",
+    id: 89, agent: "generator", tags: ["behavioral"],
     prompt: "Start building a design system for a B2B project management tool",
-    description: "Generator starts the process for a B2B tool design system",
-    checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
+    description: "Generator asks about brand tone or product aesthetic before proceeding",
+    checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
   {
-    id: 90, agent: "generator",
+    id: 90, agent: "generator", tags: ["behavioral"],
     prompt: "Create a children's educational app design system",
-    description: "Generator begins gathering info for a playful education DS",
-    checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
+    description: "Generator asks for color preferences or brand details to gather direction",
+    checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
   {
-    id: 91, agent: "generator",
+    id: 91, agent: "generator", tags: ["behavioral"],
     prompt: "Generate a luxury brand design system",
-    description: "Generator gathers brand aesthetic for a luxury design system",
-    checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
+    description: "Generator asks a clarifying question about the luxury brand direction",
+    checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
   {
-    id: 92, agent: "generator",
+    id: 92, agent: "generator", tags: ["behavioral"],
     prompt: "Build a design system for a news media website",
-    description: "Generator starts the news media design system conversation",
-    checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
+    description: "Generator asks for brand or typographic direction before generating",
+    checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
   {
-    id: 93, agent: "generator",
+    id: 93, agent: "generator", tags: ["behavioral"],
     prompt: "I need a complete new design system from scratch",
-    description: "Generator begins the creation process for a fresh DS",
-    checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
+    description: "Generator asks a question to start gathering brand information",
+    checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
   {
-    id: 94, agent: "generator",
+    id: 94, agent: "generator", tags: ["behavioral"],
     prompt: "Create a gaming platform design system",
-    description: "Generator engages with a gaming aesthetic design system request",
-    checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
+    description: "Generator asks about brand aesthetic or color direction for the game platform",
+    checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
   {
-    id: 95, agent: "generator",
+    id: 95, agent: "generator", tags: ["behavioral"],
     prompt: "Generate a design system for a food delivery mobile app",
-    description: "Generator gathers brand info for a food delivery app DS",
-    checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
+    description: "Generator asks for brand info or color preferences before proceeding",
+    checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
   {
-    id: 96, agent: "generator",
+    id: 96, agent: "generator", tags: ["behavioral"],
     prompt: "Create a B2B enterprise design system with a professional tone",
-    description: "Generator begins a professional B2B design system conversation",
-    checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
+    description: "Generator asks a clarifying question about the brand or color palette",
+    checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
   {
-    id: 97, agent: "generator",
+    id: 97, agent: "generator", tags: ["behavioral"],
     prompt: "Build a nature-inspired design system with earthy green tones",
-    description: "Generator acknowledges the nature theme and asks clarifying questions",
-    checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
+    description: "Generator acknowledges the direction and asks one follow-up question",
+    checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
   {
-    id: 98, agent: "generator",
+    id: 98, agent: "generator", tags: ["behavioral"],
     prompt: "Generate a design system for a travel booking platform",
-    description: "Generator starts gathering info for a travel app design system",
-    checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
+    description: "Generator asks for more brand direction before generating",
+    checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
   {
-    id: 99, agent: "generator",
+    id: 99, agent: "generator", tags: ["behavioral"],
     prompt: "I want to generate a design system with a vibrant, energetic feel",
-    description: "Generator engages with an energy-driven aesthetic direction",
-    checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
+    description: "Generator asks a clarifying question about brand name or color preferences",
+    checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
   {
-    id: 100, agent: "generator",
+    id: 100, agent: "generator", tags: ["behavioral"],
     prompt: "Create a design system for a mental wellness and meditation app",
-    description: "Generator gathers calm, wellness-oriented brand direction",
-    checks: [{ type: "agentMatch", value: "generator" }, { type: "notEmpty" }],
+    description: "Generator asks about calm brand direction before proceeding",
+    checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
 ];
 
@@ -646,11 +867,23 @@ function evaluateCheck(check, result) {
         passed: typeof result.message === "string" && result.message.toLowerCase().includes(check.value.toLowerCase()),
         detail: result.message ? result.message.slice(0, SNIPPET_LENGTH) + "…" : "no message",
       };
+    case "toolUsed":
+      return {
+        label: `Called MCP tool "${check.value}"`,
+        passed: Array.isArray(result.toolCallsUsed) && result.toolCallsUsed.includes(check.value),
+        detail: result.toolCallsUsed?.join(", ") || "no tools called",
+      };
     case "hasPreview":
       return {
         label: "Response includes a preview",
         passed: typeof result.preview === "string" && result.preview.trim().length > 0,
         detail: result.preview ? "preview present" : "no preview",
+      };
+    case "previewContains":
+      return {
+        label: `Preview HTML contains "${check.value}"`,
+        passed: typeof result.preview === "string" && result.preview.toLowerCase().includes(check.value.toLowerCase()),
+        detail: result.preview ? (result.preview.toLowerCase().includes(check.value.toLowerCase()) ? "found in preview" : "not found in preview") : "no preview",
       };
     case "notEmpty":
       return {
@@ -733,9 +966,25 @@ const AGENT_LABELS = {
   generator: "Generator",
 };
 
+const TAG_STYLES = {
+  routing:     { cls: "tl-tag-routing",     label: "routing"     },
+  epistemic:   { cls: "tl-tag-epistemic",   label: "epistemic"   },
+  grounding:   { cls: "tl-tag-grounding",   label: "grounding"   },
+  behavioral:  { cls: "tl-tag-behavioral",  label: "behavioral"  },
+  mechanistic: { cls: "tl-tag-mechanistic", label: "mechanistic" },
+};
+
 function agentBadge(agent) {
   const color = AGENT_COLORS[agent] ?? "accent";
   return `<span class="tl-agent-badge tl-badge-${color}">${escapeHtml(AGENT_LABELS[agent] ?? agent)}</span>`;
+}
+
+function tagBadges(tags) {
+  if (!tags || tags.length === 0) return "";
+  return tags.map(tag => {
+    const s = TAG_STYLES[tag] ?? { cls: "tl-tag-mechanistic", label: tag };
+    return `<span class="tl-tag ${s.cls}">${s.label}</span>`;
+  }).join("");
 }
 
 function statusBadge(status) {
@@ -765,9 +1014,10 @@ export function initTestLabModal() {
   const openBtn    = document.getElementById("test-lab-btn");
   const tabBtns    = overlay.querySelectorAll(".tl-tab");
 
-  let activeTab = "suite";
-  let suiteFilter = "all";
-  let runningAll = false;
+  let activeTab   = "suite";
+  let agentFilter = "all";
+  let typeFilter  = "all";
+  let runningAll  = false;
   let stopAllFlag = false;
 
   // ── Tab switching ──────────────────────────────────────────────────────
@@ -783,23 +1033,37 @@ export function initTestLabModal() {
     return document.getElementById("model-select")?.value || DEFAULT_MODEL;
   }
 
-  // ── Suite tab ─────────────────────────────────────────────────────────
+  // ── Suite filtering ────────────────────────────────────────────────────
   function filteredTests() {
-    if (suiteFilter === "all") return TEST_SUITE;
-    return TEST_SUITE.filter(t => t.agent === suiteFilter);
+    return TEST_SUITE.filter(t => {
+      const agentOk = agentFilter === "all" || t.agent === agentFilter;
+      const typeOk  = typeFilter  === "all" || (t.tags && t.tags.includes(typeFilter));
+      return agentOk && typeOk;
+    });
   }
 
   function renderSuite() {
-    const tests = filteredTests();
-    const total = tests.length;
-    const ran   = tests.filter(t => getTestState(t.id).status !== "idle").length;
+    const tests  = filteredTests();
+    const total  = tests.length;
+    const ran    = tests.filter(t => getTestState(t.id).status !== "idle").length;
     const passed = tests.filter(t => getTestState(t.id).status === "pass").length;
     const failed = tests.filter(t => ["fail", "error"].includes(getTestState(t.id).status)).length;
 
-    const filterTabs = ["all", "orchestrator", "reader", "builder", "generator"].map(f => {
-      const count = f === "all" ? TEST_SUITE.length : TEST_SUITE.filter(t => t.agent === f).length;
-      return `<button class="tl-filter-tab${suiteFilter === f ? " active" : ""}" data-filter="${f}">
+    const agentTabs = ["all", "orchestrator", "reader", "builder", "generator"].map(f => {
+      const count = f === "all"
+        ? TEST_SUITE.filter(t => typeFilter === "all" || (t.tags && t.tags.includes(typeFilter))).length
+        : TEST_SUITE.filter(t => t.agent === f && (typeFilter === "all" || (t.tags && t.tags.includes(typeFilter)))).length;
+      return `<button class="tl-filter-tab${agentFilter === f ? " active" : ""}" data-agent="${f}">
         ${f === "all" ? "All" : AGENT_LABELS[f]} <span class="tl-filter-count">${count}</span>
+      </button>`;
+    }).join("");
+
+    const typeTabs = ["all", "routing", "epistemic", "grounding", "behavioral", "mechanistic"].map(f => {
+      const count = f === "all"
+        ? TEST_SUITE.filter(t => agentFilter === "all" || t.agent === agentFilter).length
+        : TEST_SUITE.filter(t => (agentFilter === "all" || t.agent === agentFilter) && t.tags && t.tags.includes(f)).length;
+      return `<button class="tl-filter-tab tl-type-tab${typeFilter === f ? " active" : ""}${f !== "all" ? ` tl-type-tab-${f}` : ""}" data-type="${f}">
+        ${f === "all" ? "All types" : f} <span class="tl-filter-count">${count}</span>
       </button>`;
     }).join("");
 
@@ -810,6 +1074,7 @@ export function initTestLabModal() {
         <div class="tl-test-row-header">
           <span class="tl-test-id">#${test.id}</span>
           ${agentBadge(test.agent)}
+          ${tagBadges(test.tags)}
           <span class="tl-test-desc">${escapeHtml(test.description)}</span>
           <div class="tl-test-row-actions">
             ${statusBadge(st.status)}
@@ -823,23 +1088,30 @@ export function initTestLabModal() {
 
     modalBody.innerHTML = `
       <div class="tl-suite-toolbar">
-        <div class="tl-filter-tabs">${filterTabs}</div>
-        <div class="tl-suite-actions">
-          <span class="tl-suite-stats">${ran}/${total} run &middot; ${passed} pass &middot; ${failed} fail</span>
-          ${runningAll
-            ? `<button class="btn-secondary tl-stop-btn" id="tl-stop-all">⏹ Stop</button>`
-            : `<button class="btn-secondary tl-run-all-btn" id="tl-run-all">▶ Run All (${total})</button>`}
-          <button class="btn-secondary tl-clear-btn" id="tl-clear-results">Clear</button>
+        <div class="tl-filter-row">
+          <div class="tl-filter-tabs">${agentTabs}</div>
+        </div>
+        <div class="tl-filter-row tl-filter-row-type">
+          <div class="tl-filter-tabs">${typeTabs}</div>
+          <div class="tl-suite-actions">
+            <span class="tl-suite-stats">${ran}/${total} run &middot; ${passed} pass &middot; ${failed} fail</span>
+            ${runningAll
+              ? `<button class="btn-secondary tl-stop-btn" id="tl-stop-all">⏹ Stop</button>`
+              : `<button class="btn-secondary tl-run-all-btn" id="tl-run-all">▶ Run (${total})</button>`}
+            <button class="btn-secondary tl-clear-btn" id="tl-clear-results">Clear</button>
+          </div>
         </div>
       </div>
       <div class="tl-test-list">${rows}</div>`;
 
-    // Wire filter tabs
-    modalBody.querySelectorAll(".tl-filter-tab").forEach(btn => {
-      btn.addEventListener("click", () => {
-        suiteFilter = btn.dataset.filter;
-        renderSuite();
-      });
+    // Wire agent filter tabs
+    modalBody.querySelectorAll(".tl-filter-tab[data-agent]").forEach(btn => {
+      btn.addEventListener("click", () => { agentFilter = btn.dataset.agent; renderSuite(); });
+    });
+
+    // Wire type filter tabs
+    modalBody.querySelectorAll(".tl-filter-tab[data-type]").forEach(btn => {
+      btn.addEventListener("click", () => { typeFilter = btn.dataset.type; renderSuite(); });
     });
 
     // Wire run-all / stop / clear
@@ -909,6 +1181,7 @@ export function initTestLabModal() {
       <div class="tl-test-row-header">
         <span class="tl-test-id">#${test.id}</span>
         ${agentBadge(test.agent)}
+        ${tagBadges(test.tags)}
         <span class="tl-test-desc">${escapeHtml(test.description)}</span>
         <div class="tl-test-row-actions">
           ${statusBadge(st.status)}
@@ -975,8 +1248,16 @@ export function initTestLabModal() {
             </div>
           </div>
           <div class="tl-pg-field">
-            <label class="tl-pg-label">Expected keywords in response (comma-separated, optional)</label>
-            <input class="tl-pg-input" type="text" id="pg-keywords" placeholder="e.g. primary, color, hex" />
+            <label class="tl-pg-label">Expected values in response (comma-separated, optional)</label>
+            <input class="tl-pg-input" type="text" id="pg-keywords" placeholder="e.g. #2563eb, 16px, Inter" />
+          </div>
+          <div class="tl-pg-field">
+            <label class="tl-pg-label">Expected values in preview HTML (comma-separated, optional)</label>
+            <input class="tl-pg-input" type="text" id="pg-preview-values" placeholder="e.g. #ef4444, background-color" />
+          </div>
+          <div class="tl-pg-field">
+            <label class="tl-pg-label">Expected MCP tool called (optional)</label>
+            <input class="tl-pg-input" type="text" id="pg-tool-used" placeholder="e.g. get_tokens, get_component" />
           </div>
         </div>
         <div class="tl-pg-run-row">
@@ -995,10 +1276,13 @@ export function initTestLabModal() {
     const prompt = document.getElementById("pg-prompt")?.value.trim();
     if (!prompt) return;
 
-    const expectedAgent = document.getElementById("pg-expected-agent")?.value;
-    const expectPreview = document.getElementById("pg-expect-preview")?.value;
-    const keywords = (document.getElementById("pg-keywords")?.value ?? "")
+    const expectedAgent   = document.getElementById("pg-expected-agent")?.value;
+    const expectPreview   = document.getElementById("pg-expect-preview")?.value;
+    const keywords        = (document.getElementById("pg-keywords")?.value ?? "")
       .split(",").map(s => s.trim()).filter(Boolean);
+    const previewValues   = (document.getElementById("pg-preview-values")?.value ?? "")
+      .split(",").map(s => s.trim()).filter(Boolean);
+    const toolUsed        = document.getElementById("pg-tool-used")?.value.trim();
 
     const resultEl = document.getElementById("pg-result");
     const runBtn   = document.getElementById("pg-run-btn");
@@ -1008,11 +1292,13 @@ export function initTestLabModal() {
 
     // Build ad-hoc checks
     const checks = [{ type: "notEmpty" }];
-    if (expectedAgent) checks.push({ type: "agentMatch", value: expectedAgent });
+    if (expectedAgent)   checks.push({ type: "agentMatch",     value: expectedAgent });
     if (expectPreview === "yes") checks.push({ type: "hasPreview" });
-    keywords.forEach(kw => checks.push({ type: "contains", value: kw }));
+    if (toolUsed)        checks.push({ type: "toolUsed",       value: toolUsed });
+    keywords.forEach(kw    => checks.push({ type: "contains",        value: kw }));
+    previewValues.forEach(v => checks.push({ type: "previewContains", value: v }));
 
-    const pgTest = { id: 0, agent: expectedAgent || "any", prompt, description: "Playground test", checks };
+    const pgTest = { id: 0, agent: expectedAgent || "any", tags: [], prompt, description: "Playground test", checks };
 
     try {
       const outcome = await runTest(pgTest, getModel());
@@ -1026,17 +1312,19 @@ export function initTestLabModal() {
           </div>`
         ).join("");
 
-        const summary = outcome.passed ? "tl-pg-pass" : "tl-pg-fail";
+        const summary     = outcome.passed ? "tl-pg-pass" : "tl-pg-fail";
         const summaryText = outcome.passed ? "✓ All checks passed" : "✗ Some checks failed";
-        const msg = outcome.result?.message ?? "";
-        const hasPreview = outcome.result?.preview;
+        const msg         = outcome.result?.message ?? "";
+        const hasPreview  = outcome.result?.preview;
+        const toolsUsed   = outcome.result?.toolCallsUsed ?? [];
 
         resultEl.innerHTML = `
           <div class="tl-pg-summary ${summary}">${summaryText}</div>
           <div class="tl-pg-meta">
-            <span>Agent routed to: ${agentBadge(outcome.result?.routedAgent ?? "unknown")}</span>
+            <span>Agent: ${agentBadge(outcome.result?.routedAgent ?? "unknown")}</span>
             <span class="tl-pg-meta-sep">·</span>
             <span>Preview: ${hasPreview ? "yes" : "no"}</span>
+            ${toolsUsed.length ? `<span class="tl-pg-meta-sep">·</span><span>Tools: ${escapeHtml(toolsUsed.join(", "))}</span>` : ""}
           </div>
           <div class="tl-check-list">${checkRows}</div>
           ${msg ? `<div class="tl-pg-response-label">Response</div>

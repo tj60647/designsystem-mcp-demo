@@ -65,6 +65,7 @@ test.describe("/api/agent-info — builder tool set", () => {
       "get_component_variants",
       "get_component_anatomy",
       "get_component_constraints",
+      "get_accessibility_guidance",
       "validate_component_usage",
     ]) {
       expect(toolNames, `builder is missing ${required}`).toContain(required);

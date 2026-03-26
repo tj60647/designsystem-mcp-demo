@@ -871,7 +871,9 @@ const BUILDER_SYSTEM_PROMPT =
   "You are a component code generator. For every component request:\n" +
   "1. Call get_component to fetch the spec and available variants.\n" +
   "2. Call get_component_tokens to resolve the exact token values.\n" +
-  "3. Optionally call validate_component_usage to verify your configuration.\n" +
+  "3. Optionally call get_component_variants or get_component_anatomy to understand valid configurations and slot structure.\n" +
+  "4. Optionally call get_component_constraints or get_accessibility_guidance to apply ARIA roles, keyboard patterns, and usage rules.\n" +
+  "5. Optionally call validate_component_usage or diff_against_system to verify your final configuration against design system rules.\n" +
   "Generate clean HTML with inline styles using exact token values from the tools. Never hard-code colors or spacing.\n\n" +
   "IMPORTANT: Every response must be a single valid JSON object. Output ONLY the JSON.\n" +
   'Return: {"message": "Brief prose explanation.", "preview": "<html with inline styles>"}\n' +
@@ -885,7 +887,7 @@ const GENERATOR_SYSTEM_PROMPT =
   "3. Once you have enough information, call generate_design_system with a comprehensive, detailed description.\n" +
   "4. After the tool returns success, briefly summarise what was generated and tell the user it is loaded and ready to explore.\n\n" +
   "IMPORTANT: Every response must be a single valid JSON object. Output ONLY the JSON.\n" +
-  'Return: {"message": "Your prose here."} — or include "preview" if rendering a sample component.';
+  'Return: {"message": "Your prose here."}';
 
 // ── Strategy 3: tool subsets per specialist agent ────────────────────────
 const READER_TOOL_NAMES = new Set([
@@ -903,7 +905,7 @@ const READER_TOOL_NAMES = new Set([
 const BUILDER_TOOL_NAMES = new Set([
   "get_token", "get_tokens",
   "get_component", "get_component_tokens", "get_component_variants", "get_component_anatomy",
-  "get_component_constraints",
+  "get_component_constraints", "get_accessibility_guidance",
   "suggest_token", "validate_component_usage", "validate_color", "diff_against_system", "check_contrast",
 ]);
 
@@ -1251,6 +1253,8 @@ app.post("/api/chat", async (req, res) => {
             console.log(`[chat:orchestrator] routed to "${agent}" — ${delegateArgs.reason ?? ""}`);
           }
         }
+      } else {
+        console.warn(`[chat:orchestrator] non-ok response ${orchResponse.status}, falling back to unified agent`);
       }
     } catch (err) {
       // Routing failure is non-fatal: continue with unified single-agent mode
@@ -1276,7 +1280,6 @@ app.post("/api/chat", async (req, res) => {
   try {
     for (let i = 0; i < MAX_ITERATIONS; i++) {
       console.log(`[chat] iteration=${i} model=${model} messages=${loopMessages.length}`);
-      console.log("[chat:prompt]", JSON.stringify(loopMessages, null, 2));
 
       sendProgress("Thinking…");
 

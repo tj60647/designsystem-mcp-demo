@@ -214,7 +214,7 @@
     <div class="messages" id="messages" role="log" aria-live="polite">
       <div class="msg assistant">
         <div class="msg-bubble">
-          Hi! Ask me anything about the design system — tokens, components, colors, spacing, or accessibility. I'll query the live MCP server to give you accurate answers. 🎨
+          Hi! Ask me anything about the design system — tokens, components, colors, spacing, or accessibility. I'll query the live MCP server to give you accurate answers.
         </div>
       </div>
     </div>
@@ -251,6 +251,11 @@
         <h2>Live Preview</h2>
         <div class="panel-header-actions">
           <span class="preview-model-badge" id="model-badge" style="display:none"></span>
+          <div class="preview-nav" id="preview-nav" style="display:none">
+            <button class="preview-nav-btn" id="preview-prev" title="Previous preview" disabled>&#8592;</button>
+            <span class="preview-nav-counter" id="preview-nav-counter">1 / 1</span>
+            <button class="preview-nav-btn" id="preview-next" title="Next preview" disabled>&#8594;</button>
+          </div>
           <button class="code-toggle-btn" id="code-toggle-btn" style="display:none" title="Toggle between rendered preview and HTML source">Show Code</button>
           <button class="info-btn" data-info="preview" title="About the Live Preview panel">ℹ</button>
         </div>

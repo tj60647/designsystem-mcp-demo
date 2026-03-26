@@ -5,14 +5,24 @@ let currentHtmlCode = null;
 let showingCode = false;
 let currentBlobUrl = null;
 
+// ── Preview history ───────────────────────────────────────────────────────────
+// Each entry: { html, toolsUsed, model }
+const history = [];
+let historyIndex = -1;
+
 // ── DOM refs (populated by initPreview) ──────────────────────────────────────
 let previewBody, codeToggleBtn, modelBadge, toolsBody;
+let previewNav, previewPrev, previewNext, previewNavCounter;
 
 export function initPreview() {
   previewBody   = document.getElementById("preview-body");
   codeToggleBtn = document.getElementById("code-toggle-btn");
   modelBadge    = document.getElementById("model-badge");
   toolsBody     = document.getElementById("tools-body");
+  previewNav    = document.getElementById("preview-nav");
+  previewPrev   = document.getElementById("preview-prev");
+  previewNext   = document.getElementById("preview-next");
+  previewNavCounter = document.getElementById("preview-nav-counter");
 
   codeToggleBtn.addEventListener("click", () => {
     showingCode = !showingCode;
@@ -26,15 +36,35 @@ export function initPreview() {
       codeToggleBtn.classList.remove("active");
     }
   });
+
+  previewPrev.addEventListener("click", () => navigateHistory(historyIndex - 1));
+  previewNext.addEventListener("click", () => navigateHistory(historyIndex + 1));
 }
 
 export function updateLivePreview(previewHtml, toolsUsed, model) {
-  if (model) {
-    modelBadge.textContent = model;
+  // Push a new history entry (only when there's something to show)
+  history.push({ html: previewHtml || null, toolsUsed: toolsUsed || [], model: model || null });
+  historyIndex = history.length - 1;
+  renderHistoryEntry(historyIndex);
+}
+
+function navigateHistory(idx) {
+  if (idx < 0 || idx >= history.length) return;
+  historyIndex = idx;
+  renderHistoryEntry(historyIndex);
+}
+
+function renderHistoryEntry(idx) {
+  const entry = history[idx];
+
+  if (entry.model) {
+    modelBadge.textContent = entry.model;
     modelBadge.style.display = "";
+  } else {
+    modelBadge.style.display = "none";
   }
 
-  currentHtmlCode = previewHtml || null;
+  currentHtmlCode = entry.html;
   showingCode = false;
 
   if (currentHtmlCode) {
@@ -51,7 +81,19 @@ export function updateLivePreview(previewHtml, toolsUsed, model) {
       </div>`;
   }
 
-  updateToolsPanel(toolsUsed);
+  updateToolsPanel(entry.toolsUsed);
+  syncNavControls();
+}
+
+function syncNavControls() {
+  if (history.length > 1) {
+    previewNav.style.display = "";
+    previewNavCounter.textContent = `${historyIndex + 1} / ${history.length}`;
+    previewPrev.disabled = historyIndex === 0;
+    previewNext.disabled = historyIndex === history.length - 1;
+  } else {
+    previewNav.style.display = "none";
+  }
 }
 
 function updateToolsPanel(toolsUsed) {

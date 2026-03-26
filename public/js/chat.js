@@ -134,6 +134,128 @@ async function handleSend() {
     const decoder = new TextDecoder();
     let buffer = "";
 
+    // ── Live activity trace ───────────────────────────────────────────────
+    // Rows are appended into the loading bubble as events arrive.
+    // On "done" the trace is detached and re-attached as a collapsible block.
+    let traceEl = null;
+    const liveToolRows = new Map(); // callId → <div.trace-item>
+
+    function getOrCreateTrace() {
+      if (traceEl) return traceEl;
+      traceEl = document.createElement("div");
+      traceEl.className = "trace-live";
+      loadingEl.querySelector(".loading-bubble").appendChild(traceEl);
+      return traceEl;
+    }
+
+    function addTraceAgentRouted(agent, reason) {
+      const trace = getOrCreateTrace();
+      const row = document.createElement("div");
+      row.className = "trace-item trace-routed";
+      const agentLabel = { reader: "Design System Reader", builder: "Component Builder", generator: "System Generator" }[agent] ?? agent;
+      row.innerHTML = `<span class="trace-agent-name">${escapeHtml(agentLabel)}</span>`;
+      if (reason) {
+        const tip = document.createElement("span");
+        tip.className = "trace-reason";
+        tip.textContent = reason;
+        row.appendChild(tip);
+      }
+      trace.appendChild(row);
+      scrollToBottom();
+    }
+
+    function addTraceToolCall(callId, tool, args) {
+      const trace = getOrCreateTrace();
+      const row = document.createElement("div");
+      row.className = "trace-item trace-tool";
+
+      // Format the first arg as a short inline hint
+      let argHint = "";
+      try {
+        const keys = Object.keys(args || {});
+        if (keys.length > 0) {
+          const val = String(args[keys[0]]).slice(0, 35);
+          argHint = `<span class="trace-arg-hint">${escapeHtml(keys[0])}: ${escapeHtml(val)}${String(args[keys[0]]).length > 35 ? "…" : ""}</span>`;
+        }
+      } catch { /* ignore */ }
+
+      row.innerHTML = `<span class="trace-tool-name">${escapeHtml(tool)}</span>${argHint}`;
+
+      // Make the row a toggle that reveals full args + result
+      const detail = document.createElement("div");
+      detail.className = "trace-detail";
+      try {
+        detail.innerHTML = `<div class="trace-detail-section"><span class="trace-detail-label">Args</span><pre class="trace-detail-code">${escapeHtml(JSON.stringify(args, null, 2))}</pre></div>`;
+      } catch { /* ignore */ }
+      row.appendChild(detail);
+
+      row.addEventListener("click", () => row.classList.toggle("trace-expanded"));
+
+      trace.appendChild(row);
+      liveToolRows.set(callId, { row, detail });
+      scrollToBottom();
+    }
+
+    function addTraceReasoning(iteration, content) {
+      const trace = getOrCreateTrace();
+      const row = document.createElement("div");
+      row.className = "trace-item trace-reasoning-row";
+      const short = content.slice(0, 90).replace(/\n/g, ' ');
+      row.innerHTML = `<span class="trace-reasoning-preview">${escapeHtml(short)}${content.length > 90 ? '…' : ''}</span>`;
+      const detail = document.createElement("div");
+      detail.className = "trace-detail";
+      detail.innerHTML = `<div class="trace-detail-section"><pre class="trace-detail-code trace-reasoning-full">${escapeHtml(content)}</pre></div>`;
+      row.appendChild(detail);
+      row.addEventListener("click", () => row.classList.toggle("trace-expanded"));
+      trace.appendChild(row);
+      scrollToBottom();
+    }
+
+    function addTraceToolResult(callId, chars, preview) {
+      const entry = liveToolRows.get(callId);
+      if (!entry) return;
+      const { row, detail } = entry;
+
+      // Append size badge to the row header
+      const badge = document.createElement("span");
+      badge.className = "trace-result-badge";
+      badge.textContent = chars < 1024 ? `${chars} chars` : `${(chars / 1024).toFixed(1)}k chars`;
+      row.insertBefore(badge, row.querySelector(".trace-detail"));
+
+      // Add result preview to the expandable section
+      const resultSection = document.createElement("div");
+      resultSection.className = "trace-detail-section";
+      resultSection.innerHTML = `<span class="trace-detail-label">Result</span><pre class="trace-detail-code">${escapeHtml(preview)}</pre>`;
+      detail.appendChild(resultSection);
+    }
+
+    function finalizeTrace(routedAgent) {
+      if (!traceEl || traceEl.children.length === 0) return null;
+
+      const toolCount = liveToolRows.size;
+      const summary = toolCount > 0
+        ? `${toolCount} tool call${toolCount !== 1 ? "s" : ""}`
+        : "Processed";
+
+      const block = document.createElement("div");
+      block.className = "thinking-block";
+
+      const toggle = document.createElement("button");
+      toggle.className = "thinking-toggle";
+      toggle.innerHTML = `<span class="thinking-toggle-icon">▶</span><span>Activity — ${escapeHtml(summary)}</span>`;
+      toggle.addEventListener("click", () => block.classList.toggle("expanded"));
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "thinking-steps trace-finalized";
+      wrapper.appendChild(traceEl);
+
+      block.appendChild(toggle);
+      block.appendChild(wrapper);
+      messagesEl.appendChild(block);
+      return block;
+    }
+    // ─────────────────────────────────────────────────────────────────────
+
     sseLoop: while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -155,8 +277,18 @@ async function handleSend() {
         if (event.type === "progress") {
           updateLoadingStatus(loadingEl, event.message);
           scrollToBottom();
+        } else if (event.type === "agent_routed") {
+          addTraceAgentRouted(event.agent, event.reason);
+        } else if (event.type === "tool_call") {
+          addTraceToolCall(event.callId, event.tool, event.args);
+        } else if (event.type === "tool_result") {
+          addTraceToolResult(event.callId, event.chars, event.preview);
+        } else if (event.type === "reasoning") {
+          addTraceReasoning(event.iteration, event.content);
         } else if (event.type === "done") {
           loadingEl.remove();
+          finalizeTrace(event.routedAgent);
+
           const message   = event.message || "";
           const preview   = event.preview || null;
           const toolsUsed = event.toolCallsUsed || [];
@@ -164,17 +296,8 @@ async function handleSend() {
 
           // Remember which specialist handled this turn so the server can skip
           // re-routing on the immediately following message.
-          // Only store it when this turn was itself a fresh routing decision
-          // (agentForThisTurn was null) — that way previousAgent is used for
-          // exactly one continuation, then the orchestrator re-routes freely.
-          // "unified" is the fallback mode and should never be forwarded as a
-          // specialist hint; storing it would cause the next turn to skip routing.
           if (!agentForThisTurn && event.routedAgent && event.routedAgent !== "unified") {
             lastRoutedAgent = event.routedAgent;
-          }
-
-          if (event.thinkingSteps && event.thinkingSteps.length > 0) {
-            appendThinkingBlock(event.thinkingSteps);
           }
 
           appendMessage("assistant", message);

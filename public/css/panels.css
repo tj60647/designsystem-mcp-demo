@@ -242,6 +242,28 @@
 .code-toggle-btn:hover { color: var(--accent); border-color: var(--accent); }
 .code-toggle-btn.active { color: var(--accent); border-color: var(--accent); background: rgba(47,129,247,.08); }
 
+/* Preview history navigation */
+.preview-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.preview-nav-btn {
+  font-size: 13px; line-height: 1;
+  width: 24px; height: 24px;
+  background: var(--bg-input); color: var(--text-muted);
+  border: 1px solid var(--border); border-radius: 6px;
+  cursor: pointer; transition: color .15s, border-color .15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.preview-nav-btn:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
+.preview-nav-btn:disabled { opacity: 0.35; cursor: default; }
+.preview-nav-counter {
+  font-size: 10px; color: var(--text-dim);
+  padding: 0 4px;
+  white-space: nowrap;
+}
+
 .preview-body {
   flex: 1;
   overflow: hidden;

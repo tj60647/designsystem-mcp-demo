@@ -1,3 +1,47 @@
+import { marked } from "https://esm.sh/marked@15";
+
+// Configure marked: GFM (tables, strikethrough, etc.), treat single newlines as <br>
+marked.use({ gfm: true, breaks: true });
+
+// ── Token color cache ─────────────────────────────────────────────────────
+// Flattened map of dot-notation token path → CSS color value.
+// Populated once at init; used synchronously by highlightTokens().
+const tokenColorCache = new Map();
+
+function flattenTokens(obj, prefix) {
+  if (!obj || typeof obj !== "object") return;
+  if ("value" in obj && typeof obj.value === "string") {
+    // Leaf token node — store if it looks like a color value
+    const v = obj.value.trim();
+    if (v.startsWith("#") || v.startsWith("rgb") || v.startsWith("hsl")) {
+      tokenColorCache.set(prefix, v);
+    }
+    return;
+  }
+  for (const key of Object.keys(obj)) {
+    flattenTokens(obj[key], prefix ? `${prefix}.${key}` : key);
+  }
+}
+
+async function initTokenColors() {
+  try {
+    const res = await fetch("/api/data/tokens");
+    if (!res.ok) return;
+    const data = await res.json();
+    // tokens live under a "color" key; flatten the whole payload
+    const colorSection = data?.color ?? data?.tokens?.color ?? null;
+    if (colorSection) {
+      flattenTokens(colorSection, "color");
+    } else {
+      // Fallback: flatten entire payload to catch any color.* paths
+      flattenTokens(data, "");
+    }
+  } catch { /* non-fatal — swatches fall back to accent gradient */ }
+}
+
+initTokenColors();
+// ─────────────────────────────────────────────────────────────────────────
+
 export function escapeHtml(str) {
   return str
     .replace(/&/g, "&amp;")
@@ -7,42 +51,7 @@ export function escapeHtml(str) {
 }
 
 export function renderMarkdown(text) {
-  let html = escapeHtml(text);
-
-  // Headings
-  html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
-  html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
-  html = html.replace(/^# (.+)$/gm, "<h1>$1</h1>");
-
-  // Bold / italic
-  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-  html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
-
-  // Code blocks
-  html = html.replace(/```[\w]*\n([\s\S]*?)```/g, "<pre><code>$1</code></pre>");
-
-  // Inline code
-  html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
-
-  // Horizontal rule
-  html = html.replace(/^---$/gm, "<hr>");
-
-  // Unordered lists
-  html = html.replace(/^[*\-] (.+)$/gm, "<li>$1</li>");
-  html = html.replace(/(<li>(?:.*?)<\/li>\n?)+/gs, (block) => `<ul>${block}</ul>`);
-
-  // Ordered lists
-  html = html.replace(/^\d+\. (.+)$/gm, "<li>$1</li>");
-
-  // Paragraphs
-  html = html.split("\n").map(line => {
-    const trimmed = line.trim();
-    if (!trimmed) return "";
-    if (/^<(h[1-3]|ul|ol|li|pre|hr)/.test(trimmed)) return trimmed;
-    return `<p>${trimmed}</p>`;
-  }).filter(Boolean).join("\n");
-
-  return html;
+  return marked.parse(text);
 }
 
 export function highlightTokens(container) {
@@ -67,20 +76,24 @@ export function highlightTokens(container) {
     const str = textNode.textContent;
 
     while ((m = tokenRegex.exec(str)) !== null) {
+      // Strip trailing dots (e.g. "typography.fontSize." from glob notation "typography.fontSize.*")
+      const tokenPath = m[0].replace(/\.+$/, "");
+      const matchEnd = m.index + tokenPath.length;
       if (m.index > lastIdx) {
         fragment.appendChild(document.createTextNode(str.slice(lastIdx, m.index)));
       }
       const chip = document.createElement("span");
       chip.className = "token-chip";
-      if (m[0].startsWith("color.")) {
+      if (tokenPath.startsWith("color.")) {
         const swatch = document.createElement("span");
         swatch.className = "token-chip-swatch";
-        swatch.style.background = "linear-gradient(135deg, #2f81f7, #bc8cff)";
+        const resolvedColor = tokenColorCache.get(tokenPath);
+        swatch.style.background = resolvedColor ?? "linear-gradient(135deg, #2f81f7, #bc8cff)";
         chip.appendChild(swatch);
       }
-      chip.appendChild(document.createTextNode(m[0]));
+      chip.appendChild(document.createTextNode(tokenPath));
       fragment.appendChild(chip);
-      lastIdx = tokenRegex.lastIndex;
+      lastIdx = matchEnd;
     }
     if (lastIdx < str.length) {
       fragment.appendChild(document.createTextNode(str.slice(lastIdx)));

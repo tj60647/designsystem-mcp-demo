@@ -1206,7 +1206,10 @@ app.post("/api/chat", async (req, res) => {
       sendProgress("Routing request…");
       const orchMessages: OpenRouterMessage[] = [
         { role: "system", content: ORCHESTRATOR_SYSTEM_PROMPT },
-        messages[messages.length - 1],
+        // Only send the latest user message — the orchestrator only needs to
+        // classify intent, not re-read the full conversation history.
+        // The empty-array guard at the top of this handler ensures messages[0] exists.
+        messages.at(-1)!,
       ];
       const orchResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",

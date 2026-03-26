@@ -10,8 +10,9 @@
  * via POST /api/data is immediately reflected in chat tool responses.
  */
 
-import { getData } from "./dataStore.js";
+import { getData, setData, type DataType } from "./dataStore.js";
 import { DATA_SCHEMAS } from "./schemas.js";
+import { generateDesignSystem } from "./generator.js";
 
 // ── Data ──────────────────────────────────────────────────────────────────
 interface TokenEntry {
@@ -504,6 +505,31 @@ export async function runMcpTool(name: string, args: Record<string, unknown>): P
       const type     = (args.type as string | undefined) ?? "all";
       const filtered = type === "all" ? deprecations : deprecations.filter(d => d.type === type);
       return JSON.stringify({ deprecations: filtered, total: filtered.length }, null, 2);
+    }
+
+    case "generate_design_system": {
+      const description = (args.description as string | undefined) ?? "";
+      const apiKey = process.env.OPENROUTER_API_KEY;
+      if (!apiKey) return JSON.stringify({ error: "OPENROUTER_API_KEY not set" });
+      const model = process.env.OPENROUTER_MODEL ?? "openai/gpt-oss-20b:nitro";
+      const result = await generateDesignSystem(description, apiKey, model);
+      const VALID_TYPES: DataType[] = ["tokens", "components", "themes", "icons"];
+      const loadedSections: string[] = [];
+      for (const section of VALID_TYPES) {
+        if (result.data[section] !== undefined) {
+          setData(section, result.data[section]);
+          loadedSections.push(section);
+        }
+      }
+      return JSON.stringify({
+        success: true,
+        message: "Design system generated and loaded successfully.",
+        sectionsLoaded: loadedSections,
+        componentCount: Object.keys((result.data.components ?? {}) as object).length,
+        themeCount: Object.keys((result.data.themes ?? {}) as object).length,
+        iconCount: Object.keys((result.data.icons ?? {}) as object).length,
+        warnings: result.warnings,
+      });
     }
 
     default:

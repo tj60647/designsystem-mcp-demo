@@ -789,7 +789,7 @@ const OPENROUTER_TOOLS = [
   // v0.2.0 tools
   { type: "function", function: { name: "list_themes", description: "List all available themes (e.g. light, dark). Returns theme keys, names, and descriptions.", parameters: { type: "object", properties: {}, required: [] } } },
   { type: "function", function: { name: "get_theme", description: 'Get full theme definition including all semantic token overrides. Example: "light", "dark".', parameters: { type: "object", properties: { themeName: { type: "string", description: "The theme key." } }, required: ["themeName"] } } },
-  { type: "function", function: { name: "list_icons", description: "List all icons, optionally filtered by category or tag.", parameters: { type: "object", properties: { category: { type: "string" }, tag: { type: "string" } }, required: [] } } },
+  { type: "function", function: { name: "list_icons", description: "List all icons, optionally filtered by category or tag.", parameters: { type: "object", properties: { category: { type: "string", description: "Optional icon category to filter by, e.g. 'navigation', 'action'." }, tag: { type: "string", description: "Optional tag to filter by, e.g. 'arrow', 'alert'." } }, required: [] } } },
   { type: "function", function: { name: "get_icon", description: "Get a single icon by name with metadata, sizes, and usage guidance.", parameters: { type: "object", properties: { iconName: { type: "string", description: "The icon key, e.g. 'arrow-right'." } }, required: ["iconName"] } } },
   { type: "function", function: { name: "search_icons", description: "Semantic search across the icon set. E.g. 'warning' returns alert-triangle, exclamation-circle.", parameters: { type: "object", properties: { query: { type: "string" }, limit: { type: "number" } }, required: ["query"] } } },
   { type: "function", function: { name: "check_contrast", description: "Check WCAG 2.1 contrast ratio between foreground and background hex colors. Returns AA/AAA pass/fail.", parameters: { type: "object", properties: { foreground: { type: "string", description: "Foreground hex color, e.g. '#1e293b'." }, background: { type: "string", description: "Background hex color, e.g. '#ffffff'." } }, required: ["foreground", "background"] } } },
@@ -903,10 +903,53 @@ const GENERATOR_TOOL_NAMES = new Set([
 ]);
 
 function filterTools(nameSet: Set<string>) {
-  return OPENROUTER_TOOLS
-    .filter((t) => nameSet.has(t.function.name))
-    .map((t) => ({ name: t.function.name, description: t.function.description, parameters: t.function.parameters }));
+  return OPENROUTER_TOOLS.filter((t) => nameSet.has(t.function.name));
 }
+
+// Routing tool used by the Orchestrator agent.
+// Extracted as a constant so both the /api/agent-info endpoint and the
+// /api/chat routing step reference the same definition.
+const DELEGATE_TOOL = {
+  type: "function" as const,
+  function: {
+    name: "delegate_to_agent",
+    description: 'Route the conversation to a specialist. agent must be "reader", "builder", or "generator".',
+    parameters: {
+      type: "object",
+      properties: {
+        agent: {
+          type: "string",
+          enum: ["reader", "builder", "generator"],
+          description: "The specialist agent to delegate to.",
+        },
+        reason: { type: "string", description: "One-sentence rationale for the routing decision." },
+      },
+      required: ["agent", "reason"],
+    },
+  },
+};
+
+// Pre-computed per-agent configs used in both /api/agent-info and the
+// /api/chat routing step.
+const SPECIALIST_CONFIGS = {
+  reader: {
+    systemPrompt: READER_SYSTEM_PROMPT,
+    tools: filterTools(READER_TOOL_NAMES),
+    maxIterations: 5,
+  },
+  builder: {
+    systemPrompt: BUILDER_SYSTEM_PROMPT,
+    tools: filterTools(BUILDER_TOOL_NAMES),
+    maxIterations: 6,
+  },
+  generator: {
+    systemPrompt: GENERATOR_SYSTEM_PROMPT,
+    tools: filterTools(GENERATOR_TOOL_NAMES),
+    maxIterations: 10,
+  },
+} as const;
+
+type SpecialistName = keyof typeof SPECIALIST_CONFIGS;
 
 // ── Agent info endpoint ───────────────────────────────────────────────────
 // Returns a machine-readable description of all four Strategy-3 agents:
@@ -931,20 +974,9 @@ app.get("/api/agent-info", (_req, res) => {
         systemPrompt: ORCHESTRATOR_SYSTEM_PROMPT,
         tools: [
           {
-            name: "delegate_to_agent",
-            description: 'Route the conversation to a specialist. agent must be "reader", "builder", or "generator".',
-            parameters: {
-              type: "object",
-              properties: {
-                agent: {
-                  type: "string",
-                  enum: ["reader", "builder", "generator"],
-                  description: "The specialist agent to delegate to.",
-                },
-                reason: { type: "string", description: "One-sentence rationale for the routing decision." },
-              },
-              required: ["agent", "reason"],
-            },
+            name: DELEGATE_TOOL.function.name,
+            description: DELEGATE_TOOL.function.description,
+            parameters: DELEGATE_TOOL.function.parameters,
           },
         ],
       },
@@ -953,36 +985,35 @@ app.get("/api/agent-info", (_req, res) => {
         description: "Answers questions about tokens, components, themes, icons, layout, and accessibility using read-only MCP tools. Never mutates the design system.",
         model,
         parameters: {
-          maxIterations: 5,
+          maxIterations: SPECIALIST_CONFIGS.reader.maxIterations,
           toolChoice: "auto",
           endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
         },
-        systemPrompt: READER_SYSTEM_PROMPT,
-        tools: filterTools(READER_TOOL_NAMES),
+        tools: SPECIALIST_CONFIGS.reader.tools,
       },
       {
         name: "Component Builder",
         description: "Generates HTML/CSS component code grounded in exact design system tokens. Validates all props and token values before emitting code.",
         model,
         parameters: {
-          maxIterations: 6,
+          maxIterations: SPECIALIST_CONFIGS.builder.maxIterations,
           toolChoice: "auto",
           endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
         },
-        systemPrompt: BUILDER_SYSTEM_PROMPT,
-        tools: filterTools(BUILDER_TOOL_NAMES),
+        systemPrompt: SPECIALIST_CONFIGS.builder.systemPrompt,
+        tools: SPECIALIST_CONFIGS.builder.tools,
       },
       {
         name: "System Generator",
         description: "Gathers brand requirements through conversation then generates a complete new design system (tokens, components, themes, icons) via AI.",
         model,
         parameters: {
-          maxIterations: 10,
+          maxIterations: SPECIALIST_CONFIGS.generator.maxIterations,
           toolChoice: "auto",
           endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
         },
-        systemPrompt: GENERATOR_SYSTEM_PROMPT,
-        tools: filterTools(GENERATOR_TOOL_NAMES),
+        systemPrompt: SPECIALIST_CONFIGS.generator.systemPrompt,
+        tools: SPECIALIST_CONFIGS.generator.tools,
       },
     ],
   });
@@ -1100,7 +1131,9 @@ app.post("/api/chat", async (req, res) => {
   const endWithDone = (payload: object) => { sendEvent({ type: "done", ...payload }); res.end(); };
   const endWithError = (error: string) => { sendEvent({ type: "error", error }); res.end(); };
 
-  // Build the message list for OpenRouter: system + conversation
+  // Build the message list for OpenRouter: system + conversation.
+  // System prompt and tool set are determined after the Orchestrator routing
+  // step below; these are the fallback values used if routing fails.
   type OpenRouterMessage = {
     role: string;
     content: string | null;
@@ -1108,13 +1141,8 @@ app.post("/api/chat", async (req, res) => {
     tool_call_id?: string;
     name?: string;
   };
-  const loopMessages: OpenRouterMessage[] = [
-    { role: "system", content: CHAT_SYSTEM_PROMPT },
-    ...messages,
-  ];
 
   const toolCallsUsed: string[] = [];
-  const MAX_ITERATIONS = 8; // extra headroom: generate_design_system is slow and the conversation flow needs additional turns
 
   // Abort the whole agentic loop after a generous timeout.  Progress is
   // streamed so the user sees activity; 120 s gives multi-step agentic tasks
@@ -1129,6 +1157,70 @@ app.post("/api/chat", async (req, res) => {
     | { type: "reasoning"; content: string }
     | { type: "tool_call"; tool: string; args: string };
   const thinkingSteps: ThinkingStep[] = [];
+
+  // ── Step 1: Orchestrator routing ──────────────────────────────────────────
+  // Call the Orchestrator with tool_choice:"required" so it must call
+  // delegate_to_agent.  Fall back to the unified single-agent mode (with all
+  // tools and CHAT_SYSTEM_PROMPT) if the routing call fails for any reason.
+  // ─────────────────────────────────────────────────────────────────────────
+  let routedAgent: SpecialistName | "unified" = "unified";
+  let systemPrompt = CHAT_SYSTEM_PROMPT;
+  type AnyTool = { type: string; function: { name: string; description: string; parameters: unknown } };
+  let agentTools: AnyTool[] = OPENROUTER_TOOLS as unknown as AnyTool[];
+  let MAX_ITERATIONS = 8;
+
+  try {
+    sendProgress("Routing request…");
+    const orchMessages: OpenRouterMessage[] = [
+      { role: "system", content: ORCHESTRATOR_SYSTEM_PROMPT },
+      ...messages,
+    ];
+    const orchResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://github.com/designsystem-mcp-demo",
+        "X-Title": "Design System MCP Demo",
+      },
+      body: JSON.stringify({
+        model,
+        messages: orchMessages,
+        tools: [DELEGATE_TOOL],
+        tool_choice: "required",
+      }),
+      signal: chatAbort.signal,
+    });
+    if (orchResponse.ok) {
+      const orchData = await orchResponse.json() as { choices: Array<{ message: { tool_calls?: Array<{ function: { name: string; arguments: string } }> } }> };
+      const delegateCall = orchData.choices?.[0]?.message?.tool_calls?.[0];
+      if (delegateCall?.function?.name === "delegate_to_agent") {
+        let delegateArgs: { agent?: string; reason?: string } = {};
+        try {
+          delegateArgs = JSON.parse(delegateCall.function.arguments) as { agent?: string; reason?: string };
+        } catch (parseErr) {
+          console.warn("[chat:orchestrator] failed to parse delegate_to_agent arguments:", String(parseErr), delegateCall.function.arguments);
+        }
+        const agent = delegateArgs.agent as SpecialistName | undefined;
+        if (agent && agent in SPECIALIST_CONFIGS) {
+          routedAgent = agent;
+          systemPrompt = SPECIALIST_CONFIGS[agent].systemPrompt;
+          agentTools = SPECIALIST_CONFIGS[agent].tools;
+          MAX_ITERATIONS = SPECIALIST_CONFIGS[agent].maxIterations;
+          console.log(`[chat:orchestrator] routed to "${agent}" — ${delegateArgs.reason ?? ""}`);
+        }
+      }
+    }
+  } catch (err) {
+    // Routing failure is non-fatal: continue with unified single-agent mode
+    console.warn("[chat:orchestrator] routing failed, falling back to unified agent:", String(err));
+  }
+
+  // ── Step 2: Specialist (or unified fallback) agentic loop ────────────────
+  const loopMessages: OpenRouterMessage[] = [
+    { role: "system", content: systemPrompt },
+    ...messages,
+  ];
 
   // Holds the generated design system data if generate_design_system is called
   let generatedDesignSystemData: Record<string, unknown> | null = null;
@@ -1157,7 +1249,7 @@ app.post("/api/chat", async (req, res) => {
         body: JSON.stringify({
           model,
           messages: loopMessages,
-          tools: OPENROUTER_TOOLS,
+          tools: agentTools,
           tool_choice: "auto",
         }),
         signal: chatAbort.signal,
@@ -1300,7 +1392,7 @@ app.post("/api/chat", async (req, res) => {
       const { message, preview } = parseChatResponse(rawResponse);
       console.log("[chat:response]", message.slice(0, 300));
       clearTimeout(chatTimer);
-      endWithDone({ message, preview, model, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
+      endWithDone({ message, preview, model, routedAgent, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
       return;
     }
 
@@ -1309,7 +1401,7 @@ app.post("/api/chat", async (req, res) => {
     const rawLast = String(lastAssistant?.content ?? "");
     const { message: lastMessage, preview: lastPreview } = parseChatResponse(rawLast);
     clearTimeout(chatTimer);
-    endWithDone({ message: lastMessage, preview: lastPreview, model, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
+    endWithDone({ message: lastMessage, preview: lastPreview, model, routedAgent, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
   } catch (err) {
     clearTimeout(chatTimer);
     console.error("Chat error:", err);

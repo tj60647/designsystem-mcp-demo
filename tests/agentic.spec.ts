@@ -1,10 +1,11 @@
 /**
  * Agentic-setup tests.
  *
- * These tests verify the three correctness issues found in the deep audit:
+ * These tests verify the correctness of the multi-agent setup:
  *
- *  1. Builder tool set — `get_component_constraints` must be present so the
- *     builder can look up the rules it validates against.
+ *  1. Builder tool set — `list_components`, `get_component_constraints`, and
+ *     `get_component_relationships` must all be present so the builder can
+ *     discover components, look up validation rules, and compose composite UIs.
  *
  *  2. previousAgent single-turn clearing — `lastRoutedAgent` must be used
  *     for exactly one continuation turn and cleared afterwards, so a topic
@@ -60,11 +61,13 @@ test.describe("/api/agent-info — builder tool set", () => {
     const builder = data.agents.find((a) => a.name === "Component Builder");
     const toolNames = builder!.tools.map((t) => t.name);
     for (const required of [
+      "list_components",
       "get_component",
       "get_component_tokens",
       "get_component_variants",
       "get_component_anatomy",
       "get_component_constraints",
+      "get_component_relationships",
       "get_accessibility_guidance",
       "validate_component_usage",
     ]) {

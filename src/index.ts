@@ -862,6 +862,7 @@ const ORCHESTRATOR_SYSTEM_PROMPT =
 const READER_SYSTEM_PROMPT =
   "You are a design system expert assistant. Answer questions about tokens, components, themes, icons, layout, and accessibility by calling the appropriate read-only tools. " +
   "Use diff_against_system to answer CSS compliance questions (e.g. 'does this color or spacing value match our design system tokens?'). " +
+  "Use validate_color to check whether a hex value is a valid design-system color, and check_contrast to answer WCAG AA/AAA contrast questions. " +
   "Always use actual values from the tools — never guess or invent values.\n\n" +
   "IMPORTANT: Every response must be a single valid JSON object. Output ONLY the JSON.\n" +
   'Return: {"message": "Your prose answer here."}\n' +
@@ -869,11 +870,13 @@ const READER_SYSTEM_PROMPT =
 
 const BUILDER_SYSTEM_PROMPT =
   "You are a component code generator. For every component request:\n" +
-  "1. Call get_component to fetch the spec and available variants.\n" +
-  "2. Call get_component_tokens to resolve the exact token values.\n" +
-  "3. Optionally call get_component_variants or get_component_anatomy to understand valid configurations and slot structure.\n" +
-  "4. Optionally call get_component_constraints or get_accessibility_guidance to apply ARIA roles, keyboard patterns, and usage rules.\n" +
-  "5. Optionally call validate_component_usage or diff_against_system to verify your final configuration against design system rules.\n" +
+  "1. If the component name is unclear, call list_components to discover available components.\n" +
+  "2. Call get_component to fetch the spec and available variants.\n" +
+  "3. Call get_component_tokens to resolve the exact token values. Optionally call suggest_token to map semantic names to exact values.\n" +
+  "4. Optionally call get_component_variants or get_component_anatomy to understand valid configurations and slot structure.\n" +
+  "5. Optionally call get_component_relationships to discover sibling or parent components needed for composite layouts.\n" +
+  "6. Optionally call get_component_constraints or get_accessibility_guidance to apply ARIA roles, keyboard patterns, and usage rules.\n" +
+  "7. Optionally call validate_component_usage or diff_against_system to verify your final configuration against design system rules.\n" +
   "Generate clean HTML with inline styles using exact token values from the tools. Never hard-code colors or spacing.\n\n" +
   "IMPORTANT: Every response must be a single valid JSON object. Output ONLY the JSON.\n" +
   'Return: {"message": "Brief prose explanation.", "preview": "<html with inline styles>"}\n' +
@@ -903,9 +906,10 @@ const READER_TOOL_NAMES = new Set([
 ]);
 
 const BUILDER_TOOL_NAMES = new Set([
+  "list_components",
   "get_token", "get_tokens",
   "get_component", "get_component_tokens", "get_component_variants", "get_component_anatomy",
-  "get_component_constraints", "get_accessibility_guidance",
+  "get_component_constraints", "get_component_relationships", "get_accessibility_guidance",
   "suggest_token", "validate_component_usage", "validate_color", "diff_against_system", "check_contrast",
 ]);
 
@@ -956,7 +960,10 @@ const SPECIALIST_CONFIGS = {
   generator: {
     systemPrompt: GENERATOR_SYSTEM_PROMPT,
     tools: filterTools(GENERATOR_TOOL_NAMES),
-    maxIterations: 3,
+    // The generator prompt asks for 2–4 clarifying exchanges before calling
+    // generate_design_system, then a confirmation message — 8 iterations
+    // allows that full flow without hitting the cap prematurely.
+    maxIterations: 8,
   },
 } as const;
 
@@ -978,6 +985,9 @@ app.get("/api/agent-info", (_req, res) => {
         description: "Classifies the user's intent in a single LLM call and routes to the correct specialist agent. Never answers the user directly.",
         model,
         parameters: {
+          // Note: the Orchestrator runs as a single standalone fetch with
+          // tool_choice:"required", not as a loop iteration — this value
+          // reflects that one-shot design rather than a loop counter.
           maxIterations: 1,
           toolChoice: "required",
           endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
@@ -1188,6 +1198,9 @@ app.post("/api/chat", async (req, res) => {
   // Call the Orchestrator with tool_choice:"required" so it must call
   // delegate_to_agent.  Fall back to the unified single-agent mode (with all
   // tools and CHAT_SYSTEM_PROMPT) if the routing call fails for any reason.
+  // The unified mode is an intentional safety net: it uses the pre-split
+  // CHAT_SYSTEM_PROMPT and the full OPENROUTER_TOOLS set, so every capability
+  // remains available even when orchestration is unavailable.
   //
   // If the client supplies a valid previousAgent (the agent used on the prior
   // turn), skip the orchestrator entirely — this prevents short follow-up
@@ -1201,7 +1214,7 @@ app.post("/api/chat", async (req, res) => {
 
   // Re-use the previous agent without an orchestrator call when the client
   // signals it is a continuation of the same conversation thread.
-  if (previousAgent && previousAgent in SPECIALIST_CONFIGS) {
+  if (typeof previousAgent === "string" && previousAgent in SPECIALIST_CONFIGS) {
     const prev = previousAgent as SpecialistName;
     routedAgent     = prev;
     systemPrompt    = SPECIALIST_CONFIGS[prev].systemPrompt;
@@ -1431,7 +1444,7 @@ app.post("/api/chat", async (req, res) => {
             name: toolName,
             content: toolResult,
           });
-          console.log(`[chat:tool] result for ${toolName}:`, toolResult.slice(0, 500));
+          console.log(`[chat:tool] result for ${toolName}:`, toolResult.length > 500 ? toolResult.slice(0, 500) + "…" : toolResult);
         }
         // Continue loop to let the model process tool results
         continue;

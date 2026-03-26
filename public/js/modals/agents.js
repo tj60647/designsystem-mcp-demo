@@ -42,7 +42,7 @@ export function initAgentsModal() {
             Component<br>Builder<br><small style="opacity:.7;font-weight:400">up to 6 iters</small>
           </div>
           <div class="diag-node green" style="font-size:11px;flex:1;text-align:center">
-            System<br>Generator<br><small style="opacity:.7;font-weight:400">up to 3 iters</small>
+            System<br>Generator<br><small style="opacity:.7;font-weight:400">up to 8 iters</small>
           </div>
         </div>
         <div class="diag-arrow-down">↓</div>

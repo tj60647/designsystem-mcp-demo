@@ -829,7 +829,9 @@ const OPENROUTER_TOOLS = [
 
 const CHAT_SYSTEM_PROMPT =
   "You are a design system expert assistant. You have access to a design system MCP server with tokens, components, themes, icons, and guidelines. " +
-  "When the user asks about UI components, colors, spacing, typography, or design tokens, call the appropriate tools to get accurate data from the design system before answering. " +
+  "When the user asks about UI components, colors, spacing, typography, design tokens, layout, accessibility, themes, icons, changelog, or deprecations, " +
+  "call the appropriate tools to get accurate data from the design system before answering. " +
+  "Use diff_against_system to check whether CSS properties or values match design system tokens. " +
   "Always use the actual token values and component specs from the tools — never guess or invent values.\n\n" +
   "## Response format\n" +
   "IMPORTANT: Every response must be a single valid JSON object. Output ONLY the JSON — no text, no markdown, no code fences outside it.\n\n" +
@@ -859,6 +861,7 @@ const ORCHESTRATOR_SYSTEM_PROMPT =
 
 const READER_SYSTEM_PROMPT =
   "You are a design system expert assistant. Answer questions about tokens, components, themes, icons, layout, and accessibility by calling the appropriate read-only tools. " +
+  "Use diff_against_system to answer CSS compliance questions (e.g. 'does this color or spacing value match our design system tokens?'). " +
   "Always use actual values from the tools — never guess or invent values.\n\n" +
   "IMPORTANT: Every response must be a single valid JSON object. Output ONLY the JSON.\n" +
   'Return: {"message": "Your prose answer here."}\n' +
@@ -893,6 +896,8 @@ const READER_TOOL_NAMES = new Set([
   "get_schema", "get_layout_guidance", "get_accessibility_guidance", "get_changelog", "get_deprecations",
   // Pure query tools — also useful when the reader answers accessibility/compliance questions
   "validate_color", "check_contrast",
+  // CSS compliance: "does this color/spacing value match our design system?"
+  "diff_against_system",
 ]);
 
 const BUILDER_TOOL_NAMES = new Set([

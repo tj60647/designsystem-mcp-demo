@@ -95,6 +95,14 @@ test.describe("/api/agent-info — builder tool set", () => {
     const toolNames = reader!.tools.map((t) => t.name);
     expect(toolNames).not.toContain("generate_design_system");
   });
+
+  test("reader agent includes diff_against_system for CSS compliance queries", async ({ request }) => {
+    const res = await request.get("/api/agent-info");
+    const data = await res.json() as { agents: Array<{ name: string; tools: Array<{ name: string }> }> };
+    const reader = data.agents.find((a) => a.name === "Design System Reader");
+    expect(reader).toBeDefined();
+    expect(reader!.tools.map((t) => t.name)).toContain("diff_against_system");
+  });
 });
 
 // ── 2. previousAgent single-turn clearing ────────────────────────────────────

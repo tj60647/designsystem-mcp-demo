@@ -891,6 +891,8 @@ const READER_TOOL_NAMES = new Set([
   "get_component_variants", "get_component_anatomy", "get_component_relationships",
   "list_themes", "get_theme", "list_icons", "get_icon", "search_icons", "search",
   "get_schema", "get_layout_guidance", "get_accessibility_guidance", "get_changelog", "get_deprecations",
+  // Pure query tools — also useful when the reader answers accessibility/compliance questions
+  "validate_color", "check_contrast",
 ]);
 
 const BUILDER_TOOL_NAMES = new Set([
@@ -1076,8 +1078,8 @@ app.post("/api/generate-from-website", async (req, res) => {
 
 // ── Chat endpoint ──────────────────────────────────────────────────────────
 // OpenRouter-backed agentic loop. Calls OpenRouter with the conversation and
-// all 27 design-system read tools (plus generate_design_system, handled inline).
-// and results are fed back into the loop until the model returns a final answer.
+// all 27 design-system read tools (plus generate_design_system, handled inline);
+// results are fed back into the loop until the model returns a final answer.
 // ─────────────────────────────────────────────────────────────────────────
 
 /** Parse the LLM's JSON response into {message, preview}.
@@ -1108,9 +1110,11 @@ app.post("/api/chat", async (req, res) => {
     return;
   }
 
-  const { messages, model: requestedModel } = req.body as {
+  const { messages, model: requestedModel, previousAgent } = req.body as {
     messages: Array<{ role: "user" | "assistant"; content: string }>;
     model?: string;
+    /** Agent name from the previous turn, sent by the client to avoid re-routing follow-up messages. */
+    previousAgent?: string;
   };
 
   if (!Array.isArray(messages) || messages.length === 0) {
@@ -1164,6 +1168,10 @@ app.post("/api/chat", async (req, res) => {
   // Call the Orchestrator with tool_choice:"required" so it must call
   // delegate_to_agent.  Fall back to the unified single-agent mode (with all
   // tools and CHAT_SYSTEM_PROMPT) if the routing call fails for any reason.
+  //
+  // If the client supplies a valid previousAgent (the agent used on the prior
+  // turn), skip the orchestrator entirely — this prevents short follow-up
+  // messages (e.g. "yes, go ahead") from being mis-classified as a new topic.
   // ─────────────────────────────────────────────────────────────────────────
   let routedAgent: SpecialistName | "unified" = "unified";
   let systemPrompt = CHAT_SYSTEM_PROMPT;
@@ -1171,51 +1179,62 @@ app.post("/api/chat", async (req, res) => {
   let agentTools: AnyTool[] = OPENROUTER_TOOLS as unknown as AnyTool[];
   let MAX_ITERATIONS = 8;
 
-  try {
-    sendProgress("Routing request…");
-    const orchMessages: OpenRouterMessage[] = [
-      { role: "system", content: ORCHESTRATOR_SYSTEM_PROMPT },
-      ...messages,
-    ];
-    const orchResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://github.com/designsystem-mcp-demo",
-        "X-Title": "Design System MCP Demo",
-      },
-      body: JSON.stringify({
-        model,
-        messages: orchMessages,
-        tools: [DELEGATE_TOOL],
-        tool_choice: "required",
-      }),
-      signal: chatAbort.signal,
-    });
-    if (orchResponse.ok) {
-      const orchData = await orchResponse.json() as { choices: Array<{ message: { tool_calls?: Array<{ function: { name: string; arguments: string } }> } }> };
-      const delegateCall = orchData.choices?.[0]?.message?.tool_calls?.[0];
-      if (delegateCall?.function?.name === "delegate_to_agent") {
-        let delegateArgs: { agent?: string; reason?: string } = {};
-        try {
-          delegateArgs = JSON.parse(delegateCall.function.arguments) as { agent?: string; reason?: string };
-        } catch (parseErr) {
-          console.warn("[chat:orchestrator] failed to parse delegate_to_agent arguments:", String(parseErr), delegateCall.function.arguments);
-        }
-        const agent = delegateArgs.agent as SpecialistName | undefined;
-        if (agent && agent in SPECIALIST_CONFIGS) {
-          routedAgent = agent;
-          systemPrompt = SPECIALIST_CONFIGS[agent].systemPrompt;
-          agentTools = SPECIALIST_CONFIGS[agent].tools;
-          MAX_ITERATIONS = SPECIALIST_CONFIGS[agent].maxIterations;
-          console.log(`[chat:orchestrator] routed to "${agent}" — ${delegateArgs.reason ?? ""}`);
+  // Re-use the previous agent without an orchestrator call when the client
+  // signals it is a continuation of the same conversation thread.
+  if (previousAgent && previousAgent in SPECIALIST_CONFIGS) {
+    const prev = previousAgent as SpecialistName;
+    routedAgent     = prev;
+    systemPrompt    = SPECIALIST_CONFIGS[prev].systemPrompt;
+    agentTools      = SPECIALIST_CONFIGS[prev].tools;
+    MAX_ITERATIONS  = SPECIALIST_CONFIGS[prev].maxIterations;
+    console.log(`[chat:orchestrator] reusing previousAgent="${prev}" (skip re-route)`);
+  } else {
+    try {
+      sendProgress("Routing request…");
+      const orchMessages: OpenRouterMessage[] = [
+        { role: "system", content: ORCHESTRATOR_SYSTEM_PROMPT },
+        ...messages,
+      ];
+      const orchResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://github.com/designsystem-mcp-demo",
+          "X-Title": "Design System MCP Demo",
+        },
+        body: JSON.stringify({
+          model,
+          messages: orchMessages,
+          tools: [DELEGATE_TOOL],
+          tool_choice: "required",
+        }),
+        signal: chatAbort.signal,
+      });
+      if (orchResponse.ok) {
+        const orchData = await orchResponse.json() as { choices: Array<{ message: { tool_calls?: Array<{ function: { name: string; arguments: string } }> } }> };
+        const delegateCall = orchData.choices?.[0]?.message?.tool_calls?.[0];
+        if (delegateCall?.function?.name === "delegate_to_agent") {
+          let delegateArgs: { agent?: string; reason?: string } = {};
+          try {
+            delegateArgs = JSON.parse(delegateCall.function.arguments) as { agent?: string; reason?: string };
+          } catch (parseErr) {
+            console.warn("[chat:orchestrator] failed to parse delegate_to_agent arguments:", String(parseErr), delegateCall.function.arguments);
+          }
+          const agent = delegateArgs.agent as SpecialistName | undefined;
+          if (agent && agent in SPECIALIST_CONFIGS) {
+            routedAgent = agent;
+            systemPrompt = SPECIALIST_CONFIGS[agent].systemPrompt;
+            agentTools = SPECIALIST_CONFIGS[agent].tools;
+            MAX_ITERATIONS = SPECIALIST_CONFIGS[agent].maxIterations;
+            console.log(`[chat:orchestrator] routed to "${agent}" — ${delegateArgs.reason ?? ""}`);
+          }
         }
       }
+    } catch (err) {
+      // Routing failure is non-fatal: continue with unified single-agent mode
+      console.warn("[chat:orchestrator] routing failed, falling back to unified agent:", String(err));
     }
-  } catch (err) {
-    // Routing failure is non-fatal: continue with unified single-agent mode
-    console.warn("[chat:orchestrator] routing failed, falling back to unified agent:", String(err));
   }
 
   // ── Step 2: Specialist (or unified fallback) agentic loop ────────────────

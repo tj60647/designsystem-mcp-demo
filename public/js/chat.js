@@ -9,6 +9,9 @@ const DEFAULT_CHAT_MODEL = "openai/gpt-oss-20b:nitro";
 const conversationHistory = [];
 let isLoading = false;
 let generatedDesignSystemData = null;
+/** Agent used in the most recent completed turn — sent back to the server so
+ *  short follow-up messages don't get mis-routed by the stateless orchestrator. */
+let lastRoutedAgent = null;
 
 // ── DOM refs (populated by initChat) ─────────────────────────────────────────
 let messagesEl, chipsEl, inputEl, sendBtn, downloadDsBtn, modelSelect;
@@ -108,7 +111,7 @@ async function handleSend() {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: conversationHistory, model: getSelectedModel() }),
+      body: JSON.stringify({ messages: conversationHistory, model: getSelectedModel(), previousAgent: lastRoutedAgent }),
     });
 
     // Early validation errors (400, 503) are returned as plain JSON before SSE
@@ -153,6 +156,12 @@ async function handleSend() {
           const preview   = event.preview || null;
           const toolsUsed = event.toolCallsUsed || [];
           conversationHistory.push({ role: "assistant", content: message });
+
+          // Remember which specialist handled this turn so the server can skip
+          // re-routing on the next follow-up message.
+          if (event.routedAgent && event.routedAgent !== "unified") {
+            lastRoutedAgent = event.routedAgent;
+          }
 
           if (event.thinkingSteps && event.thinkingSteps.length > 0) {
             appendThinkingBlock(event.thinkingSteps);

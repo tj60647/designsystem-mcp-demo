@@ -11,6 +11,7 @@ import { initViewSchemaModal } from './modals/schema.js';
 import { initValidationModal } from './modals/validation.js';
 import { initAgentsModal } from './modals/agents.js';
 import { initGenerateFromWebsiteModal } from './modals/generate-from-website.js';
+import { initTestLabModal } from './modals/testlab.js';
 
 // Wire up the global data-reload hook used by load-json and generate-from-website
 window.notifyDataReloaded = () => {
@@ -28,6 +29,7 @@ initViewSchemaModal();
 initAgentsModal();
 initValidationModal();
 initGenerateFromWebsiteModal();
+initTestLabModal();
 initRightTabs();
 initComponentExplorer();
 initGallery();

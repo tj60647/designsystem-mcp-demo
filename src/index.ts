@@ -71,9 +71,9 @@ app.get("/health", (_req, res) => {
     description:
       "A queryable context layer that makes design systems machine-readable and usable by AI.",
     primitives: {
-      tools: 26,
+      tools: 27,
       resources: "14 URIs + 4 templates",
-      prompts: 9,
+      prompts: 10,
       logging: "4 levels, 14 events",
       sampling: "5 use cases",
       elicitation: "6 scenarios",
@@ -853,7 +853,7 @@ const CHAT_SYSTEM_PROMPT =
 const ORCHESTRATOR_SYSTEM_PROMPT =
   "You are a routing agent. Your only job is to classify the user's intent and call delegate_to_agent exactly once.\n\n" +
   'Route to "reader" for: questions, explanations, token lookups, component specs, icon search, theme info, changelog, deprecations, layout and accessibility guidance.\n' +
-  'Route to "builder" for: requests to create, generate, build, render, or code a UI component or HTML preview.\n' +
+  'Route to "builder" for: requests to create, build, render, or code a UI component or HTML preview.\n' +
   'Route to "generator" for: requests to create a brand-new design system, extract styles from a website, or generate from scratch.\n\n' +
   "Always call delegate_to_agent. Never answer the user directly.";
 
@@ -946,7 +946,7 @@ const SPECIALIST_CONFIGS = {
   generator: {
     systemPrompt: GENERATOR_SYSTEM_PROMPT,
     tools: filterTools(GENERATOR_TOOL_NAMES),
-    maxIterations: 10,
+    maxIterations: 3,
   },
 } as const;
 
@@ -1076,7 +1076,7 @@ app.post("/api/generate-from-website", async (req, res) => {
 
 // ── Chat endpoint ──────────────────────────────────────────────────────────
 // OpenRouter-backed agentic loop. Calls OpenRouter with the conversation and
-// all 26 design-system tools. Tool calls are executed locally via runMcpTool,
+// all 27 design-system read tools (plus generate_design_system, handled inline).
 // and results are fed back into the loop until the model returns a final answer.
 // ─────────────────────────────────────────────────────────────────────────
 
@@ -1438,9 +1438,9 @@ if (!isVercel) {
     console.log(`  Health check  : GET  /health`);
     console.log(`  MCP endpoint  : POST /mcp`);
     console.log(`  Version       : 0.3.0`);
-    console.log(`  Tools         : 26`);
+    console.log(`  Tools         : 27`);
     console.log(`  Resources     : 14 URIs + 4 templates`);
-    console.log(`  Prompts       : 9\n`);
+    console.log(`  Prompts       : 10\n`);
   });
 }
 

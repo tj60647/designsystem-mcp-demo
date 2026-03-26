@@ -2,7 +2,7 @@
  * Design System MCP — Tool Runner
  *
  * Provides a single `runMcpTool(name, args)` function that executes any of the
- * 26 design-system tools and returns a plain string result. Used by the
+ * 27 design-system tools and returns a plain string result. Used by the
  * /api/chat agentic loop to execute OpenRouter tool-call responses locally
  * without going through the full MCP JSON-RPC protocol.
  *
@@ -10,9 +10,8 @@
  * via POST /api/data is immediately reflected in chat tool responses.
  */
 
-import { getData, setData, type DataType } from "./dataStore.js";
+import { getData } from "./dataStore.js";
 import { DATA_SCHEMAS } from "./schemas.js";
-import { generateDesignSystem } from "./generator.js";
 
 // ── Data ──────────────────────────────────────────────────────────────────
 interface TokenEntry {
@@ -508,28 +507,10 @@ export async function runMcpTool(name: string, args: Record<string, unknown>): P
     }
 
     case "generate_design_system": {
-      const description = (args.description as string | undefined) ?? "";
-      const apiKey = process.env.OPENROUTER_API_KEY;
-      if (!apiKey) return JSON.stringify({ error: "OPENROUTER_API_KEY not set" });
-      const model = process.env.OPENROUTER_MODEL ?? "openai/gpt-oss-20b:nitro";
-      const result = await generateDesignSystem(description, apiKey, model);
-      const VALID_TYPES: DataType[] = ["tokens", "components", "themes", "icons"];
-      const loadedSections: string[] = [];
-      for (const section of VALID_TYPES) {
-        if (result.data[section] !== undefined) {
-          setData(section, result.data[section]);
-          loadedSections.push(section);
-        }
-      }
-      return JSON.stringify({
-        success: true,
-        message: "Design system generated and loaded successfully.",
-        sectionsLoaded: loadedSections,
-        componentCount: Object.keys((result.data.components ?? {}) as object).length,
-        themeCount: Object.keys((result.data.themes ?? {}) as object).length,
-        iconCount: Object.keys((result.data.icons ?? {}) as object).length,
-        warnings: result.warnings,
-      });
+      // generate_design_system is handled directly by /api/chat before
+      // runMcpTool is called; this case is intentionally unreachable and
+      // kept only as a safety net.
+      return JSON.stringify({ error: "generate_design_system must be invoked through /api/chat" });
     }
 
     default:

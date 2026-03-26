@@ -791,15 +791,15 @@ const OPENROUTER_TOOLS = [
   { type: "function", function: { name: "get_theme", description: 'Get full theme definition including all semantic token overrides. Example: "light", "dark".', parameters: { type: "object", properties: { themeName: { type: "string", description: "The theme key." } }, required: ["themeName"] } } },
   { type: "function", function: { name: "list_icons", description: "List all icons, optionally filtered by category or tag.", parameters: { type: "object", properties: { category: { type: "string", description: "Optional icon category to filter by, e.g. 'navigation', 'action'." }, tag: { type: "string", description: "Optional tag to filter by, e.g. 'arrow', 'alert'." } }, required: [] } } },
   { type: "function", function: { name: "get_icon", description: "Get a single icon by name with metadata, sizes, and usage guidance.", parameters: { type: "object", properties: { iconName: { type: "string", description: "The icon key, e.g. 'arrow-right'." } }, required: ["iconName"] } } },
-  { type: "function", function: { name: "search_icons", description: "Semantic search across the icon set. E.g. 'warning' returns alert-triangle, exclamation-circle.", parameters: { type: "object", properties: { query: { type: "string" }, limit: { type: "number" } }, required: ["query"] } } },
+  { type: "function", function: { name: "search_icons", description: "Semantic search across the icon set. E.g. 'warning' returns alert-triangle, exclamation-circle.", parameters: { type: "object", properties: { query: { type: "string", description: "Natural-language search term, e.g. 'warning', 'close', 'arrow right'." }, limit: { type: "number", description: "Maximum number of results to return (default 10)." } }, required: ["query"] } } },
   { type: "function", function: { name: "check_contrast", description: "Check WCAG 2.1 contrast ratio between foreground and background hex colors. Returns AA/AAA pass/fail.", parameters: { type: "object", properties: { foreground: { type: "string", description: "Foreground hex color, e.g. '#1e293b'." }, background: { type: "string", description: "Background hex color, e.g. '#ffffff'." } }, required: ["foreground", "background"] } } },
-  { type: "function", function: { name: "get_accessibility_guidance", description: "Get per-component accessibility spec: ARIA roles, keyboard interaction, focus order, screen reader expectations.", parameters: { type: "object", properties: { componentName: { type: "string" } }, required: ["componentName"] } } },
-  { type: "function", function: { name: "get_component_variants", description: "List all variants for a component with when-to-use guidance for each.", parameters: { type: "object", properties: { componentName: { type: "string" } }, required: ["componentName"] } } },
-  { type: "function", function: { name: "get_component_anatomy", description: "Get internal structure of a component: named slots, valid children, and composition patterns.", parameters: { type: "object", properties: { componentName: { type: "string" } }, required: ["componentName"] } } },
-  { type: "function", function: { name: "get_component_relationships", description: "Get component relationships: parent, siblings, related components, and composition contexts.", parameters: { type: "object", properties: { componentName: { type: "string" } }, required: ["componentName"] } } },
+  { type: "function", function: { name: "get_accessibility_guidance", description: "Get per-component accessibility spec: ARIA roles, keyboard interaction, focus order, screen reader expectations.", parameters: { type: "object", properties: { componentName: { type: "string", description: "The component key, e.g. 'button', 'modal', 'input'." } }, required: ["componentName"] } } },
+  { type: "function", function: { name: "get_component_variants", description: "List all variants for a component with when-to-use guidance for each.", parameters: { type: "object", properties: { componentName: { type: "string", description: "The component key, e.g. 'button', 'badge', 'alert'." } }, required: ["componentName"] } } },
+  { type: "function", function: { name: "get_component_anatomy", description: "Get internal structure of a component: named slots, valid children, and composition patterns.", parameters: { type: "object", properties: { componentName: { type: "string", description: "The component key, e.g. 'card', 'modal', 'select'." } }, required: ["componentName"] } } },
+  { type: "function", function: { name: "get_component_relationships", description: "Get component relationships: parent, siblings, related components, and composition contexts.", parameters: { type: "object", properties: { componentName: { type: "string", description: "The component key, e.g. 'button', 'input', 'card'." } }, required: ["componentName"] } } },
   { type: "function", function: { name: "get_layout_guidance", description: "Get layout rules: page gutters, content max-widths, breakpoints, grid columns, and region spacing.", parameters: { type: "object", properties: { context: { type: "string", description: "Optional context, e.g. 'page', 'form', 'dashboard'." } }, required: [] } } },
   { type: "function", function: { name: "get_spacing_scale", description: "Get the complete spacing scale with semantic usage hints for each step.", parameters: { type: "object", properties: {}, required: [] } } },
-  { type: "function", function: { name: "get_changelog", description: "Get the design system version history, filterable by version range.", parameters: { type: "object", properties: { fromVersion: { type: "string" }, toVersion: { type: "string" } }, required: [] } } },
+  { type: "function", function: { name: "get_changelog", description: "Get the design system version history, filterable by version range.", parameters: { type: "object", properties: { fromVersion: { type: "string", description: "Inclusive lower bound version, e.g. '0.2.0'." }, toVersion: { type: "string", description: "Inclusive upper bound version, e.g. '0.3.0'." } }, required: [] } } },
   { type: "function", function: { name: "get_deprecations", description: "List all deprecated tokens, components, patterns, and endpoints with migration paths.", parameters: { type: "object", properties: { type: { type: "string", enum: ["token", "component", "endpoint", "all"] } }, required: [] } } },
   // AI generation
   {
@@ -894,12 +894,13 @@ const READER_TOOL_NAMES = new Set([
 ]);
 
 const BUILDER_TOOL_NAMES = new Set([
+  "get_token", "get_tokens",
   "get_component", "get_component_tokens", "get_component_variants", "get_component_anatomy",
   "suggest_token", "validate_component_usage", "validate_color", "diff_against_system", "check_contrast",
 ]);
 
 const GENERATOR_TOOL_NAMES = new Set([
-  "generate_design_system", "get_deprecations", "get_changelog",
+  "generate_design_system",
 ]);
 
 function filterTools(nameSet: Set<string>) {
@@ -989,6 +990,7 @@ app.get("/api/agent-info", (_req, res) => {
           toolChoice: "auto",
           endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
         },
+        systemPrompt: SPECIALIST_CONFIGS.reader.systemPrompt,
         tools: SPECIALIST_CONFIGS.reader.tools,
       },
       {
@@ -1335,6 +1337,11 @@ app.post("/api/chat", async (req, res) => {
           let toolResult: string;
 
           // ── Special handling: generate_design_system ───────────────────
+          // Handled here (rather than delegating to runMcpTool) for two reasons:
+          // 1. We pass chatAbort.signal so the long-running generation respects
+          //    the request timeout and can be aborted by the client.
+          // 2. We capture the returned data in generatedDesignSystemData so it
+          //    is included in the SSE "done" payload for the UI to display.
           if (toolName === "generate_design_system") {
             try {
               const description = (toolArgs.description as string) ?? "";

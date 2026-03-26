@@ -107,11 +107,16 @@ async function handleSend() {
   const loadingEl = appendLoading();
   scrollToBottom();
 
+  // Capture the stored agent for this single continuation turn, then clear it
+  // immediately so topic changes on subsequent turns are re-routed fresh.
+  const agentForThisTurn = lastRoutedAgent;
+  lastRoutedAgent = null;
+
   try {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: conversationHistory, model: getSelectedModel(), previousAgent: lastRoutedAgent }),
+      body: JSON.stringify({ messages: conversationHistory, model: getSelectedModel(), previousAgent: agentForThisTurn }),
     });
 
     // Early validation errors (400, 503) are returned as plain JSON before SSE
@@ -158,8 +163,11 @@ async function handleSend() {
           conversationHistory.push({ role: "assistant", content: message });
 
           // Remember which specialist handled this turn so the server can skip
-          // re-routing on the next follow-up message.
-          if (event.routedAgent && event.routedAgent !== "unified") {
+          // re-routing on the immediately following message.
+          // Only store it when this turn was itself a fresh routing decision
+          // (agentForThisTurn was null) — that way previousAgent is used for
+          // exactly one continuation, then the orchestrator re-routes freely.
+          if (!agentForThisTurn && event.routedAgent && event.routedAgent !== "unified") {
             lastRoutedAgent = event.routedAgent;
           }
 

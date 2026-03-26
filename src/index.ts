@@ -898,6 +898,7 @@ const READER_TOOL_NAMES = new Set([
 const BUILDER_TOOL_NAMES = new Set([
   "get_token", "get_tokens",
   "get_component", "get_component_tokens", "get_component_variants", "get_component_anatomy",
+  "get_component_constraints",
   "suggest_token", "validate_component_usage", "validate_color", "diff_against_system", "check_contrast",
 ]);
 
@@ -993,7 +994,11 @@ app.get("/api/agent-info", (_req, res) => {
           endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
         },
         systemPrompt: SPECIALIST_CONFIGS.reader.systemPrompt,
-        tools: SPECIALIST_CONFIGS.reader.tools,
+        tools: SPECIALIST_CONFIGS.reader.tools.map((t) => ({
+          name: t.function.name,
+          description: t.function.description,
+          parameters: t.function.parameters,
+        })),
       },
       {
         name: "Component Builder",
@@ -1005,7 +1010,11 @@ app.get("/api/agent-info", (_req, res) => {
           endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
         },
         systemPrompt: SPECIALIST_CONFIGS.builder.systemPrompt,
-        tools: SPECIALIST_CONFIGS.builder.tools,
+        tools: SPECIALIST_CONFIGS.builder.tools.map((t) => ({
+          name: t.function.name,
+          description: t.function.description,
+          parameters: t.function.parameters,
+        })),
       },
       {
         name: "System Generator",
@@ -1017,7 +1026,11 @@ app.get("/api/agent-info", (_req, res) => {
           endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
         },
         systemPrompt: SPECIALIST_CONFIGS.generator.systemPrompt,
-        tools: SPECIALIST_CONFIGS.generator.tools,
+        tools: SPECIALIST_CONFIGS.generator.tools.map((t) => ({
+          name: t.function.name,
+          description: t.function.description,
+          parameters: t.function.parameters,
+        })),
       },
     ],
   });
@@ -1193,7 +1206,7 @@ app.post("/api/chat", async (req, res) => {
       sendProgress("Routing request…");
       const orchMessages: OpenRouterMessage[] = [
         { role: "system", content: ORCHESTRATOR_SYSTEM_PROMPT },
-        ...messages,
+        messages[messages.length - 1],
       ];
       const orchResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",

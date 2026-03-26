@@ -3,7 +3,7 @@
   display: flex;
   flex: 1;
   overflow: hidden;
-  height: calc(100vh - 53px);
+  min-height: 0;
 }
 
 /* ── Panel header (shared) ── */

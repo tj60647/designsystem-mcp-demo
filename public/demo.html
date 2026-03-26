@@ -37,6 +37,7 @@
   <button class="topbar-btn" id="gen-from-web-btn" title="Generate a design system by extracting design tokens from a website URL" aria-label="Generate design system from website">Generate from Website</button>
   <button class="topbar-btn" id="view-schema-btn" title="View and download the JSON schema for any data type">View Schema</button>
   <button class="topbar-btn" id="view-agents-btn" title="View the chat agent configuration, system prompt, and tool list">View Agents</button>
+  <button class="topbar-btn" id="test-lab-btn" title="Test Lab — run 100 prompt/response tests across all agents">Test Lab</button>
   <button class="topbar-btn" id="load-json-btn" title="Replace a data file (tokens, components, themes, icons) with custom JSON">Load JSON</button>
   <button class="topbar-btn" id="reset-btn" title="Reset all data back to bundled defaults">Reset</button>
   <button class="topbar-btn" id="mcp-info-btn" title="How to connect to the MCP server">MCP server</button>
@@ -145,6 +146,26 @@
     </div>
     <div class="modal-actions">
       <button class="btn-secondary" id="agents-modal-cancel">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Test Lab modal -->
+<div class="modal-overlay" id="testlab-modal" role="dialog" aria-modal="true" aria-labelledby="testlab-modal-title">
+  <div class="modal testlab-modal">
+    <div class="modal-header">
+      <span class="modal-title" id="testlab-modal-title">Agent Test Lab</span>
+      <div class="agents-lobby-tabs" role="tablist">
+        <button class="tl-tab active" data-tab="suite" role="tab">Test Suite (100)</button>
+        <button class="tl-tab" data-tab="playground" role="tab">Playground</button>
+      </div>
+      <button class="modal-close" id="testlab-modal-close" aria-label="Close">✕</button>
+    </div>
+    <div class="testlab-modal-body" id="testlab-modal-body">
+      <div class="agents-loading">Select a tab to get started.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="testlab-modal-cancel">Close</button>
     </div>
   </div>
 </div>

@@ -4,9 +4,9 @@
  * License: MIT
  *
  * Defines the MCP server and registers all six primitive types:
- *   - Tools (26): executable functions for querying design system data
+ *   - Tools (27): executable functions for querying design system data
  *   - Resources (14 URIs + templates): read-only reference documents
- *   - Prompts (9): reusable parameterized templates for LLM interaction
+ *   - Prompts (10): reusable parameterized templates for LLM interaction
  *   - Logging: structured log events via notifications/message
  *   - Sampling: server-initiated LLM completions via the client
  *   - Elicitation: interactive user input requests
@@ -14,7 +14,7 @@
  * Versioned releases:
  *   v0.1.0 — 13 core tools (tokens, components, validation, search)
  *   v0.2.0 — +13 tools (themes, icons, a11y, component depth, layout, versioning)
- *   v0.3.0 — Resources, Prompts, Sampling, Elicitation, Logging, Tasks (experimental)
+ *   v0.3.0 — +1 tool (get_deprecations), Resources, Prompts, Sampling, Elicitation, Logging, Tasks (experimental)
  */
 
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";

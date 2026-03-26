@@ -2,7 +2,7 @@
  * Design System MCP — Tool Runner
  *
  * Provides a single `runMcpTool(name, args)` function that executes any of the
- * 26 design-system tools and returns a plain string result. Used by the
+ * 27 design-system tools and returns a plain string result. Used by the
  * /api/chat agentic loop to execute OpenRouter tool-call responses locally
  * without going through the full MCP JSON-RPC protocol.
  *
@@ -504,6 +504,13 @@ export async function runMcpTool(name: string, args: Record<string, unknown>): P
       const type     = (args.type as string | undefined) ?? "all";
       const filtered = type === "all" ? deprecations : deprecations.filter(d => d.type === type);
       return JSON.stringify({ deprecations: filtered, total: filtered.length }, null, 2);
+    }
+
+    case "generate_design_system": {
+      // generate_design_system is handled directly by /api/chat before
+      // runMcpTool is called; this case is intentionally unreachable and
+      // kept only as a safety net.
+      return JSON.stringify({ error: "generate_design_system must be invoked through /api/chat" });
     }
 
     default:

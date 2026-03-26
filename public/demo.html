@@ -133,14 +133,12 @@
 <div class="modal-overlay" id="agents-modal" role="dialog" aria-modal="true" aria-labelledby="agents-modal-title">
   <div class="modal agents-modal">
     <div class="modal-header">
-      <span class="modal-title" id="agents-modal-title">View Agents</span>
+      <span class="modal-title" id="agents-modal-title">Agent Lobby</span>
+      <div class="agents-lobby-tabs" role="tablist">
+        <button class="agents-lobby-tab active" data-tab="lobby" role="tab">Agents</button>
+        <button class="agents-lobby-tab" data-tab="diagram" role="tab">System Diagram</button>
+      </div>
       <button class="modal-close" id="agents-modal-close" aria-label="Close">✕</button>
-    </div>
-    <div class="agents-modal-tabs" role="tablist">
-      <button class="agents-tab active" data-tab="config" role="tab">Agent Config</button>
-      <button class="agents-tab" data-tab="prompt" role="tab">System Prompt</button>
-      <button class="agents-tab" data-tab="tools" role="tab">Tools</button>
-      <button class="agents-tab" data-tab="diagram" role="tab">System Diagram</button>
     </div>
     <div class="agents-modal-body" id="agents-modal-body">
       <div class="agents-loading">Loading agent info…</div>

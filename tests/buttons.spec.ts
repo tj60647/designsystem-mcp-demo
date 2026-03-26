@@ -447,28 +447,29 @@ test.describe("View Agents button", () => {
     await expect(page.locator("#agents-modal")).toHaveClass(/open/);
   });
 
-  test("modal shows agent name on Config tab", async ({ page }) => {
+  test("modal shows agent names in the lobby", async ({ page }) => {
     await openDemo(page);
     await page.click("#view-agents-btn");
     // Wait for the agent info to load
     await expect(page.locator("#agents-modal-body")).not.toContainText("Loading agent info", { timeout: 5000 });
-    await expect(page.locator("#agents-modal-body")).toContainText("Chat Assistant");
+    // Multi-agent lobby shows all four specialist agents
+    await expect(page.locator("#agents-modal-body")).toContainText("Orchestrator");
+    await expect(page.locator("#agents-modal-body")).toContainText("Component Builder");
   });
 
-  test("System Prompt tab shows the system instructions", async ({ page }) => {
+  test("lobby cards show system prompt instructions", async ({ page }) => {
     await openDemo(page);
     await page.click("#view-agents-btn");
     await expect(page.locator("#agents-modal-body")).not.toContainText("Loading agent info", { timeout: 5000 });
-    await page.click(".agents-tab[data-tab='prompt']");
-    // The system prompt should contain the JSON format instruction
+    // The lobby tab is shown by default — each card embeds the system prompt inline
     await expect(page.locator("#agents-modal-body")).toContainText("message");
   });
 
-  test("Tools tab lists MCP tool names", async ({ page }) => {
+  test("lobby cards list MCP tool names", async ({ page }) => {
     await openDemo(page);
     await page.click("#view-agents-btn");
     await expect(page.locator("#agents-modal-body")).not.toContainText("Loading agent info", { timeout: 5000 });
-    await page.click(".agents-tab[data-tab='tools']");
+    // Tool names are shown inside the lobby cards (no separate "tools" tab)
     await expect(page.locator("#agents-modal-body")).toContainText("get_tokens");
   });
 
@@ -476,7 +477,7 @@ test.describe("View Agents button", () => {
     await openDemo(page);
     await page.click("#view-agents-btn");
     await expect(page.locator("#agents-modal-body")).not.toContainText("Loading agent info", { timeout: 5000 });
-    await page.click(".agents-tab[data-tab='diagram']");
+    await page.click(".agents-lobby-tab[data-tab='diagram']");
     await expect(page.locator(".diagram")).toBeVisible();
     await expect(page.locator(".diagram")).toContainText("User Input");
     await expect(page.locator(".diagram")).toContainText("Live Preview");

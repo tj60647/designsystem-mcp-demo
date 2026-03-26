@@ -9,6 +9,9 @@ const DEFAULT_CHAT_MODEL = "openai/gpt-oss-20b:nitro";
 const conversationHistory = [];
 let isLoading = false;
 let generatedDesignSystemData = null;
+/** Agent used in the most recent completed turn — sent back to the server so
+ *  short follow-up messages don't get mis-routed by the stateless orchestrator. */
+let lastRoutedAgent = null;
 
 // ── DOM refs (populated by initChat) ─────────────────────────────────────────
 let messagesEl, chipsEl, inputEl, sendBtn, downloadDsBtn, modelSelect;
@@ -104,11 +107,16 @@ async function handleSend() {
   const loadingEl = appendLoading();
   scrollToBottom();
 
+  // Capture the stored agent for this single continuation turn, then clear it
+  // immediately so topic changes on subsequent turns are re-routed fresh.
+  const agentForThisTurn = lastRoutedAgent;
+  lastRoutedAgent = null;
+
   try {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: conversationHistory, model: getSelectedModel() }),
+      body: JSON.stringify({ messages: conversationHistory, model: getSelectedModel(), previousAgent: agentForThisTurn }),
     });
 
     // Early validation errors (400, 503) are returned as plain JSON before SSE
@@ -153,6 +161,17 @@ async function handleSend() {
           const preview   = event.preview || null;
           const toolsUsed = event.toolCallsUsed || [];
           conversationHistory.push({ role: "assistant", content: message });
+
+          // Remember which specialist handled this turn so the server can skip
+          // re-routing on the immediately following message.
+          // Only store it when this turn was itself a fresh routing decision
+          // (agentForThisTurn was null) — that way previousAgent is used for
+          // exactly one continuation, then the orchestrator re-routes freely.
+          // "unified" is the fallback mode and should never be forwarded as a
+          // specialist hint; storing it would cause the next turn to skip routing.
+          if (!agentForThisTurn && event.routedAgent && event.routedAgent !== "unified") {
+            lastRoutedAgent = event.routedAgent;
+          }
 
           if (event.thinkingSteps && event.thinkingSteps.length > 0) {
             appendThinkingBlock(event.thinkingSteps);

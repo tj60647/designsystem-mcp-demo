@@ -121,36 +121,82 @@
 .validation-list.recs li     { background: rgba(210,153,34,.08); color: var(--orange); border-left: 3px solid var(--orange); }
 
 
-/* ── Agents modal ── */
-.agents-modal { width: 700px; max-height: calc(100vh - 60px); }
-.agents-modal-tabs {
-  display: flex; gap: 0; border-bottom: 1px solid var(--border-soft);
-  flex-shrink: 0;
+/* ── Agents modal (lobby) ── */
+.agents-modal { width: 800px; max-height: calc(100vh - 60px); }
+.modal-header { align-items: center; gap: 12px; }
+.agents-lobby-tabs {
+  display: flex; gap: 2px; margin-left: auto;
+  background: var(--bg-input); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); padding: 2px;
 }
-.agents-tab {
-  font-size: 12px; font-weight: 500; padding: 8px 14px;
-  color: var(--text-muted); cursor: pointer; border: none; background: none;
-  border-bottom: 2px solid transparent; margin-bottom: -1px;
-  transition: color .15s, border-color .15s; white-space: nowrap;
+.agents-lobby-tab {
+  font-size: 11.5px; font-weight: 500; padding: 4px 12px;
+  color: var(--text-muted); cursor: pointer; border: none;
+  background: none; border-radius: calc(var(--radius-sm) - 1px);
+  transition: color .15s, background .15s; white-space: nowrap;
 }
-.agents-tab:hover { color: var(--text); }
-.agents-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.agents-lobby-tab:hover { color: var(--text); }
+.agents-lobby-tab.active { background: var(--bg-panel); color: var(--text); }
 .agents-modal-body {
-  flex: 1; overflow-y: auto; min-height: 200px; max-height: 55vh;
+  flex: 1; overflow-y: auto; min-height: 200px; max-height: 62vh;
 }
 .agents-loading { padding: 16px; font-size: 12px; color: var(--text-dim); }
-.agents-pane { display: none; padding: 14px; }
-.agents-pane.active { display: block; }
-.agents-field { margin-bottom: 14px; }
-.agents-field-label {
-  font-size: 10px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: .5px; color: var(--text-dim); margin-bottom: 4px;
+
+/* ── Lobby list ── */
+.lobby-list {
+  display: flex; flex-direction: column;
+  gap: 14px; padding: 14px;
 }
-.agents-value {
-  font-size: 12px; color: var(--text-muted);
-  background: var(--bg-input); border: 1px solid var(--border-soft);
-  border-radius: var(--radius-sm); padding: 6px 10px;
+.lobby-card {
+  background: var(--bg); border: 1px solid var(--border-soft);
+  border-radius: var(--radius); padding: 16px 16px 12px;
+  display: flex; flex-direction: column; gap: 10px;
+  border-left: 3px solid var(--card-color, var(--accent));
+}
+.lobby-card[data-color="purple"] { --card-color: var(--purple); }
+.lobby-card[data-color="accent"]  { --card-color: var(--accent);  }
+.lobby-card[data-color="orange"]  { --card-color: var(--orange);  }
+.lobby-card[data-color="green"]   { --card-color: var(--green);   }
+.lobby-card-header { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.lobby-card-name {
+  font-size: 14px; font-weight: 700; color: var(--card-color, var(--text));
+}
+.lobby-card-model {
+  font-size: 10.5px; color: var(--text-dim);
   font-family: "SFMono-Regular", Consolas, monospace;
+  margin-left: auto;
+}
+.lobby-section-label {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .5px; color: var(--text-dim);
+}
+.lobby-params {
+  display: flex; flex-direction: column; gap: 2px;
+  background: var(--bg-input); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); padding: 8px 10px;
+}
+.lobby-param-row { display: flex; gap: 8px; font-size: 11.5px; }
+.lobby-param-key { color: var(--purple); font-family: "SFMono-Regular", Consolas, monospace; min-width: 120px; flex-shrink: 0; }
+.lobby-param-val { color: var(--text-muted); font-family: "SFMono-Regular", Consolas, monospace; }
+.lobby-prompt-pre {
+  max-height: 22vh; font-size: 10.5px;
+}
+.agents-tools-list { display: flex; flex-direction: column; gap: 6px; }
+.agents-tool-card {
+  background: var(--bg-input); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); padding: 8px 10px;
+}
+.agents-tool-name {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  color: var(--purple); font-size: 11.5px; font-weight: 600; margin-bottom: 2px;
+}
+.agents-tool-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+.agents-tool-params { margin-top: 4px; font-size: 10.5px; color: var(--text-dim); }
+.agents-param-chip {
+  display: inline-block; margin: 2px 3px 0 0; padding: 1px 7px;
+  background: var(--bg); border: 1px solid var(--border-soft);
+  border-radius: 20px; font-size: 10px; font-family: "SFMono-Regular", Consolas, monospace;
+  color: var(--orange);
 }
 .agents-prompt-pre {
   background: var(--bg); border: 1px solid var(--border-soft);
@@ -159,23 +205,7 @@
   color: var(--text-muted); white-space: pre-wrap;
   word-break: break-word; max-height: 44vh; overflow-y: auto; line-height: 1.6;
 }
-.agents-tools-list { display: flex; flex-direction: column; gap: 8px; }
-.agents-tool-card {
-  background: var(--bg); border: 1px solid var(--border-soft);
-  border-radius: var(--radius-sm); padding: 10px 12px;
-}
-.agents-tool-name {
-  font-family: "SFMono-Regular", Consolas, monospace;
-  color: var(--purple); font-size: 12px; font-weight: 600; margin-bottom: 3px;
-}
-.agents-tool-desc { font-size: 11.5px; color: var(--text-muted); line-height: 1.5; }
-.agents-tool-params { margin-top: 5px; font-size: 10.5px; color: var(--text-dim); }
-.agents-param-chip {
-  display: inline-block; margin: 2px 3px 0 0; padding: 1px 7px;
-  background: var(--bg-input); border: 1px solid var(--border-soft);
-  border-radius: 20px; font-size: 10px; font-family: "SFMono-Regular", Consolas, monospace;
-  color: var(--orange);
-}
+
 
 /* ── System diagram ── */
 .diagram-wrap { padding: 16px 10px; overflow-x: auto; }

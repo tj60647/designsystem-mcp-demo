@@ -71,9 +71,9 @@ app.get("/health", (_req, res) => {
     description:
       "A queryable context layer that makes design systems machine-readable and usable by AI.",
     primitives: {
-      tools: 26,
+      tools: 27,
       resources: "14 URIs + 4 templates",
-      prompts: 9,
+      prompts: 10,
       logging: "4 levels, 14 events",
       sampling: "5 use cases",
       elicitation: "6 scenarios",
@@ -789,17 +789,17 @@ const OPENROUTER_TOOLS = [
   // v0.2.0 tools
   { type: "function", function: { name: "list_themes", description: "List all available themes (e.g. light, dark). Returns theme keys, names, and descriptions.", parameters: { type: "object", properties: {}, required: [] } } },
   { type: "function", function: { name: "get_theme", description: 'Get full theme definition including all semantic token overrides. Example: "light", "dark".', parameters: { type: "object", properties: { themeName: { type: "string", description: "The theme key." } }, required: ["themeName"] } } },
-  { type: "function", function: { name: "list_icons", description: "List all icons, optionally filtered by category or tag.", parameters: { type: "object", properties: { category: { type: "string" }, tag: { type: "string" } }, required: [] } } },
+  { type: "function", function: { name: "list_icons", description: "List all icons, optionally filtered by category or tag.", parameters: { type: "object", properties: { category: { type: "string", description: "Optional icon category to filter by, e.g. 'navigation', 'action'." }, tag: { type: "string", description: "Optional tag to filter by, e.g. 'arrow', 'alert'." } }, required: [] } } },
   { type: "function", function: { name: "get_icon", description: "Get a single icon by name with metadata, sizes, and usage guidance.", parameters: { type: "object", properties: { iconName: { type: "string", description: "The icon key, e.g. 'arrow-right'." } }, required: ["iconName"] } } },
-  { type: "function", function: { name: "search_icons", description: "Semantic search across the icon set. E.g. 'warning' returns alert-triangle, exclamation-circle.", parameters: { type: "object", properties: { query: { type: "string" }, limit: { type: "number" } }, required: ["query"] } } },
+  { type: "function", function: { name: "search_icons", description: "Semantic search across the icon set. E.g. 'warning' returns alert-triangle, exclamation-circle.", parameters: { type: "object", properties: { query: { type: "string", description: "Natural-language search term, e.g. 'warning', 'close', 'arrow right'." }, limit: { type: "number", description: "Maximum number of results to return (default 10)." } }, required: ["query"] } } },
   { type: "function", function: { name: "check_contrast", description: "Check WCAG 2.1 contrast ratio between foreground and background hex colors. Returns AA/AAA pass/fail.", parameters: { type: "object", properties: { foreground: { type: "string", description: "Foreground hex color, e.g. '#1e293b'." }, background: { type: "string", description: "Background hex color, e.g. '#ffffff'." } }, required: ["foreground", "background"] } } },
-  { type: "function", function: { name: "get_accessibility_guidance", description: "Get per-component accessibility spec: ARIA roles, keyboard interaction, focus order, screen reader expectations.", parameters: { type: "object", properties: { componentName: { type: "string" } }, required: ["componentName"] } } },
-  { type: "function", function: { name: "get_component_variants", description: "List all variants for a component with when-to-use guidance for each.", parameters: { type: "object", properties: { componentName: { type: "string" } }, required: ["componentName"] } } },
-  { type: "function", function: { name: "get_component_anatomy", description: "Get internal structure of a component: named slots, valid children, and composition patterns.", parameters: { type: "object", properties: { componentName: { type: "string" } }, required: ["componentName"] } } },
-  { type: "function", function: { name: "get_component_relationships", description: "Get component relationships: parent, siblings, related components, and composition contexts.", parameters: { type: "object", properties: { componentName: { type: "string" } }, required: ["componentName"] } } },
+  { type: "function", function: { name: "get_accessibility_guidance", description: "Get per-component accessibility spec: ARIA roles, keyboard interaction, focus order, screen reader expectations.", parameters: { type: "object", properties: { componentName: { type: "string", description: "The component key, e.g. 'button', 'modal', 'input'." } }, required: ["componentName"] } } },
+  { type: "function", function: { name: "get_component_variants", description: "List all variants for a component with when-to-use guidance for each.", parameters: { type: "object", properties: { componentName: { type: "string", description: "The component key, e.g. 'button', 'badge', 'alert'." } }, required: ["componentName"] } } },
+  { type: "function", function: { name: "get_component_anatomy", description: "Get internal structure of a component: named slots, valid children, and composition patterns.", parameters: { type: "object", properties: { componentName: { type: "string", description: "The component key, e.g. 'card', 'modal', 'select'." } }, required: ["componentName"] } } },
+  { type: "function", function: { name: "get_component_relationships", description: "Get component relationships: parent, siblings, related components, and composition contexts.", parameters: { type: "object", properties: { componentName: { type: "string", description: "The component key, e.g. 'button', 'input', 'card'." } }, required: ["componentName"] } } },
   { type: "function", function: { name: "get_layout_guidance", description: "Get layout rules: page gutters, content max-widths, breakpoints, grid columns, and region spacing.", parameters: { type: "object", properties: { context: { type: "string", description: "Optional context, e.g. 'page', 'form', 'dashboard'." } }, required: [] } } },
   { type: "function", function: { name: "get_spacing_scale", description: "Get the complete spacing scale with semantic usage hints for each step.", parameters: { type: "object", properties: {}, required: [] } } },
-  { type: "function", function: { name: "get_changelog", description: "Get the design system version history, filterable by version range.", parameters: { type: "object", properties: { fromVersion: { type: "string" }, toVersion: { type: "string" } }, required: [] } } },
+  { type: "function", function: { name: "get_changelog", description: "Get the design system version history, filterable by version range.", parameters: { type: "object", properties: { fromVersion: { type: "string", description: "Inclusive lower bound version, e.g. '0.2.0'." }, toVersion: { type: "string", description: "Inclusive upper bound version, e.g. '0.3.0'." } }, required: [] } } },
   { type: "function", function: { name: "get_deprecations", description: "List all deprecated tokens, components, patterns, and endpoints with migration paths.", parameters: { type: "object", properties: { type: { type: "string", enum: ["token", "component", "endpoint", "all"] } }, required: [] } } },
   // AI generation
   {
@@ -829,7 +829,9 @@ const OPENROUTER_TOOLS = [
 
 const CHAT_SYSTEM_PROMPT =
   "You are a design system expert assistant. You have access to a design system MCP server with tokens, components, themes, icons, and guidelines. " +
-  "When the user asks about UI components, colors, spacing, typography, or design tokens, call the appropriate tools to get accurate data from the design system before answering. " +
+  "When the user asks about UI components, colors, spacing, typography, design tokens, layout, accessibility, themes, icons, changelog, or deprecations, " +
+  "call the appropriate tools to get accurate data from the design system before answering. " +
+  "Use diff_against_system to check whether CSS properties or values match design system tokens. " +
   "Always use the actual token values and component specs from the tools — never guess or invent values.\n\n" +
   "## Response format\n" +
   "IMPORTANT: Every response must be a single valid JSON object. Output ONLY the JSON — no text, no markdown, no code fences outside it.\n\n" +
@@ -849,26 +851,199 @@ const CHAT_SYSTEM_PROMPT =
   "3. Once you have enough information (typically after 2–4 exchanges), call the generate_design_system tool with a comprehensive, detailed description.\n" +
   "4. After the tool returns success, briefly summarise what was generated and tell the user it has been loaded and is ready to explore.";
 
+// ── Strategy 3: per-agent system prompts ─────────────────────────────────
+const ORCHESTRATOR_SYSTEM_PROMPT =
+  "You are a routing agent. Your only job is to classify the user's intent and call delegate_to_agent exactly once.\n\n" +
+  'Route to "reader" for: questions, explanations, token lookups, component specs, icon search, theme info, changelog, deprecations, layout and accessibility guidance.\n' +
+  'Route to "builder" for: requests to create, build, render, or code a UI component or HTML preview.\n' +
+  'Route to "generator" for: requests to create a brand-new design system, extract styles from a website, or generate from scratch.\n\n' +
+  "Always call delegate_to_agent. Never answer the user directly.";
+
+const READER_SYSTEM_PROMPT =
+  "You are a design system expert assistant. Answer questions about tokens, components, themes, icons, layout, and accessibility by calling the appropriate read-only tools. " +
+  "Use diff_against_system to answer CSS compliance questions (e.g. 'does this color or spacing value match our design system tokens?'). " +
+  "Use validate_color to check whether a hex value is a valid design-system color, and check_contrast to answer WCAG AA/AAA contrast questions. " +
+  "Always use actual values from the tools — never guess or invent values.\n\n" +
+  "IMPORTANT: Every response must be a single valid JSON object. Output ONLY the JSON.\n" +
+  'Return: {"message": "Your prose answer here."}\n' +
+  '  • "message": plain prose text — no HTML, no code fences. Required.';
+
+const BUILDER_SYSTEM_PROMPT =
+  "You are a component code generator. For every component request:\n" +
+  "1. If the component name is unclear, call list_components to discover available components.\n" +
+  "2. Call get_component to fetch the spec and available variants.\n" +
+  "3. Call get_component_tokens to resolve the exact token values. Optionally call suggest_token to map semantic names to exact values.\n" +
+  "4. Optionally call get_component_variants or get_component_anatomy to understand valid configurations and slot structure.\n" +
+  "5. Optionally call get_component_relationships to discover sibling or parent components needed for composite layouts.\n" +
+  "6. Optionally call get_component_constraints or get_accessibility_guidance to apply ARIA roles, keyboard patterns, and usage rules.\n" +
+  "7. Optionally call validate_component_usage or diff_against_system to verify your final configuration against design system rules.\n" +
+  "Generate clean HTML with inline styles using exact token values from the tools. Never hard-code colors or spacing.\n\n" +
+  "IMPORTANT: Every response must be a single valid JSON object. Output ONLY the JSON.\n" +
+  'Return: {"message": "Brief prose explanation.", "preview": "<html with inline styles>"}\n' +
+  '  • "message": plain prose — no HTML. Required.\n' +
+  '  • "preview": raw HTML only — no fences, no wrappers. Omit when no UI is generated.';
+
+const GENERATOR_SYSTEM_PROMPT =
+  "You are a design system architect. Help users create complete new design systems through conversation.\n" +
+  "1. Gather brand name, product type, aesthetic direction, primary and secondary colors, and typography preferences.\n" +
+  "2. Ask one clarifying question at a time until you have a clear brand direction (typically 2–4 exchanges).\n" +
+  "3. Once you have enough information, call generate_design_system with a comprehensive, detailed description.\n" +
+  "4. After the tool returns success, briefly summarise what was generated and tell the user it is loaded and ready to explore.\n\n" +
+  "IMPORTANT: Every response must be a single valid JSON object. Output ONLY the JSON.\n" +
+  'Return: {"message": "Your prose here."}';
+
+// ── Strategy 3: tool subsets per specialist agent ────────────────────────
+const READER_TOOL_NAMES = new Set([
+  "list_token_categories", "get_tokens", "get_token", "suggest_token", "get_spacing_scale",
+  "list_components", "get_component", "get_component_tokens", "get_component_constraints",
+  "get_component_variants", "get_component_anatomy", "get_component_relationships",
+  "list_themes", "get_theme", "list_icons", "get_icon", "search_icons", "search",
+  "get_schema", "get_layout_guidance", "get_accessibility_guidance", "get_changelog", "get_deprecations",
+  // Pure query tools — also useful when the reader answers accessibility/compliance questions
+  "validate_color", "check_contrast",
+  // CSS compliance: "does this color/spacing value match our design system?"
+  "diff_against_system",
+]);
+
+const BUILDER_TOOL_NAMES = new Set([
+  "list_components",
+  "get_token", "get_tokens",
+  "get_component", "get_component_tokens", "get_component_variants", "get_component_anatomy",
+  "get_component_constraints", "get_component_relationships", "get_accessibility_guidance",
+  "suggest_token", "validate_component_usage", "validate_color", "diff_against_system", "check_contrast",
+]);
+
+const GENERATOR_TOOL_NAMES = new Set([
+  "generate_design_system",
+]);
+
+function filterTools(nameSet: Set<string>) {
+  return OPENROUTER_TOOLS.filter((t) => nameSet.has(t.function.name));
+}
+
+// Routing tool used by the Orchestrator agent.
+// Extracted as a constant so both the /api/agent-info endpoint and the
+// /api/chat routing step reference the same definition.
+const DELEGATE_TOOL = {
+  type: "function" as const,
+  function: {
+    name: "delegate_to_agent",
+    description: 'Route the conversation to a specialist. agent must be "reader", "builder", or "generator".',
+    parameters: {
+      type: "object",
+      properties: {
+        agent: {
+          type: "string",
+          enum: ["reader", "builder", "generator"],
+          description: "The specialist agent to delegate to.",
+        },
+        reason: { type: "string", description: "One-sentence rationale for the routing decision." },
+      },
+      required: ["agent", "reason"],
+    },
+  },
+};
+
+// Pre-computed per-agent configs used in both /api/agent-info and the
+// /api/chat routing step.
+const SPECIALIST_CONFIGS = {
+  reader: {
+    systemPrompt: READER_SYSTEM_PROMPT,
+    tools: filterTools(READER_TOOL_NAMES),
+    maxIterations: 5,
+  },
+  builder: {
+    systemPrompt: BUILDER_SYSTEM_PROMPT,
+    tools: filterTools(BUILDER_TOOL_NAMES),
+    maxIterations: 6,
+  },
+  generator: {
+    systemPrompt: GENERATOR_SYSTEM_PROMPT,
+    tools: filterTools(GENERATOR_TOOL_NAMES),
+    // The generator prompt asks for 2–4 clarifying exchanges before calling
+    // generate_design_system, then a confirmation message — 8 iterations
+    // allows that full flow without hitting the cap prematurely.
+    maxIterations: 8,
+  },
+} as const;
+
+type SpecialistName = keyof typeof SPECIALIST_CONFIGS;
+
 // ── Agent info endpoint ───────────────────────────────────────────────────
-// Returns a machine-readable description of the chat agent's configuration:
-// its name, the exact system instructions it receives, the model in use,
-// agentic loop parameters, and the full set of MCP tools it can call.
+// Returns a machine-readable description of all four Strategy-3 agents:
+// Orchestrator, Design System Reader, Component Builder, System Generator.
+// Each entry includes the agent's name, role, system prompt, parameters,
+// and the exact tool subset it is given.
 // Used by the "View Agents" modal in the demo UI.
 // ─────────────────────────────────────────────────────────────────────────
 app.get("/api/agent-info", (_req, res) => {
+  const model = process.env.OPENROUTER_MODEL ?? "openai/gpt-oss-20b:nitro";
   res.json({
     agents: [
       {
-        name: "Chat Assistant",
-        description: "OpenRouter-backed agentic loop that calls MCP tools to ground answers in live design system data.",
-        model: process.env.OPENROUTER_MODEL ?? "openai/gpt-oss-20b:nitro",
+        name: "Orchestrator",
+        description: "Classifies the user's intent in a single LLM call and routes to the correct specialist agent. Never answers the user directly.",
+        model,
         parameters: {
-          maxIterations: 8,
+          // Note: the Orchestrator runs as a single standalone fetch with
+          // tool_choice:"required", not as a loop iteration — this value
+          // reflects that one-shot design rather than a loop counter.
+          maxIterations: 1,
+          toolChoice: "required",
+          endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
+        },
+        systemPrompt: ORCHESTRATOR_SYSTEM_PROMPT,
+        tools: [
+          {
+            name: DELEGATE_TOOL.function.name,
+            description: DELEGATE_TOOL.function.description,
+            parameters: DELEGATE_TOOL.function.parameters,
+          },
+        ],
+      },
+      {
+        name: "Design System Reader",
+        description: "Answers questions about tokens, components, themes, icons, layout, and accessibility using read-only MCP tools. Never mutates the design system.",
+        model,
+        parameters: {
+          maxIterations: SPECIALIST_CONFIGS.reader.maxIterations,
           toolChoice: "auto",
           endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
         },
-        systemPrompt: CHAT_SYSTEM_PROMPT,
-        tools: OPENROUTER_TOOLS.map((t) => ({
+        systemPrompt: SPECIALIST_CONFIGS.reader.systemPrompt,
+        tools: SPECIALIST_CONFIGS.reader.tools.map((t) => ({
+          name: t.function.name,
+          description: t.function.description,
+          parameters: t.function.parameters,
+        })),
+      },
+      {
+        name: "Component Builder",
+        description: "Generates HTML/CSS component code grounded in exact design system tokens. Validates all props and token values before emitting code.",
+        model,
+        parameters: {
+          maxIterations: SPECIALIST_CONFIGS.builder.maxIterations,
+          toolChoice: "auto",
+          endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
+        },
+        systemPrompt: SPECIALIST_CONFIGS.builder.systemPrompt,
+        tools: SPECIALIST_CONFIGS.builder.tools.map((t) => ({
+          name: t.function.name,
+          description: t.function.description,
+          parameters: t.function.parameters,
+        })),
+      },
+      {
+        name: "System Generator",
+        description: "Gathers brand requirements through conversation then generates a complete new design system (tokens, components, themes, icons) via AI.",
+        model,
+        parameters: {
+          maxIterations: SPECIALIST_CONFIGS.generator.maxIterations,
+          toolChoice: "auto",
+          endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
+        },
+        systemPrompt: SPECIALIST_CONFIGS.generator.systemPrompt,
+        tools: SPECIALIST_CONFIGS.generator.tools.map((t) => ({
           name: t.function.name,
           description: t.function.description,
           parameters: t.function.parameters,
@@ -933,8 +1108,8 @@ app.post("/api/generate-from-website", async (req, res) => {
 
 // ── Chat endpoint ──────────────────────────────────────────────────────────
 // OpenRouter-backed agentic loop. Calls OpenRouter with the conversation and
-// all 26 design-system tools. Tool calls are executed locally via runMcpTool,
-// and results are fed back into the loop until the model returns a final answer.
+// all 27 design-system read tools (plus generate_design_system, handled inline);
+// results are fed back into the loop until the model returns a final answer.
 // ─────────────────────────────────────────────────────────────────────────
 
 /** Parse the LLM's JSON response into {message, preview}.
@@ -965,9 +1140,11 @@ app.post("/api/chat", async (req, res) => {
     return;
   }
 
-  const { messages, model: requestedModel } = req.body as {
+  const { messages, model: requestedModel, previousAgent } = req.body as {
     messages: Array<{ role: "user" | "assistant"; content: string }>;
     model?: string;
+    /** Agent name from the previous turn, sent by the client to avoid re-routing follow-up messages. */
+    previousAgent?: string;
   };
 
   if (!Array.isArray(messages) || messages.length === 0) {
@@ -990,7 +1167,9 @@ app.post("/api/chat", async (req, res) => {
   const endWithDone = (payload: object) => { sendEvent({ type: "done", ...payload }); res.end(); };
   const endWithError = (error: string) => { sendEvent({ type: "error", error }); res.end(); };
 
-  // Build the message list for OpenRouter: system + conversation
+  // Build the message list for OpenRouter: system + conversation.
+  // System prompt and tool set are determined after the Orchestrator routing
+  // step below; these are the fallback values used if routing fails.
   type OpenRouterMessage = {
     role: string;
     content: string | null;
@@ -998,13 +1177,8 @@ app.post("/api/chat", async (req, res) => {
     tool_call_id?: string;
     name?: string;
   };
-  const loopMessages: OpenRouterMessage[] = [
-    { role: "system", content: CHAT_SYSTEM_PROMPT },
-    ...messages,
-  ];
 
   const toolCallsUsed: string[] = [];
-  const MAX_ITERATIONS = 8; // extra headroom: generate_design_system is slow and the conversation flow needs additional turns
 
   // Abort the whole agentic loop after a generous timeout.  Progress is
   // streamed so the user sees activity; 120 s gives multi-step agentic tasks
@@ -1020,6 +1194,93 @@ app.post("/api/chat", async (req, res) => {
     | { type: "tool_call"; tool: string; args: string };
   const thinkingSteps: ThinkingStep[] = [];
 
+  // ── Step 1: Orchestrator routing ──────────────────────────────────────────
+  // Call the Orchestrator with tool_choice:"required" so it must call
+  // delegate_to_agent.  Fall back to the unified single-agent mode (with all
+  // tools and CHAT_SYSTEM_PROMPT) if the routing call fails for any reason.
+  // The unified mode is an intentional safety net: it uses the pre-split
+  // CHAT_SYSTEM_PROMPT and the full OPENROUTER_TOOLS set, so every capability
+  // remains available even when orchestration is unavailable.
+  //
+  // If the client supplies a valid previousAgent (the agent used on the prior
+  // turn), skip the orchestrator entirely — this prevents short follow-up
+  // messages (e.g. "yes, go ahead") from being mis-classified as a new topic.
+  // ─────────────────────────────────────────────────────────────────────────
+  let routedAgent: SpecialistName | "unified" = "unified";
+  let systemPrompt = CHAT_SYSTEM_PROMPT;
+  type AnyTool = { type: string; function: { name: string; description: string; parameters: unknown } };
+  let agentTools: AnyTool[] = OPENROUTER_TOOLS as unknown as AnyTool[];
+  let MAX_ITERATIONS = 8;
+
+  // Re-use the previous agent without an orchestrator call when the client
+  // signals it is a continuation of the same conversation thread.
+  if (typeof previousAgent === "string" && previousAgent in SPECIALIST_CONFIGS) {
+    const prev = previousAgent as SpecialistName;
+    routedAgent     = prev;
+    systemPrompt    = SPECIALIST_CONFIGS[prev].systemPrompt;
+    agentTools      = SPECIALIST_CONFIGS[prev].tools;
+    MAX_ITERATIONS  = SPECIALIST_CONFIGS[prev].maxIterations;
+    console.log(`[chat:orchestrator] reusing previousAgent="${prev}" (skip re-route)`);
+  } else {
+    try {
+      sendProgress("Routing request…");
+      const orchMessages: OpenRouterMessage[] = [
+        { role: "system", content: ORCHESTRATOR_SYSTEM_PROMPT },
+        // Only send the latest user message — the orchestrator only needs to
+        // classify intent, not re-read the full conversation history.
+        // The empty-array guard at the top of this handler ensures messages[0] exists.
+        messages.at(-1)!,
+      ];
+      const orchResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://github.com/designsystem-mcp-demo",
+          "X-Title": "Design System MCP Demo",
+        },
+        body: JSON.stringify({
+          model,
+          messages: orchMessages,
+          tools: [DELEGATE_TOOL],
+          tool_choice: "required",
+        }),
+        signal: chatAbort.signal,
+      });
+      if (orchResponse.ok) {
+        const orchData = await orchResponse.json() as { choices: Array<{ message: { tool_calls?: Array<{ function: { name: string; arguments: string } }> } }> };
+        const delegateCall = orchData.choices?.[0]?.message?.tool_calls?.[0];
+        if (delegateCall?.function?.name === "delegate_to_agent") {
+          let delegateArgs: { agent?: string; reason?: string } = {};
+          try {
+            delegateArgs = JSON.parse(delegateCall.function.arguments) as { agent?: string; reason?: string };
+          } catch (parseErr) {
+            console.warn("[chat:orchestrator] failed to parse delegate_to_agent arguments:", String(parseErr), delegateCall.function.arguments);
+          }
+          const agent = delegateArgs.agent as SpecialistName | undefined;
+          if (agent && agent in SPECIALIST_CONFIGS) {
+            routedAgent = agent;
+            systemPrompt = SPECIALIST_CONFIGS[agent].systemPrompt;
+            agentTools = SPECIALIST_CONFIGS[agent].tools;
+            MAX_ITERATIONS = SPECIALIST_CONFIGS[agent].maxIterations;
+            console.log(`[chat:orchestrator] routed to "${agent}" — ${delegateArgs.reason ?? ""}`);
+          }
+        }
+      } else {
+        console.warn(`[chat:orchestrator] non-ok response ${orchResponse.status}, falling back to unified agent`);
+      }
+    } catch (err) {
+      // Routing failure is non-fatal: continue with unified single-agent mode
+      console.warn("[chat:orchestrator] routing failed, falling back to unified agent:", String(err));
+    }
+  }
+
+  // ── Step 2: Specialist (or unified fallback) agentic loop ────────────────
+  const loopMessages: OpenRouterMessage[] = [
+    { role: "system", content: systemPrompt },
+    ...messages,
+  ];
+
   // Holds the generated design system data if generate_design_system is called
   let generatedDesignSystemData: Record<string, unknown> | null = null;
 
@@ -1032,7 +1293,6 @@ app.post("/api/chat", async (req, res) => {
   try {
     for (let i = 0; i < MAX_ITERATIONS; i++) {
       console.log(`[chat] iteration=${i} model=${model} messages=${loopMessages.length}`);
-      console.log("[chat:prompt]", JSON.stringify(loopMessages, null, 2));
 
       sendProgress("Thinking…");
 
@@ -1047,7 +1307,7 @@ app.post("/api/chat", async (req, res) => {
         body: JSON.stringify({
           model,
           messages: loopMessages,
-          tools: OPENROUTER_TOOLS,
+          tools: agentTools,
           tool_choice: "auto",
         }),
         signal: chatAbort.signal,
@@ -1133,6 +1393,11 @@ app.post("/api/chat", async (req, res) => {
           let toolResult: string;
 
           // ── Special handling: generate_design_system ───────────────────
+          // Handled here (rather than delegating to runMcpTool) for two reasons:
+          // 1. We pass chatAbort.signal so the long-running generation respects
+          //    the request timeout and can be aborted by the client.
+          // 2. We capture the returned data in generatedDesignSystemData so it
+          //    is included in the SSE "done" payload for the UI to display.
           if (toolName === "generate_design_system") {
             try {
               const description = (toolArgs.description as string) ?? "";
@@ -1179,7 +1444,7 @@ app.post("/api/chat", async (req, res) => {
             name: toolName,
             content: toolResult,
           });
-          console.log(`[chat:tool] result for ${toolName}:`, toolResult.slice(0, 500));
+          console.log(`[chat:tool] result for ${toolName}:`, toolResult.length > 500 ? toolResult.slice(0, 500) + "…" : toolResult);
         }
         // Continue loop to let the model process tool results
         continue;
@@ -1190,7 +1455,7 @@ app.post("/api/chat", async (req, res) => {
       const { message, preview } = parseChatResponse(rawResponse);
       console.log("[chat:response]", message.slice(0, 300));
       clearTimeout(chatTimer);
-      endWithDone({ message, preview, model, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
+      endWithDone({ message, preview, model, routedAgent, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
       return;
     }
 
@@ -1199,7 +1464,7 @@ app.post("/api/chat", async (req, res) => {
     const rawLast = String(lastAssistant?.content ?? "");
     const { message: lastMessage, preview: lastPreview } = parseChatResponse(rawLast);
     clearTimeout(chatTimer);
-    endWithDone({ message: lastMessage, preview: lastPreview, model, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
+    endWithDone({ message: lastMessage, preview: lastPreview, model, routedAgent, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
   } catch (err) {
     clearTimeout(chatTimer);
     console.error("Chat error:", err);
@@ -1229,9 +1494,9 @@ if (!isVercel) {
     console.log(`  Health check  : GET  /health`);
     console.log(`  MCP endpoint  : POST /mcp`);
     console.log(`  Version       : 0.3.0`);
-    console.log(`  Tools         : 26`);
+    console.log(`  Tools         : 27`);
     console.log(`  Resources     : 14 URIs + 4 templates`);
-    console.log(`  Prompts       : 9\n`);
+    console.log(`  Prompts       : 10\n`);
   });
 }
 

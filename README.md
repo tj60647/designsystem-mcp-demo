@@ -12,7 +12,7 @@
 2. [Why this matters](#2-why-this-matters)
 3. [Core concepts](#3-core-concepts)
 4. [How it works end-to-end](#4-how-it-works-end-to-end)
-5. [The 26 MCP tools — and when to use them](#5-the-26-mcp-tools--and-when-to-use-them)
+5. [The 27 MCP tools — and when to use them](#5-the-27-mcp-tools--and-when-to-use-them)
 6. [Using the demo](#6-using-the-demo)
 7. [Connecting an AI client](#7-connecting-an-ai-client)
 8. [Key design considerations](#8-key-design-considerations)
@@ -145,7 +145,7 @@ The key distinction: the AI's output is anchored to the real design system defin
 
 ---
 
-## 5. The 26 MCP tools — and when to use them
+## 5. The 27 MCP tools — and when to use them
 
 AI clients call these tools via `POST /mcp` using the JSON-RPC protocol.
 
@@ -198,6 +198,7 @@ AI clients call these tools via `POST /mcp` using the JSON-RPC protocol.
 |---|---|
 | `get_changelog` | Version history filterable by version range |
 | `get_deprecations` | Deprecations with migration paths and removal timelines |
+| `get_style_guide` | Design principles, color usage rules, typography guidance, and composition patterns |
 | `search` | Full-text search across all tokens, components, and icons |
 | `get_schema` | JSON Schema for a data file — use before loading custom JSON |
 

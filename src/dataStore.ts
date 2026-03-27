@@ -27,12 +27,13 @@ function loadJson(filename: string): unknown {
 
 // The active data for each type — replaced by setData(), restored by resetData().
 const store: Record<DataType, unknown> = {
-  tokens:       loadJson("tokens.json"),
-  components:   loadJson("components.json"),
-  themes:       loadJson("themes.json"),
-  icons:        loadJson("icons.json"),
-  changelog:    loadJson("changelog.json"),
-  deprecations: loadJson("deprecations.json"),
+  tokens:        loadJson("tokens.json"),
+  components:    loadJson("components.json"),
+  themes:        loadJson("themes.json"),
+  icons:         loadJson("icons.json"),
+  changelog:     loadJson("changelog.json"),
+  deprecations:  loadJson("deprecations.json"),
+  "style-guide": loadJson("style-guide.json"),
 };
 
 /** Return the active data for the given type. */
@@ -53,7 +54,7 @@ export function resetData(type?: DataType): void {
   if (type) {
     store[type] = loadJson(`${type}.json`);
   } else {
-    (["tokens", "components", "themes", "icons", "changelog", "deprecations"] as DataType[]).forEach((t) => {
+    (["tokens", "components", "themes", "icons", "changelog", "deprecations", "style-guide"] as DataType[]).forEach((t) => {
       store[t] = loadJson(`${t}.json`);
     });
   }

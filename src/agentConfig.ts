@@ -228,6 +228,7 @@ export const OPENROUTER_TOOLS = [
   { type: "function", function: { name: "get_spacing_scale", description: "Get the complete spacing scale with semantic usage hints for each step.", parameters: { type: "object", properties: {}, required: [] } } },
   { type: "function", function: { name: "get_changelog", description: "Get the design system version history, filterable by version range.", parameters: { type: "object", properties: { fromVersion: { type: "string", description: "Inclusive lower bound version, e.g. '0.2.0'." }, toVersion: { type: "string", description: "Inclusive upper bound version, e.g. '0.3.0'." } }, required: [] } } },
   { type: "function", function: { name: "get_deprecations", description: "List all deprecated tokens, components, patterns, and endpoints with migration paths.", parameters: { type: "object", properties: { type: { type: "string", enum: ["token", "component", "endpoint", "all"] } }, required: [] } } },
+  { type: "function", function: { name: "get_style_guide", description: "Retrieve design style guide content: principles, color usage rules, typography usage, and composition patterns.", parameters: { type: "object", properties: { section: { type: "string", enum: ["principles", "colorUsage", "typographyUsage", "compositionPatterns", "all"] } }, required: [] } } },
   // AI generation
   {
     type: "function",
@@ -342,6 +343,7 @@ const READER_TOOL_NAMES = new Set([
   "get_schema", "get_layout_guidance", "get_accessibility_guidance", "get_changelog", "get_deprecations",
   "validate_color", "check_contrast",
   "diff_against_system",
+  "get_style_guide",
 ]);
 
 const BUILDER_TOOL_NAMES = new Set([

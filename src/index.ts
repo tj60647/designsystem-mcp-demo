@@ -83,6 +83,7 @@ app.get("/health", (_req, res) => {
       "get_component_variants", "get_component_anatomy", "get_component_relationships",
       "get_layout_guidance", "get_spacing_scale",
       "get_changelog", "get_deprecations",
+      "get_style_guide",
     ],
     availableResources: [
       "design-system://tokens",
@@ -100,6 +101,7 @@ app.get("/health", (_req, res) => {
       "design-system://changelog",
       "design-system://changelog/latest",
       "design-system://deprecations",
+      "design-system://style-guide",
     ],
     availablePrompts: [
       "design-system/build-component",

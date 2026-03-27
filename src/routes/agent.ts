@@ -18,8 +18,9 @@ import {
 const router = express.Router();
 
 // ── GET /api/agent-info ───────────────────────────────────────────────────
-// Returns a machine-readable description of all four Strategy-3 agents:
-// Orchestrator, Design System Reader, Component Builder, System Generator.
+// Returns a machine-readable description of all five Strategy-3 agents:
+// Orchestrator, Design System Reader, Component Builder, System Generator,
+// and Style Guide.
 // Each entry includes the agent's name, role, system prompt, parameters,
 // and the exact tool subset it is given.
 // Used by the "View Agents" modal in the demo UI.
@@ -89,6 +90,22 @@ router.get("/api/agent-info", (_req, res) => {
         },
         systemPrompt: SPECIALIST_CONFIGS.generator.systemPrompt,
         tools: SPECIALIST_CONFIGS.generator.tools.map((t) => ({
+          name: t.function.name,
+          description: t.function.description,
+          parameters: t.function.parameters,
+        })),
+      },
+      {
+        name: "Style Guide",
+        description: "Explains design principles, color usage rules, typography guidelines, and composition patterns from the style guide. Grounds answers in actual style guide content and token values.",
+        model,
+        parameters: {
+          maxIterations: SPECIALIST_CONFIGS["style-guide"].maxIterations,
+          toolChoice: "auto",
+          endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
+        },
+        systemPrompt: SPECIALIST_CONFIGS["style-guide"].systemPrompt,
+        tools: SPECIALIST_CONFIGS["style-guide"].tools.map((t) => ({
           name: t.function.name,
           description: t.function.description,
           parameters: t.function.parameters,

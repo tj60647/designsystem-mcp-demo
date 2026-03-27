@@ -34,24 +34,25 @@ function validateAgainstSchema(
   const recommendations: string[] = [];
 
   if (type === "design-system") {
-    const SECTIONS: DataType[] = ["tokens", "components", "themes", "icons"];
+    const REQUIRED_SECTIONS: DataType[] = ["tokens", "components", "themes", "icons"];
+    const ALL_SECTIONS: DataType[] = [...REQUIRED_SECTIONS, "style-guide"];
     const keys = Object.keys(data);
 
-    const unknown = keys.filter(k => !SECTIONS.includes(k as DataType));
+    const unknown = keys.filter(k => !ALL_SECTIONS.includes(k as DataType));
     if (unknown.length > 0) {
       recommendations.push(
         `Unexpected top-level keys: ${unknown.map(k => `"${k}"`).join(", ")}. ` +
-        `Expected keys are: ${SECTIONS.join(", ")}.`,
+        `Expected keys are: ${ALL_SECTIONS.join(", ")}.`,
       );
     }
 
-    for (const section of SECTIONS) {
+    for (const section of REQUIRED_SECTIONS) {
       if (!(section in data)) {
         recommendations.push(`Section "${section}" is missing. Add it to include ${section} data.`);
       }
     }
 
-    for (const section of SECTIONS) {
+    for (const section of ALL_SECTIONS) {
       if (section in data) {
         const sectionData = data[section];
         if (sectionData === null || typeof sectionData !== "object" || Array.isArray(sectionData)) {
@@ -234,7 +235,8 @@ router.post("/data", (req, res) => {
   if (type === "design-system") {
     const combined = data as Record<string, unknown>;
     const loaded: string[] = [];
-    for (const section of VALID_TYPES) {
+    const ALL_SECTIONS: DataType[] = ["tokens", "components", "themes", "icons", "style-guide"];
+    for (const section of ALL_SECTIONS) {
       const sectionData = combined[section];
       if (sectionData !== undefined) {
         if (sectionData === null || typeof sectionData !== "object" || Array.isArray(sectionData)) {
@@ -246,7 +248,7 @@ router.post("/data", (req, res) => {
       }
     }
     if (loaded.length === 0) {
-      res.status(400).json({ error: 'design-system JSON must contain at least one of: tokens, components, themes, icons.' });
+      res.status(400).json({ error: 'design-system JSON must contain at least one of: tokens, components, themes, icons, style-guide.' });
       return;
     }
     res.json({ ok: true, type: "design-system", loaded, message: `Design system data loaded (${loaded.join(", ")}). MCP tools now reflect the new data.` });

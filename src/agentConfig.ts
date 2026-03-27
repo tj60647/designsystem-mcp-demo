@@ -8,11 +8,12 @@
  *   • routes/chat.ts and routes/agent.ts both import from one source of truth
  *   • adding or tweaking a tool definition does not require touching routing code
  *
- * Four agents:
+ * Five agents:
  *   Orchestrator       — classifies intent, delegates to a specialist
  *   Design System Reader — read-only Q&A against tokens/components/themes/icons
  *   Component Builder  — generates grounded HTML/CSS component code
  *   System Generator   — gathers brand requirements and calls generate_design_system
+ *   Style Guide        — explains design principles, color usage, typography, and composition patterns
  */
 
 // ── OpenRouter tool definitions ───────────────────────────────────────────
@@ -288,7 +289,8 @@ export const ORCHESTRATOR_SYSTEM_PROMPT =
   "You are a routing agent. Your only job is to classify the user's intent and call delegate_to_agent exactly once.\n\n" +
   'Route to "reader" for: questions, explanations, token lookups, component specs, icon search, theme info, changelog, deprecations, layout and accessibility guidance.\n' +
   'Route to "builder" for: requests to create, build, render, or code a UI component or HTML preview.\n' +
-  'Route to "generator" for: requests to create a brand-new design system, extract styles from a website, or generate from scratch.\n\n' +
+  'Route to "generator" for: requests to create a brand-new design system, extract styles from a website, or generate from scratch.\n' +
+  'Route to "style-guide" for: questions about design principles, color usage rules, typography guidelines, composition patterns, or how to correctly apply the style guide.\n\n' +
   "Always call delegate_to_agent. Never answer the user directly.";
 
 export const READER_SYSTEM_PROMPT =
@@ -329,7 +331,19 @@ export const GENERATOR_SYSTEM_PROMPT =
   "3. Once you have enough information, call generate_design_system with a comprehensive, detailed description.\n" +
   "4. After the tool returns success, briefly summarise what was generated and tell the user it is loaded and ready to explore.\n\n" +
   "IMPORTANT: Every response must be a single valid JSON object. Output ONLY the JSON.\n" +
-  'Return: {"message": "Your prose here. No emojis."}';  
+  'Return: {"message": "Your prose here. No emojis."}';
+
+export const STYLE_GUIDE_SYSTEM_PROMPT =
+  "You are a design system style guide expert. Your role is to explain design principles, color usage rules, " +
+  "typography guidelines, and composition patterns from the style guide.\n" +
+  "1. Call get_style_guide with the relevant section (principles, colorUsage, typographyUsage, compositionPatterns, or all).\n" +
+  "2. Use get_token or get_tokens to resolve exact token values when explaining color or typography guidance.\n" +
+  "3. Use check_contrast to verify or demonstrate color pairing contrast ratios referenced in the color usage rules.\n" +
+  "Answer with clear, actionable guidance grounded in the actual style guide content — never guess or invent values.\n\n" +
+  "IMPORTANT: Every response must be a single valid JSON object. Output ONLY the JSON.\n" +
+  'Return: {"message": "Your prose answer here.", "preview": "<optional rendered demo>"}\n' +
+  '  • "message": plain prose — no HTML, no code fences, no emojis. Required.\n' +
+  '  • "preview": optional raw HTML with inline styles. Include this for color pairings or typography hierarchy demos. Omit for principle or pattern descriptions.';  
 
 // ── Tool subsets per specialist agent ────────────────────────────────────
 // Each specialist only receives the tools relevant to its role.
@@ -358,6 +372,13 @@ const GENERATOR_TOOL_NAMES = new Set([
   "generate_design_system",
 ]);
 
+const STYLE_GUIDE_TOOL_NAMES = new Set([
+  "get_style_guide",
+  "get_token",
+  "get_tokens",
+  "check_contrast",
+]);
+
 function filterTools(nameSet: Set<string>) {
   return OPENROUTER_TOOLS.filter((t) => nameSet.has(t.function.name));
 }
@@ -370,13 +391,13 @@ export const DELEGATE_TOOL = {
   type: "function" as const,
   function: {
     name: "delegate_to_agent",
-    description: 'Route the conversation to a specialist. agent must be "reader", "builder", or "generator".',
+    description: 'Route the conversation to a specialist. agent must be "reader", "builder", "generator", or "style-guide".',
     parameters: {
       type: "object",
       properties: {
         agent: {
           type: "string",
-          enum: ["reader", "builder", "generator"],
+          enum: ["reader", "builder", "generator", "style-guide"],
           description: "The specialist agent to delegate to.",
         },
         reason: { type: "string", description: "One-sentence rationale for the routing decision." },
@@ -408,6 +429,11 @@ export const SPECIALIST_CONFIGS = {
     // generate_design_system, then a confirmation message — 8 iterations
     // allows that full flow without hitting the cap prematurely.
     maxIterations: 8,
+  },
+  "style-guide": {
+    systemPrompt: STYLE_GUIDE_SYSTEM_PROMPT,
+    tools: filterTools(STYLE_GUIDE_TOOL_NAMES),
+    maxIterations: 4,
   },
 } as const;
 

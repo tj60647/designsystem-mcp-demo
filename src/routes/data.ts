@@ -20,7 +20,7 @@ import { DATA_SCHEMAS } from "../schemas.js";
 
 const router = express.Router();
 
-const VALID_TYPES: DataType[] = ["tokens", "components", "themes", "icons"];
+const VALID_TYPES: DataType[] = ["tokens", "components", "themes", "icons", "style-guide"];
 
 // ── Lightweight structural validator ─────────────────────────────────────
 // Called by POST /api/validate.  Checks the shape of each data type and
@@ -282,7 +282,7 @@ router.post("/data/reset", (req, res) => {
 // Returns the JSON Schema for the given data type as a downloadable file.
 // ─────────────────────────────────────────────────────────────────────────
 router.get("/schema/:type", (req, res) => {
-  const SCHEMA_TYPES = ["tokens", "components", "themes", "icons", "design-system"];
+  const SCHEMA_TYPES = ["tokens", "components", "themes", "icons", "style-guide", "design-system"];
   const { type } = req.params;
 
   if (!SCHEMA_TYPES.includes(type)) {

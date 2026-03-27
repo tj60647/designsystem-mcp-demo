@@ -19,7 +19,7 @@ import { dirname, join } from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
 
-export type DataType = "tokens" | "components" | "themes" | "icons" | "changelog" | "deprecations";
+export type DataType = "tokens" | "components" | "themes" | "icons" | "changelog" | "deprecations" | "style-guide";
 
 function loadJson(filename: string): unknown {
   return JSON.parse(readFileSync(join(__dirname, "data", filename), "utf-8"));

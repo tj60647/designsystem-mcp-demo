@@ -316,7 +316,10 @@ async function handleSend() {
     }
   } catch (err) {
     loadingEl.remove();
-    appendMessage("error", "⚠ Network error: " + err.message);
+    const isTimeout = err.name === "AbortError";
+    appendMessage("error", "⚠ " + (isTimeout
+      ? "Request timed out. Please try again."
+      : `Network error: ${err.message || err.name || "Unknown error"}`));
   } finally {
     isLoading = false;
     sendBtn.disabled = false;

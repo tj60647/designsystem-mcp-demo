@@ -22,6 +22,22 @@
 
 ---
 
+## Introduction
+
+This demo consists of two parts that work together: a **Design System MCP server** and a **web application** that consumes it.
+
+The **Design System MCP** is a self-contained server that exposes a design system — its tokens, components, themes, and icons — as a set of queryable tools over the [Model Context Protocol](https://modelcontextprotocol.io). Because MCP is an open standard, the server is not coupled to this demo's web app. Any MCP-compatible client (Claude Desktop, Cursor, a custom agent, or any other application) can connect to it and query the design system directly.
+
+The **web application** demonstrates what becomes possible when an AI assistant has live, structured access to a design system. It provides a split-panel interface with a chat pane on the left and a live preview pane on the right, and exposes three distinct capabilities:
+
+1. **Build design-system-compliant UI via chat.** A Builder agent uses the MCP to look up component specs, token values, constraints, and accessibility rules at query time, then generates HTML with inline styles grounded in actual token values — never hard-coded colours or arbitrary spacing.
+
+2. **Dialog about the design system.** A Reader agent can answer natural-language questions about the design system the MCP represents: which tokens exist, what variants a component supports, how to achieve WCAG AA contrast, what changed between versions, and more.
+
+3. **Build new design systems via chat or a reference website.** A Generator agent guides you through a short conversational exchange to gather brand intent, then produces a complete `design-system.json` that conforms to the schema the MCP expects. Alternatively, the **Generate from Website** feature extracts visual context from any public URL — using computed CSS, custom properties, external stylesheets, and framework detection — and uses AI to generate a conforming design system automatically.
+
+---
+
 ## 1. What is a Design System MCP?
 
 The [Model Context Protocol (MCP)](https://modelcontextprotocol.io) is an open standard that lets AI systems call external **tools** — structured functions that return real data on demand. Think of it as a USB standard for giving AI access to the systems your organisation already has.

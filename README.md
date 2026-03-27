@@ -12,7 +12,7 @@
 2. [Why this matters](#2-why-this-matters)
 3. [Core concepts](#3-core-concepts)
 4. [How it works end-to-end](#4-how-it-works-end-to-end)
-5. [The 26 MCP tools — and when to use them](#5-the-26-mcp-tools--and-when-to-use-them)
+5. [The 28 MCP tools — and when to use them](#5-the-28-mcp-tools--and-when-to-use-them)
 6. [Using the demo](#6-using-the-demo)
 7. [Connecting an AI client](#7-connecting-an-ai-client)
 8. [Key design considerations](#8-key-design-considerations)
@@ -145,7 +145,7 @@ The key distinction: the AI's output is anchored to the real design system defin
 
 ---
 
-## 5. The 26 MCP tools — and when to use them
+## 5. The 28 MCP tools — and when to use them
 
 AI clients call these tools via `POST /mcp` using the JSON-RPC protocol.
 
@@ -198,6 +198,7 @@ AI clients call these tools via `POST /mcp` using the JSON-RPC protocol.
 |---|---|
 | `get_changelog` | Version history filterable by version range |
 | `get_deprecations` | Deprecations with migration paths and removal timelines |
+| `get_style_guide` | Design principles, color usage rules, typography guidance, and composition patterns |
 | `search` | Full-text search across all tokens, components, and icons |
 | `get_schema` | JSON Schema for a data file — use before loading custom JSON |
 
@@ -248,7 +249,7 @@ The Explorer reflects the live data — if you load a custom `components.json` v
 
 ### Loading a sample design system
 
-The repository ships with a sample `design-system.json` at `public/sample-design-system.json`. This is a full-featured "Verdigris" design system (green palette, Plus Jakarta Sans typography, 3 themes, 6 components, 17 icons) that you can load via the **Load JSON** button to test the full workflow with a fresh data set.
+The repository ships with a sample `design-system.json` at `public/sample-design-system.json`. This is a full-featured "Verdigris" design system (green palette, Plus Jakarta Sans typography, 3 themes, 6 components, 17 icons, and a style guide) that you can load via the **Load JSON** button to test the full workflow with a fresh data set.
 
 ### Generate from Website
 
@@ -352,7 +353,7 @@ Design your token structure so semantic tokens are the public API of the design 
 
 The MCP server is **stateless** — every request creates a fresh McpServer instance, handles the call, and tears down. This is the right choice for serverless deployments (Vercel, Netlify) and most demo use cases.
 
-However, all four data files (`tokens`, `components`, `themes`, `icons`) are held in a **shared in-memory data store** (`dataStore.ts`) that lives for the lifetime of the Node.js process. This means:
+However, all seven data files (`tokens`, `components`, `themes`, `icons`, `changelog`, `deprecations`, `style-guide`) are held in a **shared in-memory data store** (`dataStore.ts`) that lives for the lifetime of the Node.js process. This means:
 
 - MCP tool calls always reflect the most recently loaded data — if you call `POST /api/data` to replace `components.json`, the next MCP request sees the new data.
 - On Vercel (serverless), each function invocation gets its own process, so loaded data does not persist across cold starts. Use the bundled defaults or a persistent store for production.
@@ -433,7 +434,7 @@ The server starts at `http://localhost:3000` and opens the demo UI automatically
 | `GET /health` | JSON health check — server info, tools, resources, and prompts |
 | `POST /mcp` | MCP JSON-RPC endpoint for AI clients |
 | `POST /api/chat` | OpenRouter-backed agentic chat endpoint |
-| `GET /api/data/:type` | Read active data for a type (`tokens`, `components`, `themes`, `icons`) |
+| `GET /api/data/:type` | Read active data for a type (`tokens`, `components`, `themes`, `icons`, `style-guide`) |
 | `POST /api/data` | Load custom JSON for a data type |
 | `POST /api/data/reset` | Reset all (or one) data type back to bundled defaults |
 | `GET /api/schema/:type` | Download the JSON Schema for a data type |
@@ -443,7 +444,7 @@ The server starts at `http://localhost:3000` and opens the demo UI automatically
 
 ### Loading custom data at runtime
 
-The MCP server keeps the four data files in memory. You can replace any of them at runtime so that all subsequent tool calls reflect the new data. This is the mechanism the demo UI's **Load JSON** button uses.
+The MCP server keeps all seven data files in memory. You can replace any of them at runtime so that all subsequent tool calls reflect the new data. This is the mechanism the demo UI's **Load JSON** button uses.
 
 ```bash
 # Replace the components data with your own
@@ -537,10 +538,10 @@ Use the ngrok HTTPS URL as the MCP server URL in your AI client config.
 ```
 src/
   index.ts               — Express server (routes, MCP endpoint, /api/chat, /api/data)
-  mcp-server.ts          — MCP server factory; all 26 tool definitions + resources + prompts + logging
+  mcp-server.ts          — MCP server factory; all 28 tool definitions + resources + prompts + logging
   toolRunner.ts          — Local tool executor for the /api/chat agentic loop
   dataStore.ts           — Shared in-memory data store; getData/setData/resetData
-  schemas.ts             — JSON Schema definitions for each data file (tokens/components/themes/icons)
+  schemas.ts             — JSON Schema definitions for each data file (tokens/components/themes/icons/style-guide/design-system)
   generator.ts           — AI design system generator (OpenRouter); 3-retry loop with partial-fill fallback
   websiteExtractor.ts    — Multi-strategy website design context extractor (CSS, manifest, Playwright)
   playwrightExtractor.ts — Headless Chromium extractor; captures computed styles after JS runs
@@ -551,10 +552,11 @@ src/
     icons.json           — Icon metadata (34 icons, 7 categories)
     changelog.json       — Version history (v0.1.0 → v0.3.0)
     deprecations.json    — Deprecation entries with migration paths
+    style-guide.json     — Design principles, color usage rules, typography guidance, and composition patterns
 
 public/
   demo.html                  — Split-panel demo UI (Chat, Live Preview, Component Explorer tabs)
-  sample-design-system.json  — "Verdigris" sample design system (green palette, 6 components, 3 themes, 17 icons)
+  sample-design-system.json  — "Verdigris" sample design system (green palette, 6 components, 3 themes, 17 icons, style guide)
 
 figma-export.json     — Simulated Figma export (upstream data shape reference)
 scripts/

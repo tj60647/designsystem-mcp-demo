@@ -63,8 +63,8 @@ app.get("/health", (_req, res) => {
     description:
       "A queryable context layer that makes design systems machine-readable and usable by AI.",
     primitives: {
-      tools: 27,
-      resources: "14 URIs + 4 templates",
+      tools: 28,
+      resources: "12 URIs + 4 templates",
       prompts: 10,
       logging: "4 levels, 14 events",
       sampling: "5 use cases",
@@ -83,6 +83,7 @@ app.get("/health", (_req, res) => {
       "get_component_variants", "get_component_anatomy", "get_component_relationships",
       "get_layout_guidance", "get_spacing_scale",
       "get_changelog", "get_deprecations",
+      "get_style_guide",
     ],
     availableResources: [
       "design-system://tokens",
@@ -100,6 +101,7 @@ app.get("/health", (_req, res) => {
       "design-system://changelog",
       "design-system://changelog/latest",
       "design-system://deprecations",
+      "design-system://style-guide",
     ],
     availablePrompts: [
       "design-system/build-component",
@@ -117,10 +119,10 @@ app.get("/health", (_req, res) => {
       "GET /demo": "Split-panel chatbot demo UI with Component Explorer",
       "POST /api/chat": "OpenRouter-backed agentic chat with MCP tool calling",
       "GET /prompt-templates": "DEPRECATED in v0.3.0 — use MCP Prompts primitive instead. Retained for backward compatibility.",
-      "GET /api/data/:type": "Read active data for a type (tokens, components, themes, icons) — used by Component Explorer",
-      "POST /api/data": "Load custom JSON for a data type (tokens, components, themes, icons)",
+      "GET /api/data/:type": "Read active data for a type (tokens, components, themes, icons, style-guide) — used by Component Explorer",
+      "POST /api/data": "Load custom JSON for a data type (tokens, components, themes, icons, style-guide, or design-system)",
       "POST /api/data/reset": "Reset all (or one) data type back to the bundled defaults",
-      "GET /api/schema/:type": "Download the JSON Schema for a data type (tokens, components, themes, icons)",
+      "GET /api/schema/:type": "Download the JSON Schema for a data type (tokens, components, themes, icons, style-guide, design-system)",
       "POST /api/validate": "Validate custom JSON against the schema for a data type without loading it",
     },
   });

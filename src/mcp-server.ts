@@ -15,6 +15,7 @@
  *   v0.1.0 — 13 core tools (tokens, components, validation, search)
  *   v0.2.0 — +13 tools (themes, icons, a11y, component depth, layout, versioning)
  *   v0.3.0 — +1 tool (get_deprecations), Resources, Prompts, Sampling, Elicitation, Logging, Tasks (experimental)
+ *   v0.4.0 — +1 tool (get_style_guide), style-guide resource
  */
 
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -118,6 +119,13 @@ interface DeprecationEntry {
   reason: string;
   migrationPath: string;
   replacements: string[];
+}
+
+interface StyleGuideData {
+  principles:          Record<string, unknown>[];
+  colorUsage:          Record<string, unknown>;
+  typographyUsage:     Record<string, unknown>;
+  compositionPatterns: Record<string, unknown>[];
 }
 
 // ── Utilities ─────────────────────────────────────────────────────────────
@@ -367,6 +375,7 @@ export function createMcpServer(): McpServer {
   const icons        = getData("icons")        as IconsData;
   const changelog    = getData("changelog")    as ChangelogEntry[];
   const deprecations = getData("deprecations") as DeprecationEntry[];
+  const styleGuide   = getData("style-guide")  as StyleGuideData;
 
   const server = new McpServer({
     name: "design-system-mcp",
@@ -1236,6 +1245,25 @@ export function createMcpServer(): McpServer {
     }
   );
 
+  // ── TOOL: get_style_guide ─────────────────────────────────────────────
+  server.tool(
+    "get_style_guide",
+    "Retrieve design style guide content: principles, color usage rules, typography usage guidance, and composition patterns. Use 'section' to narrow the response.",
+    {
+      section: z.enum(["principles", "colorUsage", "typographyUsage", "compositionPatterns", "all"])
+        .optional()
+        .describe("Section to retrieve. Omit or use \"all\" for the complete style guide."),
+    },
+    async ({ section = "all" }, _extra) => {
+      const start = Date.now();
+      const result = section === "all" ? styleGuide : { [section]: styleGuide[section as keyof StyleGuideData] };
+      log("info", "tool.invoked", { tool: "get_style_guide", params: { section }, duration_ms: Date.now() - start });
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+      };
+    }
+  );
+
   // =======================================================================
   // RESOURCES — v0.3.0
   // Read-only reference documents that agents can pull into context.
@@ -1325,6 +1353,16 @@ export function createMcpServer(): McpServer {
     async (uri) => {
       log("info", "resource.accessed", { uri: uri.href });
       return { contents: [{ uri: uri.href, mimeType: "application/json", text: JSON.stringify(getData("deprecations"), null, 2) }] };
+    }
+  );
+
+  server.resource(
+    "style-guide",
+    "design-system://style-guide",
+    { description: "Design style guide: principles, color usage, typography usage, and composition patterns.", mimeType: "application/json" },
+    async (uri) => {
+      log("info", "resource.accessed", { uri: uri.href });
+      return { contents: [{ uri: uri.href, mimeType: "application/json", text: JSON.stringify(getData("style-guide"), null, 2) }] };
     }
   );
 

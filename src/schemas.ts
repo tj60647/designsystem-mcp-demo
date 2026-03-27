@@ -102,6 +102,39 @@ const ICONS_SCHEMA_BODY = {
   },
 };
 
+const STYLE_GUIDE_SCHEMA_BODY = {
+  description: "Style guide: design principles, color usage rules, typography usage guidelines, and composition patterns.",
+  type: "object",
+  properties: {
+    principles: {
+      type: "array",
+      description: "Design principles guiding all decisions.",
+      items: {
+        type: "object",
+        required: ["name", "description"],
+        properties: {
+          name:        { type: "string", description: "Principle name." },
+          description: { type: "string", description: "Detailed description." },
+          implication: { type: "string", description: "Practical implication for designers and developers." },
+        },
+      },
+    },
+    colorUsage: {
+      type: "object",
+      description: "Color role definitions with approved pairings, contrast ratios, and usage notes.",
+    },
+    typographyUsage: {
+      type: "object",
+      description: "Typography hierarchy, scale intent, font pairings, and line-length guidance.",
+    },
+    compositionPatterns: {
+      type: "array",
+      description: "Named composition patterns with component lists, spacing conventions, and slot definitions.",
+      items: { type: "object" },
+    },
+  },
+};
+
 export const DATA_SCHEMAS: Record<string, unknown> = {
   tokens: {
     $schema: "http://json-schema.org/draft-07/schema#",
@@ -127,19 +160,26 @@ export const DATA_SCHEMAS: Record<string, unknown> = {
     ...ICONS_SCHEMA_BODY,
   },
 
+  "style-guide": {
+    $schema: "http://json-schema.org/draft-07/schema#",
+    title: "style-guide.json",
+    ...STYLE_GUIDE_SCHEMA_BODY,
+  },
+
   "design-system": {
     $schema: "http://json-schema.org/draft-07/schema#",
     title: "design-system.json",
     description:
-      "Combined design system file. All four data sets in a single JSON object. " +
+      "Combined design system file. Core data sets plus an optional style guide in a single JSON object. " +
       "Load this instead of individual files to replace all design system data at once.",
     type: "object",
     required: ["tokens", "components", "themes", "icons"],
     properties: {
-      tokens:     TOKENS_SCHEMA_BODY,
-      components: COMPONENTS_SCHEMA_BODY,
-      themes:     THEMES_SCHEMA_BODY,
-      icons:      ICONS_SCHEMA_BODY,
+      tokens:          TOKENS_SCHEMA_BODY,
+      components:      COMPONENTS_SCHEMA_BODY,
+      themes:          THEMES_SCHEMA_BODY,
+      icons:           ICONS_SCHEMA_BODY,
+      "style-guide":   STYLE_GUIDE_SCHEMA_BODY,
     },
     additionalProperties: false,
   },

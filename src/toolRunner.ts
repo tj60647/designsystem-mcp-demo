@@ -137,6 +137,7 @@ export async function runMcpTool(name: string, args: Record<string, unknown>): P
   const themes       = getData("themes")       as ThemesData;
   const changelog    = getData("changelog")    as ChangelogEntry[];
   const deprecations = getData("deprecations") as DeprecationEntry[];
+  const styleGuide   = getData("style-guide")  as Record<string, unknown>;
 
   switch (name) {
 
@@ -504,6 +505,12 @@ export async function runMcpTool(name: string, args: Record<string, unknown>): P
       const type     = (args.type as string | undefined) ?? "all";
       const filtered = type === "all" ? deprecations : deprecations.filter(d => d.type === type);
       return JSON.stringify({ deprecations: filtered, total: filtered.length }, null, 2);
+    }
+
+    case "get_style_guide": {
+      const section = (args.section as string | undefined) ?? "all";
+      const result  = section === "all" ? styleGuide : { [section]: styleGuide[section] };
+      return JSON.stringify(result, null, 2);
     }
 
     case "generate_design_system": {

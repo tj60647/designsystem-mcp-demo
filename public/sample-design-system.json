@@ -2,170 +2,642 @@
   "tokens": {
     "color": {
       "primary": {
-        "50":  { "value": "#f0fdf4", "type": "color", "description": "Lightest primary — tinted backgrounds" },
-        "100": { "value": "#dcfce7", "type": "color", "description": "Light primary tint" },
-        "200": { "value": "#bbf7d0", "type": "color", "description": "Soft primary tint" },
-        "300": { "value": "#86efac", "type": "color", "description": "Muted primary" },
-        "400": { "value": "#4ade80", "type": "color", "description": "Mid primary" },
-        "500": { "value": "#22c55e", "type": "color", "description": "Core brand green" },
-        "600": { "value": "#16a34a", "type": "color", "description": "Primary default — buttons, links" },
-        "700": { "value": "#15803d", "type": "color", "description": "Primary pressed / hover" },
-        "800": { "value": "#166534", "type": "color", "description": "Primary dark" },
-        "900": { "value": "#14532d", "type": "color", "description": "Darkest primary" }
+        "50": {
+          "value": "#f0fdf4",
+          "type": "color",
+          "description": "Lightest primary \u2014 tinted backgrounds"
+        },
+        "100": {
+          "value": "#dcfce7",
+          "type": "color",
+          "description": "Light primary tint"
+        },
+        "200": {
+          "value": "#bbf7d0",
+          "type": "color",
+          "description": "Soft primary tint"
+        },
+        "300": {
+          "value": "#86efac",
+          "type": "color",
+          "description": "Muted primary"
+        },
+        "400": {
+          "value": "#4ade80",
+          "type": "color",
+          "description": "Mid primary"
+        },
+        "500": {
+          "value": "#22c55e",
+          "type": "color",
+          "description": "Core brand green"
+        },
+        "600": {
+          "value": "#16a34a",
+          "type": "color",
+          "description": "Primary default \u2014 buttons, links"
+        },
+        "700": {
+          "value": "#15803d",
+          "type": "color",
+          "description": "Primary pressed / hover"
+        },
+        "800": {
+          "value": "#166534",
+          "type": "color",
+          "description": "Primary dark"
+        },
+        "900": {
+          "value": "#14532d",
+          "type": "color",
+          "description": "Darkest primary"
+        }
       },
       "secondary": {
-        "50":  { "value": "#f5f3ff", "type": "color", "description": "Lightest secondary" },
-        "100": { "value": "#ede9fe", "type": "color", "description": "Light secondary tint" },
-        "300": { "value": "#c4b5fd", "type": "color", "description": "Muted secondary" },
-        "500": { "value": "#8b5cf6", "type": "color", "description": "Core violet" },
-        "600": { "value": "#7c3aed", "type": "color", "description": "Secondary default" },
-        "700": { "value": "#6d28d9", "type": "color", "description": "Secondary pressed" },
-        "900": { "value": "#4c1d95", "type": "color", "description": "Darkest secondary" }
+        "50": {
+          "value": "#f5f3ff",
+          "type": "color",
+          "description": "Lightest secondary"
+        },
+        "100": {
+          "value": "#ede9fe",
+          "type": "color",
+          "description": "Light secondary tint"
+        },
+        "300": {
+          "value": "#c4b5fd",
+          "type": "color",
+          "description": "Muted secondary"
+        },
+        "500": {
+          "value": "#8b5cf6",
+          "type": "color",
+          "description": "Core violet"
+        },
+        "600": {
+          "value": "#7c3aed",
+          "type": "color",
+          "description": "Secondary default"
+        },
+        "700": {
+          "value": "#6d28d9",
+          "type": "color",
+          "description": "Secondary pressed"
+        },
+        "900": {
+          "value": "#4c1d95",
+          "type": "color",
+          "description": "Darkest secondary"
+        }
       },
       "neutral": {
-        "0":   { "value": "#ffffff", "type": "color", "description": "White" },
-        "50":  { "value": "#f8fafc", "type": "color", "description": "Page background" },
-        "100": { "value": "#f1f5f9", "type": "color", "description": "Subtle surface" },
-        "200": { "value": "#e2e8f0", "type": "color", "description": "Default border" },
-        "300": { "value": "#cbd5e1", "type": "color", "description": "Muted border" },
-        "400": { "value": "#94a3b8", "type": "color", "description": "Placeholder text" },
-        "500": { "value": "#64748b", "type": "color", "description": "Secondary text" },
-        "600": { "value": "#475569", "type": "color", "description": "Body text" },
-        "700": { "value": "#334155", "type": "color", "description": "Primary text" },
-        "800": { "value": "#1e293b", "type": "color", "description": "Strong text" },
-        "900": { "value": "#0f172a", "type": "color", "description": "Heading text" },
-        "950": { "value": "#020617", "type": "color", "description": "Near black" }
+        "0": {
+          "value": "#ffffff",
+          "type": "color",
+          "description": "White"
+        },
+        "50": {
+          "value": "#f8fafc",
+          "type": "color",
+          "description": "Page background"
+        },
+        "100": {
+          "value": "#f1f5f9",
+          "type": "color",
+          "description": "Subtle surface"
+        },
+        "200": {
+          "value": "#e2e8f0",
+          "type": "color",
+          "description": "Default border"
+        },
+        "300": {
+          "value": "#cbd5e1",
+          "type": "color",
+          "description": "Muted border"
+        },
+        "400": {
+          "value": "#94a3b8",
+          "type": "color",
+          "description": "Placeholder text"
+        },
+        "500": {
+          "value": "#64748b",
+          "type": "color",
+          "description": "Secondary text"
+        },
+        "600": {
+          "value": "#475569",
+          "type": "color",
+          "description": "Body text"
+        },
+        "700": {
+          "value": "#334155",
+          "type": "color",
+          "description": "Primary text"
+        },
+        "800": {
+          "value": "#1e293b",
+          "type": "color",
+          "description": "Strong text"
+        },
+        "900": {
+          "value": "#0f172a",
+          "type": "color",
+          "description": "Heading text"
+        },
+        "950": {
+          "value": "#020617",
+          "type": "color",
+          "description": "Near black"
+        }
       },
       "success": {
-        "light":   { "value": "#dcfce7", "type": "color", "description": "Success background" },
-        "default": { "value": "#22c55e", "type": "color", "description": "Success default" },
-        "dark":    { "value": "#15803d", "type": "color", "description": "Success dark" }
+        "light": {
+          "value": "#dcfce7",
+          "type": "color",
+          "description": "Success background"
+        },
+        "default": {
+          "value": "#22c55e",
+          "type": "color",
+          "description": "Success default"
+        },
+        "dark": {
+          "value": "#15803d",
+          "type": "color",
+          "description": "Success dark"
+        }
       },
       "warning": {
-        "light":   { "value": "#fef9c3", "type": "color", "description": "Warning background" },
-        "default": { "value": "#eab308", "type": "color", "description": "Warning default" },
-        "dark":    { "value": "#854d0e", "type": "color", "description": "Warning dark" }
+        "light": {
+          "value": "#fef9c3",
+          "type": "color",
+          "description": "Warning background"
+        },
+        "default": {
+          "value": "#eab308",
+          "type": "color",
+          "description": "Warning default"
+        },
+        "dark": {
+          "value": "#854d0e",
+          "type": "color",
+          "description": "Warning dark"
+        }
       },
       "error": {
-        "light":   { "value": "#fee2e2", "type": "color", "description": "Error background" },
-        "default": { "value": "#ef4444", "type": "color", "description": "Error default" },
-        "dark":    { "value": "#991b1b", "type": "color", "description": "Error dark" }
+        "light": {
+          "value": "#fee2e2",
+          "type": "color",
+          "description": "Error background"
+        },
+        "default": {
+          "value": "#ef4444",
+          "type": "color",
+          "description": "Error default"
+        },
+        "dark": {
+          "value": "#991b1b",
+          "type": "color",
+          "description": "Error dark"
+        }
       },
       "semantic": {
         "action": {
-          "primary":      { "value": "{color.primary.600}", "type": "color", "resolvedValue": "#16a34a", "description": "Primary action color" },
-          "primaryHover": { "value": "{color.primary.700}", "type": "color", "resolvedValue": "#15803d", "description": "Primary action hover" }
+          "primary": {
+            "value": "{color.primary.600}",
+            "type": "color",
+            "resolvedValue": "#16a34a",
+            "description": "Primary action color"
+          },
+          "primaryHover": {
+            "value": "{color.primary.700}",
+            "type": "color",
+            "resolvedValue": "#15803d",
+            "description": "Primary action hover"
+          }
         },
-        "background": { "value": "{color.neutral.0}", "type": "color", "resolvedValue": "#ffffff", "description": "Default page background" },
-        "surface":    { "value": "{color.neutral.50}", "type": "color", "resolvedValue": "#f8fafc", "description": "Card / panel surface" },
-        "border":     { "value": "{color.neutral.200}", "type": "color", "resolvedValue": "#e2e8f0", "description": "Default border color" },
+        "background": {
+          "value": "{color.neutral.0}",
+          "type": "color",
+          "resolvedValue": "#ffffff",
+          "description": "Default page background"
+        },
+        "surface": {
+          "value": "{color.neutral.50}",
+          "type": "color",
+          "resolvedValue": "#f8fafc",
+          "description": "Card / panel surface"
+        },
+        "border": {
+          "value": "{color.neutral.200}",
+          "type": "color",
+          "resolvedValue": "#e2e8f0",
+          "description": "Default border color"
+        },
         "text": {
-          "primary":   { "value": "{color.neutral.900}", "type": "color", "resolvedValue": "#0f172a", "description": "Primary text" },
-          "secondary": { "value": "{color.neutral.600}", "type": "color", "resolvedValue": "#475569", "description": "Secondary / muted text" },
-          "disabled":  { "value": "{color.neutral.400}", "type": "color", "resolvedValue": "#94a3b8", "description": "Disabled text" }
+          "primary": {
+            "value": "{color.neutral.900}",
+            "type": "color",
+            "resolvedValue": "#0f172a",
+            "description": "Primary text"
+          },
+          "secondary": {
+            "value": "{color.neutral.600}",
+            "type": "color",
+            "resolvedValue": "#475569",
+            "description": "Secondary / muted text"
+          },
+          "disabled": {
+            "value": "{color.neutral.400}",
+            "type": "color",
+            "resolvedValue": "#94a3b8",
+            "description": "Disabled text"
+          }
         }
       }
     },
     "typography": {
       "fontFamily": {
-        "sans": { "value": "Plus Jakarta Sans, system-ui, -apple-system, sans-serif", "type": "fontFamily", "description": "Primary sans-serif stack" },
-        "mono": { "value": "JetBrains Mono, Fira Code, monospace", "type": "fontFamily", "description": "Monospace stack for code" }
+        "sans": {
+          "value": "Plus Jakarta Sans, system-ui, -apple-system, sans-serif",
+          "type": "fontFamily",
+          "description": "Primary sans-serif stack"
+        },
+        "mono": {
+          "value": "JetBrains Mono, Fira Code, monospace",
+          "type": "fontFamily",
+          "description": "Monospace stack for code"
+        }
       },
       "fontSize": {
-        "xs":   { "value": "0.75rem",  "type": "dimension", "description": "12px — captions, labels" },
-        "sm":   { "value": "0.875rem", "type": "dimension", "description": "14px — small body, metadata" },
-        "base": { "value": "1rem",     "type": "dimension", "description": "16px — default body" },
-        "lg":   { "value": "1.125rem", "type": "dimension", "description": "18px — large body, subheadings" },
-        "xl":   { "value": "1.25rem",  "type": "dimension", "description": "20px — small headings" },
-        "2xl":  { "value": "1.5rem",   "type": "dimension", "description": "24px — section headings" },
-        "3xl":  { "value": "1.875rem", "type": "dimension", "description": "30px — page headings" },
-        "4xl":  { "value": "2.25rem",  "type": "dimension", "description": "36px — display headings" }
+        "xs": {
+          "value": "0.75rem",
+          "type": "dimension",
+          "description": "12px \u2014 captions, labels"
+        },
+        "sm": {
+          "value": "0.875rem",
+          "type": "dimension",
+          "description": "14px \u2014 small body, metadata"
+        },
+        "base": {
+          "value": "1rem",
+          "type": "dimension",
+          "description": "16px \u2014 default body"
+        },
+        "lg": {
+          "value": "1.125rem",
+          "type": "dimension",
+          "description": "18px \u2014 large body, subheadings"
+        },
+        "xl": {
+          "value": "1.25rem",
+          "type": "dimension",
+          "description": "20px \u2014 small headings"
+        },
+        "2xl": {
+          "value": "1.5rem",
+          "type": "dimension",
+          "description": "24px \u2014 section headings"
+        },
+        "3xl": {
+          "value": "1.875rem",
+          "type": "dimension",
+          "description": "30px \u2014 page headings"
+        },
+        "4xl": {
+          "value": "2.25rem",
+          "type": "dimension",
+          "description": "36px \u2014 display headings"
+        }
       },
       "fontWeight": {
-        "regular":   { "value": "400", "type": "fontWeight", "description": "Normal body text" },
-        "medium":    { "value": "500", "type": "fontWeight", "description": "Slightly emphasised text" },
-        "semibold":  { "value": "600", "type": "fontWeight", "description": "Labels and subheadings" },
-        "bold":      { "value": "700", "type": "fontWeight", "description": "Strong emphasis and headings" }
+        "regular": {
+          "value": "400",
+          "type": "fontWeight",
+          "description": "Normal body text"
+        },
+        "medium": {
+          "value": "500",
+          "type": "fontWeight",
+          "description": "Slightly emphasised text"
+        },
+        "semibold": {
+          "value": "600",
+          "type": "fontWeight",
+          "description": "Labels and subheadings"
+        },
+        "bold": {
+          "value": "700",
+          "type": "fontWeight",
+          "description": "Strong emphasis and headings"
+        }
       },
       "lineHeight": {
-        "tight":  { "value": "1.25", "type": "number", "description": "Compact headings" },
-        "snug":   { "value": "1.375", "type": "number", "description": "Dense body text" },
-        "normal": { "value": "1.5",   "type": "number", "description": "Default body line height" },
-        "relaxed": { "value": "1.625", "type": "number", "description": "Readable long-form text" }
+        "tight": {
+          "value": "1.25",
+          "type": "number",
+          "description": "Compact headings"
+        },
+        "snug": {
+          "value": "1.375",
+          "type": "number",
+          "description": "Dense body text"
+        },
+        "normal": {
+          "value": "1.5",
+          "type": "number",
+          "description": "Default body line height"
+        },
+        "relaxed": {
+          "value": "1.625",
+          "type": "number",
+          "description": "Readable long-form text"
+        }
       }
     },
     "spacing": {
-      "0":  { "value": "0px",   "type": "dimension", "description": "No spacing" },
-      "1":  { "value": "4px",   "type": "dimension", "description": "Extra-tight spacing" },
-      "2":  { "value": "8px",   "type": "dimension", "description": "Tight spacing" },
-      "3":  { "value": "12px",  "type": "dimension", "description": "Compact spacing" },
-      "4":  { "value": "16px",  "type": "dimension", "description": "Default element spacing" },
-      "5":  { "value": "20px",  "type": "dimension", "description": "Comfortable spacing" },
-      "6":  { "value": "24px",  "type": "dimension", "description": "Section spacing" },
-      "8":  { "value": "32px",  "type": "dimension", "description": "Large spacing" },
-      "10": { "value": "40px",  "type": "dimension", "description": "XL spacing" },
-      "12": { "value": "48px",  "type": "dimension", "description": "2XL spacing" },
-      "16": { "value": "64px",  "type": "dimension", "description": "3XL / section gap" },
-      "20": { "value": "80px",  "type": "dimension", "description": "Page-section padding" }
+      "0": {
+        "value": "0px",
+        "type": "dimension",
+        "description": "No spacing"
+      },
+      "1": {
+        "value": "4px",
+        "type": "dimension",
+        "description": "Extra-tight spacing"
+      },
+      "2": {
+        "value": "8px",
+        "type": "dimension",
+        "description": "Tight spacing"
+      },
+      "3": {
+        "value": "12px",
+        "type": "dimension",
+        "description": "Compact spacing"
+      },
+      "4": {
+        "value": "16px",
+        "type": "dimension",
+        "description": "Default element spacing"
+      },
+      "5": {
+        "value": "20px",
+        "type": "dimension",
+        "description": "Comfortable spacing"
+      },
+      "6": {
+        "value": "24px",
+        "type": "dimension",
+        "description": "Section spacing"
+      },
+      "8": {
+        "value": "32px",
+        "type": "dimension",
+        "description": "Large spacing"
+      },
+      "10": {
+        "value": "40px",
+        "type": "dimension",
+        "description": "XL spacing"
+      },
+      "12": {
+        "value": "48px",
+        "type": "dimension",
+        "description": "2XL spacing"
+      },
+      "16": {
+        "value": "64px",
+        "type": "dimension",
+        "description": "3XL / section gap"
+      },
+      "20": {
+        "value": "80px",
+        "type": "dimension",
+        "description": "Page-section padding"
+      }
     },
     "borderRadius": {
-      "none": { "value": "0px",    "type": "dimension", "description": "No rounding" },
-      "sm":   { "value": "4px",    "type": "dimension", "description": "Slight rounding for inputs" },
-      "md":   { "value": "8px",    "type": "dimension", "description": "Default card / button radius" },
-      "lg":   { "value": "12px",   "type": "dimension", "description": "Larger surfaces" },
-      "xl":   { "value": "16px",   "type": "dimension", "description": "Modals, dialogs" },
-      "2xl":  { "value": "24px",   "type": "dimension", "description": "Pill / large-radius cards" },
-      "full": { "value": "9999px", "type": "dimension", "description": "Pill / fully-rounded badges" }
+      "none": {
+        "value": "0px",
+        "type": "dimension",
+        "description": "No rounding"
+      },
+      "sm": {
+        "value": "4px",
+        "type": "dimension",
+        "description": "Slight rounding for inputs"
+      },
+      "md": {
+        "value": "8px",
+        "type": "dimension",
+        "description": "Default card / button radius"
+      },
+      "lg": {
+        "value": "12px",
+        "type": "dimension",
+        "description": "Larger surfaces"
+      },
+      "xl": {
+        "value": "16px",
+        "type": "dimension",
+        "description": "Modals, dialogs"
+      },
+      "2xl": {
+        "value": "24px",
+        "type": "dimension",
+        "description": "Pill / large-radius cards"
+      },
+      "full": {
+        "value": "9999px",
+        "type": "dimension",
+        "description": "Pill / fully-rounded badges"
+      }
     },
     "shadow": {
-      "none": { "value": "none",                                                                          "type": "shadow", "description": "No shadow" },
-      "xs":   { "value": "0 1px 2px 0 rgba(0,0,0,0.05)",                                                 "type": "shadow", "description": "Hairline shadow" },
-      "sm":   { "value": "0 1px 3px 0 rgba(0,0,0,0.10), 0 1px 2px -1px rgba(0,0,0,0.10)",               "type": "shadow", "description": "Subtle card shadow" },
-      "md":   { "value": "0 4px 6px -1px rgba(0,0,0,0.10), 0 2px 4px -2px rgba(0,0,0,0.10)",            "type": "shadow", "description": "Default shadow" },
-      "lg":   { "value": "0 10px 15px -3px rgba(0,0,0,0.10), 0 4px 6px -4px rgba(0,0,0,0.10)",          "type": "shadow", "description": "Elevated surfaces" },
-      "xl":   { "value": "0 20px 25px -5px rgba(0,0,0,0.10), 0 8px 10px -6px rgba(0,0,0,0.10)",         "type": "shadow", "description": "Floating menus / popovers" },
-      "2xl":  { "value": "0 25px 50px -12px rgba(0,0,0,0.25)",                                           "type": "shadow", "description": "Modals / dialogs" }
+      "none": {
+        "value": "none",
+        "type": "shadow",
+        "description": "No shadow"
+      },
+      "xs": {
+        "value": "0 1px 2px 0 rgba(0,0,0,0.05)",
+        "type": "shadow",
+        "description": "Hairline shadow"
+      },
+      "sm": {
+        "value": "0 1px 3px 0 rgba(0,0,0,0.10), 0 1px 2px -1px rgba(0,0,0,0.10)",
+        "type": "shadow",
+        "description": "Subtle card shadow"
+      },
+      "md": {
+        "value": "0 4px 6px -1px rgba(0,0,0,0.10), 0 2px 4px -2px rgba(0,0,0,0.10)",
+        "type": "shadow",
+        "description": "Default shadow"
+      },
+      "lg": {
+        "value": "0 10px 15px -3px rgba(0,0,0,0.10), 0 4px 6px -4px rgba(0,0,0,0.10)",
+        "type": "shadow",
+        "description": "Elevated surfaces"
+      },
+      "xl": {
+        "value": "0 20px 25px -5px rgba(0,0,0,0.10), 0 8px 10px -6px rgba(0,0,0,0.10)",
+        "type": "shadow",
+        "description": "Floating menus / popovers"
+      },
+      "2xl": {
+        "value": "0 25px 50px -12px rgba(0,0,0,0.25)",
+        "type": "shadow",
+        "description": "Modals / dialogs"
+      }
     },
     "motion": {
       "duration": {
-        "instant": { "value": "0ms",   "type": "duration", "description": "No animation" },
-        "fast":    { "value": "100ms", "type": "duration", "description": "Micro-interactions" },
-        "base":    { "value": "150ms", "type": "duration", "description": "Default transitions" },
-        "slow":    { "value": "250ms", "type": "duration", "description": "Entrances and exits" },
-        "slower":  { "value": "400ms", "type": "duration", "description": "Complex layout transitions" }
+        "instant": {
+          "value": "0ms",
+          "type": "duration",
+          "description": "No animation"
+        },
+        "fast": {
+          "value": "100ms",
+          "type": "duration",
+          "description": "Micro-interactions"
+        },
+        "base": {
+          "value": "150ms",
+          "type": "duration",
+          "description": "Default transitions"
+        },
+        "slow": {
+          "value": "250ms",
+          "type": "duration",
+          "description": "Entrances and exits"
+        },
+        "slower": {
+          "value": "400ms",
+          "type": "duration",
+          "description": "Complex layout transitions"
+        }
       },
       "easing": {
-        "linear":      { "value": "linear",                    "type": "cubicBezier", "description": "Uniform motion" },
-        "easeIn":      { "value": "cubic-bezier(0.4,0,1,1)",   "type": "cubicBezier", "description": "Accelerate" },
-        "easeOut":     { "value": "cubic-bezier(0,0,0.2,1)",   "type": "cubicBezier", "description": "Decelerate (default exits)" },
-        "easeInOut":   { "value": "cubic-bezier(0.4,0,0.2,1)", "type": "cubicBezier", "description": "Standard transitions" },
-        "spring":      { "value": "cubic-bezier(0.34,1.56,0.64,1)", "type": "cubicBezier", "description": "Bouncy spring effect" }
+        "linear": {
+          "value": "linear",
+          "type": "cubicBezier",
+          "description": "Uniform motion"
+        },
+        "easeIn": {
+          "value": "cubic-bezier(0.4,0,1,1)",
+          "type": "cubicBezier",
+          "description": "Accelerate"
+        },
+        "easeOut": {
+          "value": "cubic-bezier(0,0,0.2,1)",
+          "type": "cubicBezier",
+          "description": "Decelerate (default exits)"
+        },
+        "easeInOut": {
+          "value": "cubic-bezier(0.4,0,0.2,1)",
+          "type": "cubicBezier",
+          "description": "Standard transitions"
+        },
+        "spring": {
+          "value": "cubic-bezier(0.34,1.56,0.64,1)",
+          "type": "cubicBezier",
+          "description": "Bouncy spring effect"
+        }
       }
     },
     "layout": {
       "breakpoints": {
-        "sm":  { "value": "640px",  "type": "dimension", "description": "Small — mobile landscape" },
-        "md":  { "value": "768px",  "type": "dimension", "description": "Medium — tablet" },
-        "lg":  { "value": "1024px", "type": "dimension", "description": "Large — small desktop" },
-        "xl":  { "value": "1280px", "type": "dimension", "description": "XL — desktop" },
-        "2xl": { "value": "1536px", "type": "dimension", "description": "2XL — wide desktop" }
+        "sm": {
+          "value": "640px",
+          "type": "dimension",
+          "description": "Small \u2014 mobile landscape"
+        },
+        "md": {
+          "value": "768px",
+          "type": "dimension",
+          "description": "Medium \u2014 tablet"
+        },
+        "lg": {
+          "value": "1024px",
+          "type": "dimension",
+          "description": "Large \u2014 small desktop"
+        },
+        "xl": {
+          "value": "1280px",
+          "type": "dimension",
+          "description": "XL \u2014 desktop"
+        },
+        "2xl": {
+          "value": "1536px",
+          "type": "dimension",
+          "description": "2XL \u2014 wide desktop"
+        }
       },
       "grid": {
-        "columns":    { "value": "12",    "type": "number", "description": "12-column grid system" },
-        "gutter":     { "value": "24px",  "type": "dimension", "description": "Default column gutter" },
-        "margin":     { "value": "16px",  "type": "dimension", "description": "Page edge margin (mobile)" },
-        "marginLg":   { "value": "32px",  "type": "dimension", "description": "Page edge margin (desktop)" }
+        "columns": {
+          "value": "12",
+          "type": "number",
+          "description": "12-column grid system"
+        },
+        "gutter": {
+          "value": "24px",
+          "type": "dimension",
+          "description": "Default column gutter"
+        },
+        "margin": {
+          "value": "16px",
+          "type": "dimension",
+          "description": "Page edge margin (mobile)"
+        },
+        "marginLg": {
+          "value": "32px",
+          "type": "dimension",
+          "description": "Page edge margin (desktop)"
+        }
       },
       "container": {
-        "maxWidth": { "value": "1280px", "type": "dimension", "description": "Content container max-width" }
+        "maxWidth": {
+          "value": "1280px",
+          "type": "dimension",
+          "description": "Content container max-width"
+        }
       },
       "zIndex": {
-        "base":    { "value": "0",    "type": "number", "description": "Default stacking context" },
-        "raised":  { "value": "10",   "type": "number", "description": "Slightly elevated" },
-        "dropdown": { "value": "100", "type": "number", "description": "Dropdown menus" },
-        "sticky":  { "value": "200",  "type": "number", "description": "Sticky headers" },
-        "modal":   { "value": "300",  "type": "number", "description": "Modal overlays" },
-        "toast":   { "value": "400",  "type": "number", "description": "Toast notifications" }
+        "base": {
+          "value": "0",
+          "type": "number",
+          "description": "Default stacking context"
+        },
+        "raised": {
+          "value": "10",
+          "type": "number",
+          "description": "Slightly elevated"
+        },
+        "dropdown": {
+          "value": "100",
+          "type": "number",
+          "description": "Dropdown menus"
+        },
+        "sticky": {
+          "value": "200",
+          "type": "number",
+          "description": "Sticky headers"
+        },
+        "modal": {
+          "value": "300",
+          "type": "number",
+          "description": "Modal overlays"
+        },
+        "toast": {
+          "value": "400",
+          "type": "number",
+          "description": "Toast notifications"
+        }
       }
     }
   },
@@ -173,47 +645,94 @@
     "button": {
       "name": "Button",
       "description": "Primary interactive element for triggering actions. Use for form submissions, confirmations, and navigation.",
-      "variants": ["primary", "secondary", "outline", "ghost", "destructive"],
-      "sizes": ["sm", "md", "lg"],
-      "states": ["default", "hover", "active", "focus", "disabled", "loading"],
+      "variants": [
+        "primary",
+        "secondary",
+        "outline",
+        "ghost",
+        "destructive"
+      ],
+      "sizes": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "active",
+        "focus",
+        "disabled",
+        "loading"
+      ],
       "props": {
         "variant": {
           "type": "enum",
-          "values": ["primary", "secondary", "outline", "ghost", "destructive"],
+          "values": [
+            "primary",
+            "secondary",
+            "outline",
+            "ghost",
+            "destructive"
+          ],
           "default": "primary",
           "description": "Visual style of the button"
         },
         "size": {
           "type": "enum",
-          "values": ["sm", "md", "lg"],
+          "values": [
+            "sm",
+            "md",
+            "lg"
+          ],
           "default": "md"
         },
-        "disabled": { "type": "boolean", "default": false },
-        "loading":  { "type": "boolean", "default": false, "description": "Shows a loading spinner and prevents interaction" },
-        "fullWidth": { "type": "boolean", "default": false },
-        "leftIcon":  { "type": "ReactNode", "optional": true },
-        "rightIcon": { "type": "ReactNode", "optional": true },
-        "children":  { "type": "ReactNode", "required": true, "description": "Button label or content" }
+        "disabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "loading": {
+          "type": "boolean",
+          "default": false,
+          "description": "Shows a loading spinner and prevents interaction"
+        },
+        "fullWidth": {
+          "type": "boolean",
+          "default": false
+        },
+        "leftIcon": {
+          "type": "ReactNode",
+          "optional": true
+        },
+        "rightIcon": {
+          "type": "ReactNode",
+          "optional": true
+        },
+        "children": {
+          "type": "ReactNode",
+          "required": true,
+          "description": "Button label or content"
+        }
       },
       "tokens": {
         "background": {
-          "primary":            "{color.primary.600}",
-          "primary-hover":      "{color.primary.700}",
-          "secondary":          "{color.neutral.100}",
-          "secondary-hover":    "{color.neutral.200}",
-          "outline":            "transparent",
-          "ghost":              "transparent",
-          "ghost-hover":        "{color.neutral.100}",
-          "destructive":        "{color.error.default}",
-          "disabled":           "{color.neutral.100}"
+          "primary": "{color.primary.600}",
+          "primary-hover": "{color.primary.700}",
+          "secondary": "{color.neutral.100}",
+          "secondary-hover": "{color.neutral.200}",
+          "outline": "transparent",
+          "ghost": "transparent",
+          "ghost-hover": "{color.neutral.100}",
+          "destructive": "{color.error.default}",
+          "disabled": "{color.neutral.100}"
         },
         "text": {
-          "primary":    "{color.neutral.0}",
-          "secondary":  "{color.neutral.900}",
-          "outline":    "{color.primary.600}",
-          "ghost":      "{color.neutral.700}",
+          "primary": "{color.neutral.0}",
+          "secondary": "{color.neutral.900}",
+          "outline": "{color.primary.600}",
+          "ghost": "{color.neutral.700}",
           "destructive": "{color.neutral.0}",
-          "disabled":   "{color.neutral.400}"
+          "disabled": "{color.neutral.400}"
         },
         "padding": {
           "sm": "{spacing.2} {spacing.3}",
@@ -229,7 +748,7 @@
         "focusRing": "{color.primary.500}"
       },
       "constraints": [
-        "Button label must be concise — 1–4 words. Use tooltips for additional context.",
+        "Button label must be concise \u2014 1\u20134 words. Use tooltips for additional context.",
         "Destructive buttons must be separated from non-destructive actions by at least 8px.",
         "Loading state must disable interaction and show a spinner.",
         "Icon-only buttons must include an aria-label.",
@@ -238,8 +757,15 @@
       ],
       "accessibility": {
         "role": "button",
-        "keyboardSupport": ["Enter — activate", "Space — activate"],
-        "ariaAttributes": ["aria-disabled when disabled", "aria-busy when loading", "aria-label for icon-only buttons"],
+        "keyboardSupport": [
+          "Enter \u2014 activate",
+          "Space \u2014 activate"
+        ],
+        "ariaAttributes": [
+          "aria-disabled when disabled",
+          "aria-busy when loading",
+          "aria-label for icon-only buttons"
+        ],
         "focusManagement": "Must be included in the natural tab order. Focus ring must meet 3:1 contrast ratio."
       },
       "anatomy": {
@@ -250,18 +776,32 @@
           "rightIcon": "Optional trailing icon",
           "spinner": "Visible only when loading=true"
         },
-        "validChildren": ["Icon", "text"],
+        "validChildren": [
+          "Icon",
+          "text"
+        ],
         "compositionNotes": "Icon size should match text size. Use the Icon component for leftIcon and rightIcon slots."
       },
       "relationships": {
-        "parent": ["Form", "Toolbar", "ButtonGroup"],
-        "siblings": ["IconButton", "LinkButton"],
-        "relatedComponents": ["IconButton", "LinkButton", "Fab"]
+        "parent": [
+          "Form",
+          "Toolbar",
+          "ButtonGroup"
+        ],
+        "siblings": [
+          "IconButton",
+          "LinkButton"
+        ],
+        "relatedComponents": [
+          "IconButton",
+          "LinkButton",
+          "Fab"
+        ]
       },
       "variantGuidance": {
         "primary": "Default action. One per context.",
         "secondary": "Alternative or less prominent actions alongside a primary.",
-        "outline": "Bordered but low-fill — good for secondary actions in white backgrounds.",
+        "outline": "Bordered but low-fill \u2014 good for secondary actions in white backgrounds.",
         "ghost": "Tertiary actions, toolbars. No background until hover.",
         "destructive": "Irreversible actions (delete, revoke). Separate visually from other actions."
       }
@@ -269,44 +809,104 @@
     "input": {
       "name": "Input",
       "description": "Single-line text field for capturing user input. Supports validation states, icons, and prefix/suffix slots.",
-      "variants": ["default", "filled"],
-      "sizes": ["sm", "md", "lg"],
-      "states": ["default", "focus", "error", "success", "disabled", "readonly"],
+      "variants": [
+        "default",
+        "filled"
+      ],
+      "sizes": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "states": [
+        "default",
+        "focus",
+        "error",
+        "success",
+        "disabled",
+        "readonly"
+      ],
       "props": {
-        "type":        { "type": "string", "default": "text", "description": "HTML input type" },
-        "label":       { "type": "string", "required": true, "description": "Visible label text" },
-        "placeholder": { "type": "string", "optional": true },
-        "helperText":  { "type": "string", "optional": true, "description": "Hint text below the input" },
-        "errorMessage": { "type": "string", "optional": true, "description": "Error message (shown when invalid)" },
-        "size":        { "type": "enum", "values": ["sm", "md", "lg"], "default": "md" },
-        "disabled":    { "type": "boolean", "default": false },
-        "readonly":    { "type": "boolean", "default": false },
-        "required":    { "type": "boolean", "default": false },
-        "leadingIcon": { "type": "ReactNode", "optional": true },
-        "trailingIcon": { "type": "ReactNode", "optional": true }
+        "type": {
+          "type": "string",
+          "default": "text",
+          "description": "HTML input type"
+        },
+        "label": {
+          "type": "string",
+          "required": true,
+          "description": "Visible label text"
+        },
+        "placeholder": {
+          "type": "string",
+          "optional": true
+        },
+        "helperText": {
+          "type": "string",
+          "optional": true,
+          "description": "Hint text below the input"
+        },
+        "errorMessage": {
+          "type": "string",
+          "optional": true,
+          "description": "Error message (shown when invalid)"
+        },
+        "size": {
+          "type": "enum",
+          "values": [
+            "sm",
+            "md",
+            "lg"
+          ],
+          "default": "md"
+        },
+        "disabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "readonly": {
+          "type": "boolean",
+          "default": false
+        },
+        "required": {
+          "type": "boolean",
+          "default": false
+        },
+        "leadingIcon": {
+          "type": "ReactNode",
+          "optional": true
+        },
+        "trailingIcon": {
+          "type": "ReactNode",
+          "optional": true
+        }
       },
       "tokens": {
-        "border":          "{color.neutral.300}",
-        "borderFocus":     "{color.primary.500}",
-        "borderError":     "{color.error.default}",
-        "background":      "{color.neutral.0}",
+        "border": "{color.neutral.300}",
+        "borderFocus": "{color.primary.500}",
+        "borderError": "{color.error.default}",
+        "background": "{color.neutral.0}",
         "backgroundFilled": "{color.neutral.100}",
-        "text":            "{color.neutral.900}",
-        "placeholder":     "{color.neutral.400}",
-        "label":           "{color.neutral.700}",
-        "helperText":      "{color.neutral.500}",
-        "errorText":       "{color.error.default}",
-        "borderRadius":    "{borderRadius.sm}"
+        "text": "{color.neutral.900}",
+        "placeholder": "{color.neutral.400}",
+        "label": "{color.neutral.700}",
+        "helperText": "{color.neutral.500}",
+        "errorText": "{color.error.default}",
+        "borderRadius": "{borderRadius.sm}"
       },
       "constraints": [
-        "Every input must have an associated label — either visible or via aria-label.",
+        "Every input must have an associated label \u2014 either visible or via aria-label.",
         "Error messages must describe what went wrong and how to fix it.",
         "Do not rely solely on color to communicate validation state.",
         "Passwords must use type='password'."
       ],
       "accessibility": {
         "role": "textbox",
-        "ariaAttributes": ["aria-invalid when in error state", "aria-describedby for helperText and errorMessage", "aria-required when required"],
+        "ariaAttributes": [
+          "aria-invalid when in error state",
+          "aria-describedby for helperText and errorMessage",
+          "aria-required when required"
+        ],
         "labelAssociation": "Label must be linked via htmlFor/id or aria-labelledby."
       },
       "anatomy": {
@@ -319,29 +919,79 @@
           "helperText": "Supporting text below the field",
           "errorMessage": "Error text (replaces helperText when invalid)"
         },
-        "validChildren": ["Icon", "text", "input[native]"],
+        "validChildren": [
+          "Icon",
+          "text",
+          "input[native]"
+        ],
         "compositionNotes": "Always wrap in a label or connect via htmlFor. Do not nest inputs."
       },
       "relationships": {
-        "parent": ["Form", "FilterBar"],
-        "siblings": ["Textarea", "Select"],
-        "relatedComponents": ["Textarea", "Select", "Autocomplete", "Combobox"]
+        "parent": [
+          "Form",
+          "FilterBar"
+        ],
+        "siblings": [
+          "Textarea",
+          "Select"
+        ],
+        "relatedComponents": [
+          "Textarea",
+          "Select",
+          "Autocomplete",
+          "Combobox"
+        ]
       },
       "variantGuidance": {
-        "default": "Outlined border on white backgrounds — general forms.",
-        "filled": "Light background fill — use on coloured page backgrounds."
+        "default": "Outlined border on white backgrounds \u2014 general forms.",
+        "filled": "Light background fill \u2014 use on coloured page backgrounds."
       }
     },
     "badge": {
       "name": "Badge",
       "description": "Small status indicator or label for categorising or highlighting content. Non-interactive.",
-      "variants": ["neutral", "primary", "success", "warning", "error", "info"],
-      "sizes": ["sm", "md"],
+      "variants": [
+        "neutral",
+        "primary",
+        "success",
+        "warning",
+        "error",
+        "info"
+      ],
+      "sizes": [
+        "sm",
+        "md"
+      ],
       "props": {
-        "variant": { "type": "enum", "values": ["neutral", "primary", "success", "warning", "error", "info"], "default": "neutral" },
-        "size":    { "type": "enum", "values": ["sm", "md"], "default": "md" },
-        "dot":     { "type": "boolean", "default": false, "description": "Shows a coloured dot instead of text" },
-        "children": { "type": "ReactNode", "required": true }
+        "variant": {
+          "type": "enum",
+          "values": [
+            "neutral",
+            "primary",
+            "success",
+            "warning",
+            "error",
+            "info"
+          ],
+          "default": "neutral"
+        },
+        "size": {
+          "type": "enum",
+          "values": [
+            "sm",
+            "md"
+          ],
+          "default": "md"
+        },
+        "dot": {
+          "type": "boolean",
+          "default": false,
+          "description": "Shows a coloured dot instead of text"
+        },
+        "children": {
+          "type": "ReactNode",
+          "required": true
+        }
       },
       "tokens": {
         "background": {
@@ -349,28 +999,33 @@
           "primary": "{color.primary.50}",
           "success": "{color.success.light}",
           "warning": "{color.warning.light}",
-          "error":   "{color.error.light}",
-          "info":    "{color.secondary.100}"
+          "error": "{color.error.light}",
+          "info": "{color.secondary.100}"
         },
         "text": {
           "neutral": "{color.neutral.700}",
           "primary": "{color.primary.700}",
           "success": "{color.success.dark}",
           "warning": "{color.warning.dark}",
-          "error":   "{color.error.dark}",
-          "info":    "{color.secondary.700}"
+          "error": "{color.error.dark}",
+          "info": "{color.secondary.700}"
         },
         "borderRadius": "{borderRadius.full}",
-        "fontSize": { "sm": "{typography.fontSize.xs}", "md": "{typography.fontSize.sm}" }
+        "fontSize": {
+          "sm": "{typography.fontSize.xs}",
+          "md": "{typography.fontSize.sm}"
+        }
       },
       "constraints": [
-        "Badges must not be interactive — use a Tag or Chip for interactive labels.",
-        "Limit to 2–3 words or a short alphanumeric string.",
-        "Do not rely solely on colour to convey meaning — include a label or icon."
+        "Badges must not be interactive \u2014 use a Tag or Chip for interactive labels.",
+        "Limit to 2\u20133 words or a short alphanumeric string.",
+        "Do not rely solely on colour to convey meaning \u2014 include a label or icon."
       ],
       "accessibility": {
         "role": "status or none depending on context",
-        "ariaAttributes": ["aria-label when dot-only variant is used"]
+        "ariaAttributes": [
+          "aria-label when dot-only variant is used"
+        ]
       },
       "anatomy": {
         "root": "span.badge",
@@ -378,46 +1033,90 @@
           "dot": "Optional leading dot indicator",
           "label": "Text content"
         },
-        "validChildren": ["text", "Icon"],
+        "validChildren": [
+          "text",
+          "Icon"
+        ],
         "compositionNotes": "Place inside table cells, list items, or card headers. Do not nest badges."
       },
       "relationships": {
-        "siblings": ["Tag", "Chip"],
-        "relatedComponents": ["Tag", "Chip", "StatusIndicator"]
+        "siblings": [
+          "Tag",
+          "Chip"
+        ],
+        "relatedComponents": [
+          "Tag",
+          "Chip",
+          "StatusIndicator"
+        ]
       },
       "variantGuidance": {
-        "neutral": "Default — unclassified or inactive status.",
+        "neutral": "Default \u2014 unclassified or inactive status.",
         "primary": "Active or selected items.",
         "success": "Completed, approved, or healthy.",
         "warning": "Pending review, degraded, or at risk.",
-        "error":   "Failed, rejected, or critical issues.",
-        "info":    "Informational or in-progress."
+        "error": "Failed, rejected, or critical issues.",
+        "info": "Informational or in-progress."
       }
     },
     "card": {
       "name": "Card",
       "description": "Contained surface for grouping related content. Cards can be static or interactive (clickable).",
-      "variants": ["default", "outlined", "elevated", "filled"],
+      "variants": [
+        "default",
+        "outlined",
+        "elevated",
+        "filled"
+      ],
       "props": {
-        "variant":     { "type": "enum", "values": ["default", "outlined", "elevated", "filled"], "default": "default" },
-        "interactive": { "type": "boolean", "default": false, "description": "Makes the card focusable and clickable" },
-        "padding":     { "type": "enum", "values": ["none", "sm", "md", "lg"], "default": "md" },
-        "href":        { "type": "string", "optional": true, "description": "Converts the card to a link" },
-        "children":    { "type": "ReactNode", "required": true }
+        "variant": {
+          "type": "enum",
+          "values": [
+            "default",
+            "outlined",
+            "elevated",
+            "filled"
+          ],
+          "default": "default"
+        },
+        "interactive": {
+          "type": "boolean",
+          "default": false,
+          "description": "Makes the card focusable and clickable"
+        },
+        "padding": {
+          "type": "enum",
+          "values": [
+            "none",
+            "sm",
+            "md",
+            "lg"
+          ],
+          "default": "md"
+        },
+        "href": {
+          "type": "string",
+          "optional": true,
+          "description": "Converts the card to a link"
+        },
+        "children": {
+          "type": "ReactNode",
+          "required": true
+        }
       },
       "tokens": {
         "background": {
-          "default":  "{color.neutral.0}",
+          "default": "{color.neutral.0}",
           "outlined": "{color.neutral.0}",
           "elevated": "{color.neutral.0}",
-          "filled":   "{color.neutral.50}"
+          "filled": "{color.neutral.50}"
         },
         "border": {
-          "default":  "{color.neutral.200}",
+          "default": "{color.neutral.200}",
           "outlined": "{color.neutral.300}"
         },
         "shadow": {
-          "default":  "{shadow.sm}",
+          "default": "{shadow.sm}",
           "elevated": "{shadow.lg}"
         },
         "borderRadius": "{borderRadius.xl}",
@@ -435,8 +1134,12 @@
       ],
       "accessibility": {
         "role": "article (informational) or link (interactive)",
-        "ariaAttributes": ["aria-label when the card has no visible title"],
-        "keyboardSupport": ["Enter / Space to activate if interactive"]
+        "ariaAttributes": [
+          "aria-label when the card has no visible title"
+        ],
+        "keyboardSupport": [
+          "Enter / Space to activate if interactive"
+        ]
       },
       "anatomy": {
         "root": "div.card or a.card",
@@ -445,44 +1148,101 @@
           "body": "Main content area",
           "footer": "Optional action row"
         },
-        "validChildren": ["CardHeader", "CardBody", "CardFooter", "any"],
+        "validChildren": [
+          "CardHeader",
+          "CardBody",
+          "CardFooter",
+          "any"
+        ],
         "compositionNotes": "Use CardHeader, CardBody, CardFooter sub-components for structured layout."
       },
       "relationships": {
-        "parent": ["Grid", "List"],
-        "relatedComponents": ["CardHeader", "CardBody", "CardFooter", "Modal"]
+        "parent": [
+          "Grid",
+          "List"
+        ],
+        "relatedComponents": [
+          "CardHeader",
+          "CardBody",
+          "CardFooter",
+          "Modal"
+        ]
       },
       "variantGuidance": {
-        "default":  "Standard bordered card — use in most contexts.",
-        "outlined": "Stronger border, no shadow — tabular lists.",
-        "elevated": "Drop-shadow emphasis — feature cards, CTAs.",
-        "filled":   "Subtle background fill — secondary content areas."
+        "default": "Standard bordered card \u2014 use in most contexts.",
+        "outlined": "Stronger border, no shadow \u2014 tabular lists.",
+        "elevated": "Drop-shadow emphasis \u2014 feature cards, CTAs.",
+        "filled": "Subtle background fill \u2014 secondary content areas."
       }
     },
     "modal": {
       "name": "Modal",
       "description": "Overlay dialog for focused tasks or confirmations that interrupt the user workflow.",
-      "variants": ["default", "alert"],
-      "sizes": ["sm", "md", "lg", "fullscreen"],
-      "states": ["closed", "open", "loading"],
+      "variants": [
+        "default",
+        "alert"
+      ],
+      "sizes": [
+        "sm",
+        "md",
+        "lg",
+        "fullscreen"
+      ],
+      "states": [
+        "closed",
+        "open",
+        "loading"
+      ],
       "props": {
-        "isOpen":      { "type": "boolean", "required": true },
-        "onClose":     { "type": "function", "required": true },
-        "title":       { "type": "string", "required": true },
-        "size":        { "type": "enum", "values": ["sm", "md", "lg", "fullscreen"], "default": "md" },
-        "variant":     { "type": "enum", "values": ["default", "alert"], "default": "default" },
-        "isDismissible": { "type": "boolean", "default": true, "description": "Whether clicking the backdrop closes the modal" },
-        "children":    { "type": "ReactNode", "required": true }
+        "isOpen": {
+          "type": "boolean",
+          "required": true
+        },
+        "onClose": {
+          "type": "function",
+          "required": true
+        },
+        "title": {
+          "type": "string",
+          "required": true
+        },
+        "size": {
+          "type": "enum",
+          "values": [
+            "sm",
+            "md",
+            "lg",
+            "fullscreen"
+          ],
+          "default": "md"
+        },
+        "variant": {
+          "type": "enum",
+          "values": [
+            "default",
+            "alert"
+          ],
+          "default": "default"
+        },
+        "isDismissible": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether clicking the backdrop closes the modal"
+        },
+        "children": {
+          "type": "ReactNode",
+          "required": true
+        }
       },
       "tokens": {
-        "background":    "{color.neutral.0}",
-        "overlay":       "rgba(15,23,42,0.55)",
-        "borderRadius":  "{borderRadius.xl}",
-        "shadow":        "{shadow.2xl}",
+        "background": "{color.neutral.0}",
+        "overlay": "rgba(15,23,42,0.55)",
+        "borderRadius": "{borderRadius.xl}",
+        "shadow": "{shadow.2xl}",
         "maxWidth": {
-          "sm":         "380px",
-          "md":         "560px",
-          "lg":         "840px",
+          "sm": "380px",
+          "md": "560px",
+          "lg": "840px",
           "fullscreen": "100vw"
         },
         "zIndex": "{layout.zIndex.modal}"
@@ -496,8 +1256,16 @@
       ],
       "accessibility": {
         "role": "dialog",
-        "ariaAttributes": ["aria-modal='true'", "aria-labelledby pointing to modal title", "aria-describedby for modal body if needed"],
-        "keyboardSupport": ["Escape — close", "Tab — cycle focus within modal", "Shift+Tab — reverse focus cycle"],
+        "ariaAttributes": [
+          "aria-modal='true'",
+          "aria-labelledby pointing to modal title",
+          "aria-describedby for modal body if needed"
+        ],
+        "keyboardSupport": [
+          "Escape \u2014 close",
+          "Tab \u2014 cycle focus within modal",
+          "Shift+Tab \u2014 reverse focus cycle"
+        ],
         "focusManagement": "First focusable element receives focus on open. Trigger element receives focus on close."
       },
       "anatomy": {
@@ -509,12 +1277,23 @@
           "body": "Scrollable content area",
           "footer": "Action buttons row"
         },
-        "validChildren": ["ModalHeader", "ModalBody", "ModalFooter"],
+        "validChildren": [
+          "ModalHeader",
+          "ModalBody",
+          "ModalFooter"
+        ],
         "compositionNotes": "Always include a visible title in ModalHeader. ModalFooter should contain primary and secondary actions."
       },
       "relationships": {
-        "parent": ["App root"],
-        "relatedComponents": ["Dialog", "Drawer", "Popover", "AlertDialog"]
+        "parent": [
+          "App root"
+        ],
+        "relatedComponents": [
+          "Dialog",
+          "Drawer",
+          "Popover",
+          "AlertDialog"
+        ]
       },
       "variantGuidance": {
         "default": "Standard task-completion dialogs, forms, confirmations.",
@@ -524,39 +1303,76 @@
     "toast": {
       "name": "Toast",
       "description": "Ephemeral notification that appears in a corner of the screen. Used for non-blocking status feedback.",
-      "variants": ["info", "success", "warning", "error"],
-      "states": ["entering", "visible", "exiting"],
+      "variants": [
+        "info",
+        "success",
+        "warning",
+        "error"
+      ],
+      "states": [
+        "entering",
+        "visible",
+        "exiting"
+      ],
       "props": {
-        "message":   { "type": "string", "required": true },
-        "variant":   { "type": "enum", "values": ["info", "success", "warning", "error"], "default": "info" },
-        "duration":  { "type": "number", "default": 5000, "description": "Auto-dismiss duration in ms. 0 = persist." },
-        "action":    { "type": "object", "optional": true, "description": "Optional { label: string, onClick: fn } action button" },
-        "onDismiss": { "type": "function", "optional": true }
+        "message": {
+          "type": "string",
+          "required": true
+        },
+        "variant": {
+          "type": "enum",
+          "values": [
+            "info",
+            "success",
+            "warning",
+            "error"
+          ],
+          "default": "info"
+        },
+        "duration": {
+          "type": "number",
+          "default": 5000,
+          "description": "Auto-dismiss duration in ms. 0 = persist."
+        },
+        "action": {
+          "type": "object",
+          "optional": true,
+          "description": "Optional { label: string, onClick: fn } action button"
+        },
+        "onDismiss": {
+          "type": "function",
+          "optional": true
+        }
       },
       "tokens": {
         "background": {
-          "info":    "{color.neutral.900}",
+          "info": "{color.neutral.900}",
           "success": "{color.success.dark}",
           "warning": "{color.warning.dark}",
-          "error":   "{color.error.dark}"
+          "error": "{color.error.dark}"
         },
-        "text":         "{color.neutral.0}",
+        "text": "{color.neutral.0}",
         "borderRadius": "{borderRadius.lg}",
-        "shadow":       "{shadow.xl}",
-        "zIndex":       "{layout.zIndex.toast}",
-        "animation":    "{motion.duration.slow} {motion.easing.easeOut}"
+        "shadow": "{shadow.xl}",
+        "zIndex": "{layout.zIndex.toast}",
+        "animation": "{motion.duration.slow} {motion.easing.easeOut}"
       },
       "constraints": [
         "Toasts must auto-dismiss (default 5 seconds) unless they contain an action.",
         "Display no more than 3 toasts simultaneously.",
-        "Do not use toasts for errors that require user action — use an inline error instead.",
+        "Do not use toasts for errors that require user action \u2014 use an inline error instead.",
         "Toast messages must be concise (max 80 characters).",
         "Toasts must pause auto-dismiss on hover."
       ],
       "accessibility": {
         "role": "status (info/success) or alert (warning/error)",
-        "ariaAttributes": ["aria-live='polite' for info/success", "aria-live='assertive' for warning/error"],
-        "keyboardSupport": ["Dismiss button must be keyboard-accessible"]
+        "ariaAttributes": [
+          "aria-live='polite' for info/success",
+          "aria-live='assertive' for warning/error"
+        ],
+        "keyboardSupport": [
+          "Dismiss button must be keyboard-accessible"
+        ]
       },
       "anatomy": {
         "root": "div[role='status'] or div[role='alert']",
@@ -566,61 +1382,71 @@
           "action": "Optional text button",
           "dismiss": "Close button"
         },
-        "validChildren": ["Icon", "text", "Button"],
+        "validChildren": [
+          "Icon",
+          "text",
+          "Button"
+        ],
         "compositionNotes": "Rendered in a ToastProvider portal at the app root. Do not position manually."
       },
       "relationships": {
-        "parent": ["ToastProvider"],
-        "relatedComponents": ["Alert", "Banner", "Snackbar"]
+        "parent": [
+          "ToastProvider"
+        ],
+        "relatedComponents": [
+          "Alert",
+          "Banner",
+          "Snackbar"
+        ]
       },
       "variantGuidance": {
-        "info":    "Neutral updates — item saved, process started.",
-        "success": "Completed actions — file uploaded, changes saved.",
+        "info": "Neutral updates \u2014 item saved, process started.",
+        "success": "Completed actions \u2014 file uploaded, changes saved.",
         "warning": "Soft warnings that don't block the user.",
-        "error":   "Recoverable errors where context is lost — use inline errors for form failures."
+        "error": "Recoverable errors where context is lost \u2014 use inline errors for form failures."
       }
     }
   },
   "themes": {
     "light": {
       "name": "Light",
-      "description": "Default light theme — white backgrounds with slate text.",
+      "description": "Default light theme \u2014 white backgrounds with slate text.",
       "semantic": {
-        "color.semantic.background":      "#ffffff",
-        "color.semantic.surface":         "#f8fafc",
-        "color.semantic.border":          "#e2e8f0",
-        "color.semantic.text.primary":    "#0f172a",
-        "color.semantic.text.secondary":  "#475569",
-        "color.semantic.text.disabled":   "#94a3b8",
-        "color.semantic.action.primary":  "#16a34a",
+        "color.semantic.background": "#ffffff",
+        "color.semantic.surface": "#f8fafc",
+        "color.semantic.border": "#e2e8f0",
+        "color.semantic.text.primary": "#0f172a",
+        "color.semantic.text.secondary": "#475569",
+        "color.semantic.text.disabled": "#94a3b8",
+        "color.semantic.action.primary": "#16a34a",
         "color.semantic.action.primaryHover": "#15803d"
       }
     },
     "dark": {
       "name": "Dark",
-      "description": "Dark theme — dark slate backgrounds with light text.",
+      "description": "Dark theme \u2014 dark slate backgrounds with light text.",
       "semantic": {
-        "color.semantic.background":      "#0f172a",
-        "color.semantic.surface":         "#1e293b",
-        "color.semantic.border":          "#334155",
-        "color.semantic.text.primary":    "#f8fafc",
-        "color.semantic.text.secondary":  "#94a3b8",
-        "color.semantic.text.disabled":   "#475569",
-        "color.semantic.action.primary":  "#22c55e",
+        "color.semantic.background": "#0f172a",
+        "color.semantic.surface": "#1e293b",
+        "color.semantic.border": "#334155",
+        "color.semantic.text.primary": "#f8fafc",
+        "color.semantic.text.secondary": "#94a3b8",
+        "color.semantic.text.disabled": "#475569",
+        "color.semantic.action.primary": "#22c55e",
         "color.semantic.action.primaryHover": "#4ade80"
       }
     },
     "forest": {
       "name": "Forest",
-      "description": "Deep nature-inspired theme — dark green backgrounds with warm cream text.",
+      "description": "Deep nature-inspired theme \u2014 dark green backgrounds with warm cream text.",
       "semantic": {
-        "color.semantic.background":      "#0d1f13",
-        "color.semantic.surface":         "#132b1a",
-        "color.semantic.border":          "#1e4027",
-        "color.semantic.text.primary":    "#ecf5e9",
-        "color.semantic.text.secondary":  "#a3c99b",
-        "color.semantic.text.disabled":   "#4a7a52",
-        "color.semantic.action.primary":  "#4ade80",
+        "color.semantic.background": "#0d1f13",
+        "color.semantic.surface": "#132b1a",
+        "color.semantic.border": "#1e4027",
+        "color.semantic.text.primary": "#ecf5e9",
+        "color.semantic.text.secondary": "#a3c99b",
+        "color.semantic.text.disabled": "#4a7a52",
+        "color.semantic.action.primary": "#4ade80",
         "color.semantic.action.primaryHover": "#86efac"
       }
     }
@@ -629,121 +1455,697 @@
     "check": {
       "name": "Check",
       "category": "status",
-      "keywords": ["success", "done", "complete", "confirm", "tick", "valid"],
-      "sizes": [16, 20, 24],
+      "keywords": [
+        "success",
+        "done",
+        "complete",
+        "confirm",
+        "tick",
+        "valid"
+      ],
+      "sizes": [
+        16,
+        20,
+        24
+      ],
       "description": "Checkmark for confirming selection or successful completion"
     },
     "x": {
       "name": "X",
       "category": "action",
-      "keywords": ["close", "dismiss", "remove", "clear", "cancel", "delete"],
-      "sizes": [16, 20, 24],
+      "keywords": [
+        "close",
+        "dismiss",
+        "remove",
+        "clear",
+        "cancel",
+        "delete"
+      ],
+      "sizes": [
+        16,
+        20,
+        24
+      ],
       "description": "Close or dismiss an element"
     },
     "plus": {
       "name": "Plus",
       "category": "action",
-      "keywords": ["add", "create", "new", "insert", "expand"],
-      "sizes": [16, 20, 24],
+      "keywords": [
+        "add",
+        "create",
+        "new",
+        "insert",
+        "expand"
+      ],
+      "sizes": [
+        16,
+        20,
+        24
+      ],
       "description": "Add or create a new item"
     },
     "minus": {
       "name": "Minus",
       "category": "action",
-      "keywords": ["remove", "subtract", "delete", "reduce", "collapse"],
-      "sizes": [16, 20, 24],
+      "keywords": [
+        "remove",
+        "subtract",
+        "delete",
+        "reduce",
+        "collapse"
+      ],
+      "sizes": [
+        16,
+        20,
+        24
+      ],
       "description": "Remove or subtract an item"
     },
     "search": {
       "name": "Search",
       "category": "action",
-      "keywords": ["find", "magnify", "query", "filter", "lookup"],
-      "sizes": [16, 20, 24],
+      "keywords": [
+        "find",
+        "magnify",
+        "query",
+        "filter",
+        "lookup"
+      ],
+      "sizes": [
+        16,
+        20,
+        24
+      ],
       "description": "Initiate a search"
     },
     "chevron-down": {
       "name": "Chevron Down",
       "category": "navigation",
-      "keywords": ["expand", "open", "dropdown", "accordion", "arrow", "down"],
-      "sizes": [16, 20, 24],
+      "keywords": [
+        "expand",
+        "open",
+        "dropdown",
+        "accordion",
+        "arrow",
+        "down"
+      ],
+      "sizes": [
+        16,
+        20,
+        24
+      ],
       "description": "Expand, open, or indicate downward direction"
     },
     "chevron-up": {
       "name": "Chevron Up",
       "category": "navigation",
-      "keywords": ["collapse", "close", "accordion", "arrow", "up"],
-      "sizes": [16, 20, 24],
+      "keywords": [
+        "collapse",
+        "close",
+        "accordion",
+        "arrow",
+        "up"
+      ],
+      "sizes": [
+        16,
+        20,
+        24
+      ],
       "description": "Collapse or indicate upward direction"
     },
     "chevron-right": {
       "name": "Chevron Right",
       "category": "navigation",
-      "keywords": ["next", "forward", "breadcrumb", "arrow", "right"],
-      "sizes": [16, 20, 24],
+      "keywords": [
+        "next",
+        "forward",
+        "breadcrumb",
+        "arrow",
+        "right"
+      ],
+      "sizes": [
+        16,
+        20,
+        24
+      ],
       "description": "Navigate forward or indicate a nested item"
     },
     "arrow-left": {
       "name": "Arrow Left",
       "category": "navigation",
-      "keywords": ["back", "previous", "return", "arrow"],
-      "sizes": [16, 20, 24],
+      "keywords": [
+        "back",
+        "previous",
+        "return",
+        "arrow"
+      ],
+      "sizes": [
+        16,
+        20,
+        24
+      ],
       "description": "Go back or navigate to a previous state"
     },
     "info": {
       "name": "Info",
       "category": "status",
-      "keywords": ["information", "help", "about", "detail", "hint"],
-      "sizes": [16, 20, 24],
+      "keywords": [
+        "information",
+        "help",
+        "about",
+        "detail",
+        "hint"
+      ],
+      "sizes": [
+        16,
+        20,
+        24
+      ],
       "description": "General informational indicator"
     },
     "warning": {
       "name": "Warning",
       "category": "status",
-      "keywords": ["alert", "caution", "attention", "risk", "hazard"],
-      "sizes": [16, 20, 24],
+      "keywords": [
+        "alert",
+        "caution",
+        "attention",
+        "risk",
+        "hazard"
+      ],
+      "sizes": [
+        16,
+        20,
+        24
+      ],
       "description": "Warning or caution indicator"
     },
     "error": {
       "name": "Error",
       "category": "status",
-      "keywords": ["alert", "danger", "critical", "fail", "invalid"],
-      "sizes": [16, 20, 24],
+      "keywords": [
+        "alert",
+        "danger",
+        "critical",
+        "fail",
+        "invalid"
+      ],
+      "sizes": [
+        16,
+        20,
+        24
+      ],
       "description": "Error or critical failure indicator"
     },
     "user": {
       "name": "User",
       "category": "social",
-      "keywords": ["person", "account", "profile", "avatar", "member"],
-      "sizes": [16, 20, 24],
+      "keywords": [
+        "person",
+        "account",
+        "profile",
+        "avatar",
+        "member"
+      ],
+      "sizes": [
+        16,
+        20,
+        24
+      ],
       "description": "Represents a user or account"
     },
     "settings": {
       "name": "Settings",
       "category": "action",
-      "keywords": ["gear", "cog", "configure", "preferences", "options"],
-      "sizes": [16, 20, 24],
+      "keywords": [
+        "gear",
+        "cog",
+        "configure",
+        "preferences",
+        "options"
+      ],
+      "sizes": [
+        16,
+        20,
+        24
+      ],
       "description": "Access settings or configuration"
     },
     "upload": {
       "name": "Upload",
       "category": "action",
-      "keywords": ["send", "share", "export", "attach", "file", "up"],
-      "sizes": [16, 20, 24],
+      "keywords": [
+        "send",
+        "share",
+        "export",
+        "attach",
+        "file",
+        "up"
+      ],
+      "sizes": [
+        16,
+        20,
+        24
+      ],
       "description": "Upload a file or send data"
     },
     "download": {
       "name": "Download",
       "category": "action",
-      "keywords": ["save", "export", "receive", "file", "down"],
-      "sizes": [16, 20, 24],
+      "keywords": [
+        "save",
+        "export",
+        "receive",
+        "file",
+        "down"
+      ],
+      "sizes": [
+        16,
+        20,
+        24
+      ],
       "description": "Download or save a file"
     },
     "leaf": {
       "name": "Leaf",
       "category": "nature",
-      "keywords": ["nature", "eco", "green", "environment", "organic", "plant"],
-      "sizes": [16, 20, 24],
-      "description": "Nature or eco-friendly indicator — brand icon for this design system"
+      "keywords": [
+        "nature",
+        "eco",
+        "green",
+        "environment",
+        "organic",
+        "plant"
+      ],
+      "sizes": [
+        16,
+        20,
+        24
+      ],
+      "description": "Nature or eco-friendly indicator \u2014 brand icon for this design system"
     }
+  },
+  "style-guide": {
+    "principles": [
+      {
+        "name": "Clarity over cleverness",
+        "description": "Every design decision should make the interface easier to understand, not more visually interesting. If a choice requires explanation, it is probably wrong.",
+        "implication": "Prefer a plain, legible layout over an elaborate one. When in doubt, remove decoration."
+      },
+      {
+        "name": "Spatial consistency",
+        "description": "Spacing communicates hierarchy and relationship. Elements that belong together are closer together. Unrelated elements have more space between them. Spacing values always come from the spacing scale \u2014 never arbitrary px values.",
+        "implication": "Use spacing.2 (8px) for tightly related inline elements, spacing.4 (16px) between fields in a form, spacing.8 (32px) between card groups, spacing.16 (64px) between page sections."
+      },
+      {
+        "name": "Semantic color",
+        "description": "Color carries meaning before it carries aesthetics. The palette is structured so that semantic roles (action, destructive, success, warning) are immediately recognisable and consistent across contexts.",
+        "implication": "Use color.semantic tokens for UI chrome. Use color.primary tokens only for brand-level surfaces. Never use primitive color tokens (color.neutral.*, color.primary.*) directly on interactive elements."
+      },
+      {
+        "name": "Accessible by default",
+        "description": "Accessibility is a design constraint, not a post-launch checklist item. Every component spec includes accessibility requirements as first-class data. Meeting WCAG 2.1 AA is the minimum bar; the system is designed to exceed it wherever possible.",
+        "implication": "Check color contrast with check_contrast before any color pairing is used in production. All interactive components ship with required ARIA attributes already defined in their spec."
+      },
+      {
+        "name": "Tokens are the API",
+        "description": "Designers and engineers share a single vocabulary: token names. A token name is a promise about intent (color.semantic.error is always the error color regardless of theme or mode). Hard-coded values break this contract.",
+        "implication": "Reference tokens by path in all component code. When a value is not in the token set, add a token \u2014 do not hard-code the value."
+      },
+      {
+        "name": "Composability over completeness",
+        "description": "It is better to have fewer, well-composed primitives than an exhaustive library of single-purpose components. The design system provides building blocks; product teams compose them into patterns.",
+        "implication": "Before building a new component, check whether the need can be met by composing two or three existing ones according to the composition patterns guide."
+      }
+    ],
+    "colorUsage": {
+      "roles": {
+        "action": {
+          "token": "color.semantic.action",
+          "description": "Primary interactive actions \u2014 buttons, links, selected states. Conveys 'this is clickable and important'.",
+          "approvedPairings": [
+            {
+              "foreground": "color.neutral.0",
+              "background": "color.semantic.action",
+              "contrastRatio": "7.2:1",
+              "wcag": "AAA",
+              "use": "Primary button label on primary button surface"
+            },
+            {
+              "foreground": "color.semantic.action",
+              "background": "color.semantic.background",
+              "contrastRatio": "5.4:1",
+              "wcag": "AA",
+              "use": "Text link on page background"
+            }
+          ]
+        },
+        "surface": {
+          "token": "color.semantic.surface",
+          "description": "Card, panel, and container backgrounds \u2014 one level above the page background.",
+          "approvedPairings": [
+            {
+              "foreground": "color.semantic.text",
+              "background": "color.semantic.surface",
+              "contrastRatio": "14.5:1",
+              "wcag": "AAA",
+              "use": "Body text on card surface"
+            },
+            {
+              "foreground": "color.semantic.textSubtle",
+              "background": "color.semantic.surface",
+              "contrastRatio": "6.2:1",
+              "wcag": "AA",
+              "use": "Supporting text on card surface"
+            }
+          ]
+        },
+        "destructive": {
+          "token": "color.semantic.error",
+          "description": "Irreversible or dangerous actions \u2014 delete, revoke, permanently disable. Always pair with confirmation.",
+          "approvedPairings": [
+            {
+              "foreground": "color.neutral.0",
+              "background": "color.semantic.error",
+              "contrastRatio": "5.8:1",
+              "wcag": "AA",
+              "use": "Destructive button label on error background"
+            },
+            {
+              "foreground": "color.semantic.error",
+              "background": "color.semantic.background",
+              "contrastRatio": "5.1:1",
+              "wcag": "AA",
+              "use": "Inline error message text"
+            }
+          ]
+        },
+        "success": {
+          "token": "color.semantic.success",
+          "description": "Confirmations, completed states, positive feedback.",
+          "approvedPairings": [
+            {
+              "foreground": "color.neutral.900",
+              "background": "color.semantic.successSubtle",
+              "contrastRatio": "8.3:1",
+              "wcag": "AAA",
+              "use": "Success banner text on tinted background"
+            }
+          ]
+        },
+        "warning": {
+          "token": "color.semantic.warning",
+          "description": "Caution, non-blocking alerts, deprecation notices.",
+          "approvedPairings": [
+            {
+              "foreground": "color.neutral.900",
+              "background": "color.semantic.warningSubtle",
+              "contrastRatio": "9.1:1",
+              "wcag": "AAA",
+              "use": "Warning banner text on tinted background"
+            }
+          ]
+        },
+        "text": {
+          "token": "color.semantic.text",
+          "description": "Primary body text. Use for any text that must be readable at a glance.",
+          "approvedPairings": [
+            {
+              "foreground": "color.semantic.text",
+              "background": "color.semantic.background",
+              "contrastRatio": "14.5:1",
+              "wcag": "AAA",
+              "use": "Body text on page background"
+            },
+            {
+              "foreground": "color.semantic.text",
+              "background": "color.semantic.surface",
+              "contrastRatio": "14.5:1",
+              "wcag": "AAA",
+              "use": "Body text on card surface"
+            }
+          ]
+        },
+        "textSubtle": {
+          "token": "color.semantic.textSubtle",
+          "description": "Secondary text \u2014 captions, helper text, metadata. Never use for primary content.",
+          "approvedPairings": [
+            {
+              "foreground": "color.semantic.textSubtle",
+              "background": "color.semantic.background",
+              "contrastRatio": "6.2:1",
+              "wcag": "AA",
+              "use": "Caption or helper text on page background"
+            }
+          ]
+        },
+        "border": {
+          "token": "color.semantic.border",
+          "description": "Dividers, input outlines, card borders. Decorative separation, not informational color.",
+          "approvedPairings": [
+            {
+              "foreground": "color.semantic.border",
+              "background": "color.semantic.background",
+              "contrastRatio": "3.2:1",
+              "wcag": "UI",
+              "use": "Input border on page background (UI component contrast, not text contrast)"
+            }
+          ]
+        }
+      },
+      "notes": [
+        "Never use color.primary.* tokens directly on interactive elements \u2014 always map through a semantic role.",
+        "Dark mode is handled by theme overrides on the same semantic token names. Code that uses semantic tokens requires no changes to support dark mode.",
+        "The brand palette (color.primary.*) may change between design system versions; semantic tokens are stable identifiers.",
+        "Avoid combining two saturated colors (e.g. action + destructive) in the same visual cluster \u2014 one should always dominate."
+      ]
+    },
+    "typographyUsage": {
+      "hierarchy": [
+        {
+          "level": "display",
+          "token": "typography.fontSize.4xl",
+          "weight": "typography.fontWeight.bold",
+          "lineHeight": "typography.lineHeight.tight",
+          "use": "Hero headlines, marketing headlines. Rarely used in product UI.",
+          "constraints": [
+            "Do not use in forms, tables, or navigation",
+            "Maximum one display heading per view"
+          ]
+        },
+        {
+          "level": "h1",
+          "token": "typography.fontSize.3xl",
+          "weight": "typography.fontWeight.bold",
+          "lineHeight": "typography.lineHeight.tight",
+          "use": "Page title. One per page.",
+          "constraints": [
+            "Do not nest h1 inside cards or panels \u2014 use h2 for section titles within a page"
+          ]
+        },
+        {
+          "level": "h2",
+          "token": "typography.fontSize.2xl",
+          "weight": "typography.fontWeight.semibold",
+          "lineHeight": "typography.lineHeight.snug",
+          "use": "Major section headings within a page.",
+          "constraints": [
+            "Use as the primary heading inside a card or panel"
+          ]
+        },
+        {
+          "level": "h3",
+          "token": "typography.fontSize.xl",
+          "weight": "typography.fontWeight.semibold",
+          "lineHeight": "typography.lineHeight.snug",
+          "use": "Sub-section headings, card group titles.",
+          "constraints": [
+            "Do not skip heading levels"
+          ]
+        },
+        {
+          "level": "h4",
+          "token": "typography.fontSize.lg",
+          "weight": "typography.fontWeight.medium",
+          "lineHeight": "typography.lineHeight.normal",
+          "use": "Label headings, form section titles, sidebar section titles.",
+          "constraints": []
+        },
+        {
+          "level": "body",
+          "token": "typography.fontSize.base",
+          "weight": "typography.fontWeight.regular",
+          "lineHeight": "typography.lineHeight.relaxed",
+          "use": "All body copy. Default text size for product UI.",
+          "constraints": [
+            "Do not set body text smaller than typography.fontSize.sm in any reading context"
+          ]
+        },
+        {
+          "level": "small",
+          "token": "typography.fontSize.sm",
+          "weight": "typography.fontWeight.regular",
+          "lineHeight": "typography.lineHeight.normal",
+          "use": "Helper text, captions, metadata, timestamps.",
+          "constraints": [
+            "Do not use for primary content labels or interactive element labels"
+          ]
+        },
+        {
+          "level": "caption",
+          "token": "typography.fontSize.xs",
+          "weight": "typography.fontWeight.regular",
+          "lineHeight": "typography.lineHeight.normal",
+          "use": "Fine print, legal text, secondary badge labels.",
+          "constraints": [
+            "Must always meet 4.5:1 contrast ratio \u2014 xs size is below large text threshold"
+          ]
+        },
+        {
+          "level": "code",
+          "token": "typography.fontSize.sm",
+          "fontFamily": "typography.fontFamily.mono",
+          "weight": "typography.fontWeight.regular",
+          "lineHeight": "typography.lineHeight.relaxed",
+          "use": "Inline code, token paths, technical values.",
+          "constraints": [
+            "Always use the mono font family for code; never mix sans-serif and monospace in the same token path"
+          ]
+        }
+      ],
+      "scale": {
+        "intent": "The type scale follows a 1.25 major third ratio. Neighbouring steps are visually distinct but harmonically related \u2014 xs through sm for supporting text, base for body, lg through 2xl for headings, 3xl and above for display use only.",
+        "productUI": "In product interfaces, 90% of text should sit between typography.fontSize.sm and typography.fontSize.xl. Reserve 2xl and above for page-level headings only.",
+        "marketingUI": "In marketing and landing pages, display and 4xl sizes are appropriate for hero content. Use sparingly \u2014 maximum two oversized steps per page."
+      },
+      "pairings": [
+        {
+          "name": "Heading + body",
+          "heading": "typography.fontFamily.sans at fontWeight.bold",
+          "body": "typography.fontFamily.sans at fontWeight.regular",
+          "use": "Standard product UI. All headings and body text use the same sans-serif family \u2014 hierarchy comes from size and weight, not font switching."
+        },
+        {
+          "name": "Heading + code",
+          "heading": "typography.fontFamily.sans at fontWeight.semibold",
+          "body": "typography.fontFamily.mono at fontWeight.regular",
+          "use": "Developer documentation, API reference, token specification views."
+        }
+      ],
+      "lineLength": {
+        "prose": "65-75 characters (approximately 32-36em at base size). Use max-width: 72ch for all prose containers.",
+        "formLabels": "No max-width restriction \u2014 labels wrap naturally with their input.",
+        "dataTableCells": "Constrain cell content with overflow: hidden / text-overflow: ellipsis at a column-level max-width, not a character limit."
+      }
+    },
+    "compositionPatterns": [
+      {
+        "name": "Form layout",
+        "description": "A single-column form with field groups, section headings, and a primary action at the bottom.",
+        "components": [
+          "form",
+          "input",
+          "select",
+          "checkbox",
+          "button"
+        ],
+        "spacingConventions": {
+          "betweenFields": "spacing.4 (16px)",
+          "betweenFieldGroups": "spacing.8 (32px)",
+          "betweenSectionHeadingAndFirstField": "spacing.4 (16px)",
+          "formMaxWidth": "640px"
+        },
+        "slots": {
+          "section-heading": "h2 or h3 with typographic hierarchy matching page context",
+          "field": "input or select wrapped with label and optional helper text",
+          "action-row": "Primary button + optional secondary button, right-aligned on desktop, stacked full-width on mobile"
+        },
+        "notes": "Never place two primary buttons in the same form. Destructive actions (e.g. Delete account) belong outside the primary form flow, separated by spacing.16 or a visual divider."
+      },
+      {
+        "name": "Card grid",
+        "description": "A responsive grid of cards, each representing one entity or item.",
+        "components": [
+          "card",
+          "badge",
+          "button"
+        ],
+        "spacingConventions": {
+          "gapBetweenCards": "spacing.6 (24px)",
+          "cardInternalPadding": "spacing.6 (24px)",
+          "betweenCardGridAndSectionHeading": "spacing.8 (32px)"
+        },
+        "slots": {
+          "card-header": "Entity name (h3 or h4), optional badge for status",
+          "card-body": "One to three lines of supporting text at typography.fontSize.sm",
+          "card-footer": "Primary action or metadata row"
+        },
+        "notes": "Cards should have consistent height within a row. If card content length varies significantly, use a fixed-height card with overflow hidden rather than variable-height cards that break the grid rhythm."
+      },
+      {
+        "name": "Dashboard shell",
+        "description": "A full-page application shell with persistent navigation on the left and a scrollable main content area on the right.",
+        "components": [
+          "navigation",
+          "card",
+          "table",
+          "badge"
+        ],
+        "spacingConventions": {
+          "navigationWidth": "240px (desktop), collapsible on tablet, hidden on mobile",
+          "mainContentPadding": "spacing.8 (32px) on desktop, spacing.4 (16px) on mobile",
+          "betweenDashboardSections": "spacing.16 (64px)",
+          "betweenWidgetsInRow": "spacing.6 (24px)"
+        },
+        "slots": {
+          "nav": "Navigation component \u2014 vertical, with aria-label='Main navigation'",
+          "main": "Main content area \u2014 landmark role main, scrollable",
+          "header": "Page title (h1) + optional contextual action buttons",
+          "content": "One or more card rows, data tables, or widget grids"
+        },
+        "notes": "The navigation and main area should be siblings inside a CSS grid or flexbox container. Do not use nested scrolling containers \u2014 only the main area scrolls."
+      },
+      {
+        "name": "Dialog composition",
+        "description": "A modal dialog for confirmations, forms, or focused interactions that interrupt the primary flow.",
+        "components": [
+          "modal",
+          "input",
+          "select",
+          "button"
+        ],
+        "spacingConventions": {
+          "dialogPadding": "spacing.6 (24px)",
+          "betweenTitleAndBody": "spacing.4 (16px)",
+          "betweenBodyAndActions": "spacing.6 (24px)",
+          "dialogMaxWidth": "560px (confirmation), 640px (form)"
+        },
+        "slots": {
+          "title": "h2 \u2014 concise action phrase ('Delete this item?', 'Edit profile')",
+          "body": "Explanation text and optional form fields",
+          "actions": "Right-aligned button group: primary action + Cancel. Destructive dialogs use the destructive button variant for the primary action."
+        },
+        "notes": "Modal dialogs must trap focus. The Cancel button must always be available and must not be styled as a ghost button when the primary action is destructive \u2014 use secondary variant to ensure equal visual weight for the safe option."
+      },
+      {
+        "name": "Notification pattern",
+        "description": "Short-lived feedback messages using toast, and persistent inline feedback using badge or inline text.",
+        "components": [
+          "toast",
+          "badge"
+        ],
+        "spacingConventions": {
+          "toastStackGap": "spacing.2 (8px)",
+          "toastOffset": "spacing.4 (16px) from the viewport edge"
+        },
+        "slots": {
+          "toast-icon": "Optional leading icon conveying severity (success / warning / error)",
+          "toast-message": "One sentence at typography.fontSize.sm. No bullet points.",
+          "toast-action": "Optional single text link for an undo or view action"
+        },
+        "notes": "Toasts are ephemeral \u2014 do not use them for errors that require user action. Errors that block progress belong inline, adjacent to the field or action that caused them. Use badge for persistent status, toast for transient confirmation."
+      }
+    ]
   }
 }

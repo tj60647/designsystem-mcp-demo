@@ -118,7 +118,10 @@ export function initAgentsModal() {
   // ── Tab switching ──────────────────────────────────────────────────────
   function switchTab(tab) {
     activeTab = tab;
-    lobbyTabs.forEach(t => t.classList.toggle("active", t.dataset.tab === tab));
+    lobbyTabs.forEach(t => {
+      t.classList.toggle("active", t.dataset.tab === tab);
+      t.setAttribute("aria-selected", String(t.dataset.tab === tab));
+    });
     if (tab === "diagram") renderDiagram();
     else if (allAgents.length > 0) renderLobby();
   }

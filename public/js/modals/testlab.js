@@ -1023,7 +1023,10 @@ export function initTestLabModal() {
   // ── Tab switching ──────────────────────────────────────────────────────
   function switchTab(tab) {
     activeTab = tab;
-    tabBtns.forEach(t => t.classList.toggle("active", t.dataset.tab === tab));
+    tabBtns.forEach(t => {
+      t.classList.toggle("active", t.dataset.tab === tab);
+      t.setAttribute("aria-selected", String(t.dataset.tab === tab));
+    });
     if (tab === "suite") renderSuite();
     else renderPlayground();
   }

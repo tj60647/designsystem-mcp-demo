@@ -32,7 +32,8 @@ const __dirname  = dirname(__filename);
 const app = express();
 
 // Parse incoming JSON bodies — required for MCP's JSON-RPC message format.
-app.use(express.json());
+// Explicit 100 kb cap prevents oversized payloads from exhausting memory.
+app.use(express.json({ limit: "100kb" }));
 
 // Serve static files from public/ (demo UI, etc.)
 app.use(express.static(join(__dirname, "../public")));
@@ -63,8 +64,8 @@ app.get("/health", (_req, res) => {
     description:
       "A queryable context layer that makes design systems machine-readable and usable by AI.",
     primitives: {
-      tools: 28,
-      resources: "12 URIs + 4 templates",
+      tools: 27,
+      resources: "16 URIs",
       prompts: 10,
       logging: "4 levels, 14 events",
       sampling: "5 use cases",

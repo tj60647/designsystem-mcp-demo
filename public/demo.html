@@ -34,10 +34,10 @@
     </select>
   </div>
   <button class="topbar-btn topbar-btn-download" id="download-ds-btn" title="Download the AI-generated design system as JSON" style="display:none">⬇ Download Design System JSON</button>
-  <button class="topbar-btn" id="gen-from-web-btn" title="Generate a design system by extracting design tokens from a website URL" aria-label="Generate design system from website">Generate from Website</button>
-  <button class="topbar-btn" id="view-schema-btn" title="View and download the JSON schema for any data type">View Schema</button>
-  <button class="topbar-btn" id="view-agents-btn" title="View the chat agent configuration, system prompt, and tool list">View Agents</button>
-  <button class="topbar-btn" id="test-lab-btn" title="Test Lab — run 100 prompt/response tests across all agents">Test Lab</button>
+  <button class="topbar-btn topbar-btn-hide-xs" id="gen-from-web-btn" title="Generate a design system by extracting design tokens from a website URL" aria-label="Generate design system from website">Generate from Website</button>
+  <button class="topbar-btn topbar-btn-hide-xs" id="view-schema-btn" title="View and download the JSON schema for any data type">View Schema</button>
+  <button class="topbar-btn topbar-btn-hide-xs" id="view-agents-btn" title="View the chat agent configuration, system prompt, and tool list">View Agents</button>
+  <button class="topbar-btn topbar-btn-hide-xs" id="test-lab-btn" title="Test Lab — run 100 prompt/response tests across all agents">Test Lab</button>
   <button class="topbar-btn" id="load-json-btn" title="Replace a data file (tokens, components, themes, icons) with custom JSON">Load JSON</button>
   <button class="topbar-btn" id="reset-btn" title="Reset all data back to bundled defaults">Reset</button>
   <button class="topbar-btn" id="mcp-info-btn" title="How to connect to the MCP server">MCP server</button>
@@ -138,8 +138,8 @@
     <div class="modal-header">
       <span class="modal-title" id="agents-modal-title">Agent Lobby</span>
       <div class="agents-lobby-tabs" role="tablist">
-        <button class="agents-lobby-tab active" data-tab="lobby" role="tab">Agents</button>
-        <button class="agents-lobby-tab" data-tab="diagram" role="tab">System Diagram</button>
+        <button class="agents-lobby-tab active" data-tab="lobby" role="tab" aria-selected="true">Agents</button>
+        <button class="agents-lobby-tab" data-tab="diagram" role="tab" aria-selected="false">System Diagram</button>
       </div>
       <button class="modal-close" id="agents-modal-close" aria-label="Close">✕</button>
     </div>
@@ -158,8 +158,8 @@
     <div class="modal-header">
       <span class="modal-title" id="testlab-modal-title">Agent Test Lab</span>
       <div class="agents-lobby-tabs" role="tablist">
-        <button class="tl-tab active" data-tab="suite" role="tab">Test Suite (100)</button>
-        <button class="tl-tab" data-tab="playground" role="tab">Playground</button>
+        <button class="tl-tab active" data-tab="suite" role="tab" aria-selected="true">Test Suite (100)</button>
+        <button class="tl-tab" data-tab="playground" role="tab" aria-selected="false">Playground</button>
       </div>
       <button class="modal-close" id="testlab-modal-close" aria-label="Close">✕</button>
     </div>
@@ -290,13 +290,13 @@
           <button class="comp-detail-close" id="comp-detail-close" aria-label="Close detail">&#x2715;</button>
         </div>
         <div class="comp-detail-tabs" role="tablist">
-          <button class="comp-detail-tab active" data-pane="overview" role="tab">Overview</button>
-          <button class="comp-detail-tab" data-pane="props" role="tab">Props</button>
-          <button class="comp-detail-tab" data-pane="anatomy" role="tab">Anatomy</button>
-          <button class="comp-detail-tab" data-pane="tokens" role="tab">Tokens</button>
-          <button class="comp-detail-tab" data-pane="a11y" role="tab">Accessibility</button>
+          <button class="comp-detail-tab active" id="comp-tab-overview" data-pane="overview" role="tab" aria-selected="true" aria-controls="comp-detail-body">Overview</button>
+          <button class="comp-detail-tab" id="comp-tab-props" data-pane="props" role="tab" aria-selected="false" aria-controls="comp-detail-body">Props</button>
+          <button class="comp-detail-tab" id="comp-tab-anatomy" data-pane="anatomy" role="tab" aria-selected="false" aria-controls="comp-detail-body">Anatomy</button>
+          <button class="comp-detail-tab" id="comp-tab-tokens" data-pane="tokens" role="tab" aria-selected="false" aria-controls="comp-detail-body">Tokens</button>
+          <button class="comp-detail-tab" id="comp-tab-a11y" data-pane="a11y" role="tab" aria-selected="false" aria-controls="comp-detail-body">Accessibility</button>
         </div>
-        <div class="comp-detail-body" id="comp-detail-body"></div>
+        <div class="comp-detail-body" id="comp-detail-body" role="tabpanel" aria-labelledby="comp-tab-overview"></div>
       </div>
     </section>
 

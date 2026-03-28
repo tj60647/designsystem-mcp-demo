@@ -16,7 +16,11 @@
   background: var(--bg-panel);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+.right-tabs::-webkit-scrollbar { display: none; }
 .right-tab {
   font-size: 13px; font-weight: 500;
   padding: 10px 14px;
@@ -27,6 +31,7 @@
   margin-bottom: -1px;
   transition: color .15s, border-color .15s;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .right-tab:hover { color: var(--text); }
 .right-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
@@ -61,7 +66,7 @@
   flex: 1; background: var(--bg-input); color: var(--text);
   border: 1px solid var(--border); border-radius: var(--radius-sm);
   padding: 5px 10px; font-size: 12px; font-family: inherit;
-  outline: none; transition: border-color .15s;
+  transition: border-color .15s;
 }
 .explorer-search:focus { border-color: var(--accent); }
 .explorer-search::placeholder { color: var(--text-dim); }
@@ -75,7 +80,7 @@
 .explorer-refresh-btn:hover { color: var(--text); }
 
 .explorer-body {
-  flex: 1; overflow-y: auto; padding: 14px;
+  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px;
 }
 .explorer-body::-webkit-scrollbar { width: 6px; }
 .explorer-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
@@ -160,7 +165,11 @@
   background: var(--bg-panel);
   border-bottom: 1px solid var(--border-soft);
   flex-shrink: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+.comp-detail-tabs::-webkit-scrollbar { display: none; }
 .comp-detail-tab {
   font-size: 11px; font-weight: 500;
   padding: 7px 12px; color: var(--text-muted);
@@ -172,7 +181,7 @@
 .comp-detail-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
 .comp-detail-body {
-  flex: 1; overflow-y: auto; padding: 12px 14px;
+  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 14px;
   font-size: 12px; color: var(--text-muted);
 }
 .comp-detail-body::-webkit-scrollbar { width: 6px; }
@@ -365,6 +374,7 @@
 .tools-body {
   flex: 1;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 10px 14px 12px;
 }
 .tools-body::-webkit-scrollbar { width: 6px; }
@@ -416,14 +426,14 @@
 .gallery-section.active { display: flex; }
 
 .gallery-body {
-  flex: 1; overflow-y: auto; padding: 14px;
+  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px;
 }
 .gallery-body::-webkit-scrollbar { width: 6px; }
 .gallery-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 12px;
 }
 
@@ -440,6 +450,7 @@
   padding: 10px 14px 8px;
   border-bottom: 1px solid var(--border-soft);
   display: flex; align-items: center; gap: 8px;
+  flex-wrap: wrap;
 }
 .gallery-card-name { font-size: 13px; font-weight: 600; flex-shrink: 0; }
 
@@ -506,6 +517,7 @@
 .about-body {
   flex: 1;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 20px 24px;
   font-size: 13px; line-height: 1.7; color: var(--text-muted);
 }
@@ -608,16 +620,24 @@
 /* Mobile responsive */
 @media (max-width: 900px) {
   .chat-panel { width: 42%; min-width: 260px; }
+  /* Fade right edge of tab strip to hint overflow */
+  .right-tabs {
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
+    mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
+  }
 }
 
 @media (max-width: 700px) {
   .main { flex-direction: column; height: auto; overflow: visible; }
   .chat-panel { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid var(--border); height: 55vh; }
-  .right-column { height: auto; min-height: 45vh; }
+  .right-column { height: auto; min-height: 45vh; overflow: visible; }
   .preview-section { flex: none; height: 40vh; }
   .explorer-section { flex: none; height: 40vh; }
   .gallery-section { flex: none; height: 40vh; }
   .about-section { flex: none; height: 60vh; }
+  .about-body { padding: 14px 16px; }
   .tools-section { max-height: 140px; }
-  .comp-detail { max-height: 55%; }
+  .comp-detail { max-height: 55%; min-height: 200px; }
+  .right-tab { font-size: 12px; padding: 9px 10px; }
+  .about-table td:first-child { white-space: normal; }
 }

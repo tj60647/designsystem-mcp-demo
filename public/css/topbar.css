@@ -143,5 +143,6 @@
 }
 
 @media (max-width: 480px) {
-  .topbar-btn-hide-xs { display: none; }
+  /* Move secondary buttons below the model-select row instead of hiding them */
+  .topbar-btn-hide-xs { order: 11; }
 }

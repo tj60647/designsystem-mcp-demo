@@ -42,6 +42,7 @@ export function initRightTabs() {
   tabGallery.addEventListener("click",  () => activateTab(tabGallery));
   tabAbout.addEventListener("click",    () => activateTab(tabAbout));
 
-  // Expose globally so handleGeneratedDesignSystem can switch tabs
+  // Expose globally so other modules can switch tabs
   window.switchToExplorerTab = () => activateTab(tabExplorer);
+  window.switchToAboutTab    = () => activateTab(tabAbout);
 }

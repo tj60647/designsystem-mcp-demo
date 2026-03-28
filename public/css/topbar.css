@@ -83,6 +83,15 @@
   background: rgba(63,185,80,.15) !important;
 }
 
+.topbar-btn-about {
+  color: var(--accent);
+  border-color: var(--accent-dim);
+}
+.topbar-btn-about:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
 /* ── Generated design system card ── */
 .generated-ds-card {
   background: rgba(63,185,80,.07);

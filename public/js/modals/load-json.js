@@ -162,6 +162,13 @@ export function initDropZone() {
     fileInput.click();
   });
 
+  zone.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      fileInput.click();
+    }
+  });
+
   zone.addEventListener("dragenter", (e) => { e.preventDefault(); zone.classList.add("drag-over"); });
   zone.addEventListener("dragover",  (e) => { e.preventDefault(); zone.classList.add("drag-over"); });
   zone.addEventListener("dragleave", (e) => { if (!zone.contains(e.relatedTarget)) zone.classList.remove("drag-over"); });

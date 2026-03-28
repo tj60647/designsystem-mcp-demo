@@ -19,9 +19,6 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  /* Fade on the right edge to hint that there are more tabs */
-  -webkit-mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
-  mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
 }
 .right-tabs::-webkit-scrollbar { display: none; }
 .right-tab {
@@ -623,6 +620,11 @@
 /* Mobile responsive */
 @media (max-width: 900px) {
   .chat-panel { width: 42%; min-width: 260px; }
+  /* Fade right edge of tab strip to hint overflow */
+  .right-tabs {
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
+    mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%);
+  }
 }
 
 @media (max-width: 700px) {

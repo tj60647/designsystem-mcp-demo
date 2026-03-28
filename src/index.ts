@@ -63,8 +63,8 @@ app.get("/health", (_req, res) => {
     description:
       "A queryable context layer that makes design systems machine-readable and usable by AI.",
     primitives: {
-      tools: 28,
-      resources: "12 URIs + 4 templates",
+      tools: 27,
+      resources: "16 URIs",
       prompts: 10,
       logging: "4 levels, 14 events",
       sampling: "5 use cases",

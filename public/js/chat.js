@@ -368,55 +368,6 @@ export function scrollToBottom() {
   requestAnimationFrame(() => { messagesEl.scrollTop = messagesEl.scrollHeight; });
 }
 
-// ── Thinking / reasoning block ────────────────────────────────────────────────
-function appendThinkingBlock(steps) {
-  const toolSteps   = steps.filter(s => s.type === "tool_call");
-  const reasonSteps = steps.filter(s => s.type === "reasoning");
-  const totalSteps  = steps.length;
-
-  const parts = [];
-  if (toolSteps.length > 0) parts.push(`${toolSteps.length} tool call${toolSteps.length !== 1 ? "s" : ""}`);
-  if (reasonSteps.length > 0) parts.push("model reasoning");
-  const summary = parts.length > 0 ? parts.join(" · ") : `${totalSteps} step${totalSteps !== 1 ? "s" : ""}`;
-
-  const block = document.createElement("div");
-  block.className = "thinking-block";
-
-  const toggle = document.createElement("button");
-  toggle.className = "thinking-toggle";
-  toggle.innerHTML = `<span class="thinking-toggle-icon">▶</span><span>Thought for ${summary}</span>`;
-  toggle.addEventListener("click", () => block.classList.toggle("expanded"));
-
-  const stepsEl = document.createElement("div");
-  stepsEl.className = "thinking-steps";
-
-  for (const step of steps) {
-    const item = document.createElement("div");
-    item.className = "thinking-step";
-
-    if (step.type === "tool_call") {
-      let argsLabel = "";
-      try {
-        const parsed = JSON.parse(step.args || "{}");
-        const keys = Object.keys(parsed);
-        if (keys.length > 0) {
-          const first = String(parsed[keys[0]]).slice(0, 40);
-          argsLabel = ` <span style="color:var(--text-dim);font-size:10.5px">${escapeHtml(keys[0])}: ${escapeHtml(first)}${first.length >= 40 ? "…" : ""}</span>`;
-        }
-      } catch { /* ignore */ }
-      item.innerHTML = `<span class="thinking-step-tool"><span style="color:var(--text-dim)">Called</span> <span class="thinking-step-tool-name">${escapeHtml(step.tool)}</span>${argsLabel}</span>`;
-    } else if (step.type === "reasoning") {
-      item.innerHTML = `<div class="thinking-step-reasoning">${escapeHtml(step.content)}</div>`;
-    }
-
-    stepsEl.appendChild(item);
-  }
-
-  block.appendChild(toggle);
-  block.appendChild(stepsEl);
-  messagesEl.appendChild(block);
-}
-
 // ── Generated Design System handler ──────────────────────────────────────────
 export function handleGeneratedDesignSystem(dsData) {
   generatedDesignSystemData = dsData;

@@ -34,7 +34,7 @@
     </select>
   </div>
   <button class="topbar-btn topbar-btn-download" id="download-ds-btn" title="Download the AI-generated design system as JSON" style="display:none">⬇ Download Design System JSON</button>
-  <button class="topbar-btn" id="gen-from-web-btn" title="Generate a design system by extracting design tokens from a website URL" aria-label="Generate design system from website">Generate from Website</button>
+  <button class="topbar-btn topbar-btn-hide-xs" id="gen-from-web-btn" title="Generate a design system by extracting design tokens from a website URL" aria-label="Generate design system from website">Generate from Website</button>
   <button class="topbar-btn topbar-btn-hide-xs" id="view-schema-btn" title="View and download the JSON schema for any data type">View Schema</button>
   <button class="topbar-btn topbar-btn-hide-xs" id="view-agents-btn" title="View the chat agent configuration, system prompt, and tool list">View Agents</button>
   <button class="topbar-btn topbar-btn-hide-xs" id="test-lab-btn" title="Test Lab — run 100 prompt/response tests across all agents">Test Lab</button>
@@ -138,8 +138,8 @@
     <div class="modal-header">
       <span class="modal-title" id="agents-modal-title">Agent Lobby</span>
       <div class="agents-lobby-tabs" role="tablist">
-        <button class="agents-lobby-tab active" data-tab="lobby" role="tab">Agents</button>
-        <button class="agents-lobby-tab" data-tab="diagram" role="tab">System Diagram</button>
+        <button class="agents-lobby-tab active" data-tab="lobby" role="tab" aria-selected="true">Agents</button>
+        <button class="agents-lobby-tab" data-tab="diagram" role="tab" aria-selected="false">System Diagram</button>
       </div>
       <button class="modal-close" id="agents-modal-close" aria-label="Close">✕</button>
     </div>
@@ -158,8 +158,8 @@
     <div class="modal-header">
       <span class="modal-title" id="testlab-modal-title">Agent Test Lab</span>
       <div class="agents-lobby-tabs" role="tablist">
-        <button class="tl-tab active" data-tab="suite" role="tab">Test Suite (100)</button>
-        <button class="tl-tab" data-tab="playground" role="tab">Playground</button>
+        <button class="tl-tab active" data-tab="suite" role="tab" aria-selected="true">Test Suite (100)</button>
+        <button class="tl-tab" data-tab="playground" role="tab" aria-selected="false">Playground</button>
       </div>
       <button class="modal-close" id="testlab-modal-close" aria-label="Close">✕</button>
     </div>

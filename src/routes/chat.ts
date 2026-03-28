@@ -123,6 +123,14 @@ router.post("/chat", async (req, res) => {
     return;
   }
 
+  // Enforce that every message has a permitted role to prevent system-prompt injection.
+  const ALLOWED_ROLES = new Set(["user", "assistant"]);
+  const invalidRole = messages.find((m) => !ALLOWED_ROLES.has(m.role));
+  if (invalidRole) {
+    res.status(400).json({ error: `Invalid message role: "${invalidRole.role}". Only "user" and "assistant" are permitted.` });
+    return;
+  }
+
   const model = requestedModel ?? process.env.OPENROUTER_MODEL ?? "openai/gpt-oss-20b:nitro";
 
   // Stream progress updates via Server-Sent Events

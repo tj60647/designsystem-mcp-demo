@@ -245,6 +245,7 @@
       <button class="right-tab active" id="tab-preview" role="tab" aria-selected="true" aria-controls="panel-preview">Live Preview</button>
       <button class="right-tab" id="tab-explorer" role="tab" aria-selected="false" aria-controls="panel-explorer">Component Explorer</button>
       <button class="right-tab" id="tab-gallery" role="tab" aria-selected="false" aria-controls="panel-gallery">Component Gallery</button>
+      <button class="right-tab" id="tab-about" role="tab" aria-selected="false" aria-controls="panel-about">What &amp; Why</button>
     </div>
 
     <!-- Live Preview section -->
@@ -313,16 +314,133 @@
       </div>
     </section>
 
-    <!-- Design System Used section -->
-    <section class="tools-section" aria-label="Design System Used">
+    <!-- What & Why (About) section -->
+    <section class="about-section" id="panel-about" role="tabpanel" aria-labelledby="tab-about">
+      <div class="about-body">
+
+        <div class="about-intro">
+          A queryable context layer that makes design systems <strong>machine-readable</strong>, <strong>enforceable</strong>, and <strong>usable by AI</strong> — via the open <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener noreferrer">Model Context Protocol (MCP)</a>.
+        </div>
+
+        <div class="about-section-block">
+          <h3>What is a Design System MCP?</h3>
+          <p>Instead of pasting documentation into a prompt, you expose your design system as a set of <strong>queryable tools</strong>. An AI assistant can then look up exact token values, fetch component constraints, validate its own output against the real system, and detect CSS values that don't match any token — all at query time, not from a snapshot.</p>
+          <p>Because MCP is an open standard, one server works with Claude Desktop, Cursor, GitHub Copilot, and any custom agent — without rewriting function schemas for each platform.</p>
+        </div>
+
+        <div class="about-section-block">
+          <h3>Why not just use JSON or a REST API?</h3>
+          <table class="about-table">
+            <thead><tr><th>Approach</th><th>Key limitations</th></tr></thead>
+            <tbody>
+              <tr><td>Paste docs into a prompt</td><td>Snapshot in time; eats context window; AI guesses token names</td></tr>
+              <tr><td>Static JSON in context</td><td>Entire file in every prompt; no selectivity; still a snapshot</td></tr>
+              <tr><td>Database / REST API</td><td>Custom function schema per AI platform; no standard protocol</td></tr>
+              <tr><td>Figma Variables / Tokens Studio</td><td>Not directly callable by AI tools without a custom translation layer</td></tr>
+              <tr class="about-table-highlight"><td><strong>MCP ✓</strong></td><td>One server, any MCP-compatible client — live, selective, validated</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="about-section-block">
+          <h3>Why this matters</h3>
+          <table class="about-table">
+            <thead><tr><th>Without MCP</th><th>With MCP</th></tr></thead>
+            <tbody>
+              <tr><td>AI reads static docs pasted into a prompt</td><td>AI fetches structured data at query time</td></tr>
+              <tr><td>Token names are guessed or hallucinated</td><td>Token names come from the live source of truth</td></tr>
+              <tr><td>Component constraints exist only as prose</td><td>Constraints are machine-readable and enforceable</td></tr>
+              <tr><td>Validation happens in code review</td><td>Validation happens before code is written</td></tr>
+              <tr><td>Design system changes require re-prompting</td><td>AI always queries the current state of the system</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="about-section-block">
+          <h3>How it works</h3>
+          <pre class="about-diagram">User  ──▶  LLM (AI)  ──▶  MCP Server (POST /mcp)  ──▶  Design System
+                  ◀── grounded response  ◀── structured data (tokens, components, themes)</pre>
+          <ol class="about-steps">
+            <li>User describes a UI — e.g. <em>"Create a login form with a primary submit button"</em></li>
+            <li>The LLM recognises it needs design system context and calls MCP tools automatically (<code>get_component("button")</code>, <code>get_tokens("spacing")</code>)</li>
+            <li>The MCP server returns real token values, approved variants, constraints, and accessibility rules</li>
+            <li>The LLM generates a grounded response using actual token names — not guesses</li>
+            <li>The Live Preview renders the result; the MCP Tools panel shows which queries were made</li>
+          </ol>
+        </div>
+
+        <div class="about-section-block">
+          <h3>The 28 MCP tools in this demo</h3>
+          <div class="about-tools-grid">
+            <div class="about-tools-group">
+              <div class="about-tools-group-label">Tokens</div>
+              <code>list_token_categories</code>
+              <code>get_tokens</code>
+              <code>get_token</code>
+              <code>suggest_token</code>
+            </div>
+            <div class="about-tools-group">
+              <div class="about-tools-group-label">Components</div>
+              <code>list_components</code>
+              <code>get_component</code>
+              <code>get_component_tokens</code>
+              <code>get_component_constraints</code>
+              <code>get_accessibility_guidance</code>
+              <code>validate_component_usage</code>
+            </div>
+            <div class="about-tools-group">
+              <div class="about-tools-group-label">Color &amp; Themes</div>
+              <code>validate_color</code>
+              <code>check_contrast</code>
+              <code>list_themes</code>
+              <code>get_theme</code>
+            </div>
+            <div class="about-tools-group">
+              <div class="about-tools-group-label">Icons</div>
+              <code>list_icons</code>
+              <code>get_icon</code>
+              <code>search_icons</code>
+            </div>
+            <div class="about-tools-group">
+              <div class="about-tools-group-label">Search &amp; Diff</div>
+              <code>search</code>
+              <code>diff_against_system</code>
+              <code>get_changelog</code>
+              <code>get_deprecations</code>
+            </div>
+            <div class="about-tools-group">
+              <div class="about-tools-group-label">Style Guide</div>
+              <code>get_style_guide</code>
+              <code>get_style_guide_section</code>
+              <code>validate_design_decision</code>
+            </div>
+          </div>
+        </div>
+
+        <div class="about-section-block">
+          <h3>Connecting an AI client</h3>
+          <p>Any MCP-compatible client can connect to this server at <code>POST /mcp</code>. Click <strong>MCP server</strong> in the top bar for setup instructions for Claude Desktop, GitHub Copilot, and Cursor.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Preview Details section (MCP Tools + Preview Notes) -->
+    <section class="tools-section" aria-label="Preview Details">
       <div class="panel-header">
-        <h2>Design System Used</h2>
+        <div class="tools-sub-tabs" role="tablist">
+          <button class="tools-sub-tab active" id="tab-mcp-tools" role="tab" aria-selected="true">MCP Tools</button>
+          <button class="tools-sub-tab" id="tab-preview-notes" role="tab" aria-selected="false">Preview Notes</button>
+        </div>
         <div class="panel-header-actions">
-          <button class="info-btn" data-info="tools" title="About the Design System Used panel">ℹ</button>
+          <button class="info-btn" data-info="tools" title="About the MCP Tools panel">ℹ</button>
         </div>
       </div>
       <div class="tools-body" id="tools-body">
         <div class="tools-empty">MCP tools called will appear here after you send a message.</div>
+      </div>
+      <div class="tools-body" id="preview-notes-body" style="display:none">
+        <div class="tools-empty">The AI's explanation for the current preview will appear here.</div>
       </div>
     </section>
 

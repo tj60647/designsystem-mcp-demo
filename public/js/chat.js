@@ -301,7 +301,7 @@ async function handleSend() {
           }
 
           appendMessage("assistant", message);
-          updateLivePreview(preview, toolsUsed, event.model);
+          updateLivePreview(preview, toolsUsed, event.model, message);
 
           if (event.generatedDesignSystem) {
             handleGeneratedDesignSystem(event.generatedDesignSystem);

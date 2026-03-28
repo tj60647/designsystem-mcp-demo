@@ -22,6 +22,12 @@
 
 html, body { height: 100%; }
 
+/* On mobile the layout stacks vertically and can exceed viewport height.
+   Reset html to auto so the body can grow and the page scrolls naturally. */
+@media (max-width: 700px) {
+  html { height: auto; }
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   font-size: 14px;

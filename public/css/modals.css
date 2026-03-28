@@ -432,4 +432,14 @@
   padding: 8px 10px; overflow-x: auto; white-space: pre;
   max-height: 120px; overflow-y: auto;
 }
+
+/* ── Mobile modal adjustments ── */
+@media (max-width: 600px) {
+  .modal { padding: 16px; }
+  .modal-header { flex-wrap: wrap; gap: 8px; }
+  .agents-lobby-tabs { margin-left: 0; width: 100%; }
+  .agents-modal { width: calc(100vw - 32px); }
+  .testlab-modal { width: calc(100vw - 32px); }
+  .schema-modal { width: calc(100vw - 32px); }
+}
   </style>

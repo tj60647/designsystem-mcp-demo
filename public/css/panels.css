@@ -66,7 +66,7 @@
   flex: 1; background: var(--bg-input); color: var(--text);
   border: 1px solid var(--border); border-radius: var(--radius-sm);
   padding: 5px 10px; font-size: 12px; font-family: inherit;
-  outline: none; transition: border-color .15s;
+  transition: border-color .15s;
 }
 .explorer-search:focus { border-color: var(--accent); }
 .explorer-search::placeholder { color: var(--text-dim); }

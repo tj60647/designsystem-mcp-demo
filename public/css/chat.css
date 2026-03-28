@@ -349,7 +349,6 @@ textarea {
   resize: none;
   min-height: 38px;
   max-height: 120px;
-  outline: none;
   transition: border-color .15s;
 }
 textarea:focus { border-color: var(--accent); }

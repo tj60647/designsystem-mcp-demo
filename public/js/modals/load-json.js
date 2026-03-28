@@ -169,6 +169,16 @@ export function initDropZone() {
     }
   });
 
+  // The inner Browse-file <label role="button"> click-forwards to the hidden
+  // input naturally on mouse, but keyboard (Enter / Space) needs an explicit handler.
+  const browseLabel = zone.querySelector(".drop-zone-file-btn");
+  browseLabel?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      fileInput.click();
+    }
+  });
+
   zone.addEventListener("dragenter", (e) => { e.preventDefault(); zone.classList.add("drag-over"); });
   zone.addEventListener("dragover",  (e) => { e.preventDefault(); zone.classList.add("drag-over"); });
   zone.addEventListener("dragleave", (e) => { if (!zone.contains(e.relatedTarget)) zone.classList.remove("drag-over"); });

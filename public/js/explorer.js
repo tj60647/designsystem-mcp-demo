@@ -102,7 +102,9 @@ function openCompDetail(key) {
 
   document.querySelectorAll(".comp-detail-tab").forEach(t => {
     t.classList.toggle("active", t.dataset.pane === "overview");
+    t.setAttribute("aria-selected", String(t.dataset.pane === "overview"));
   });
+  document.getElementById("comp-detail-body").setAttribute("aria-labelledby", "comp-tab-overview");
 }
 
 function renderDetailPane(comp, pane) {
@@ -251,8 +253,13 @@ export function initComponentExplorer() {
 
   document.querySelectorAll(".comp-detail-tab").forEach(tab => {
     tab.addEventListener("click", () => {
-      document.querySelectorAll(".comp-detail-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".comp-detail-tab").forEach(t => {
+        t.classList.remove("active");
+        t.setAttribute("aria-selected", "false");
+      });
       tab.classList.add("active");
+      tab.setAttribute("aria-selected", "true");
+      document.getElementById("comp-detail-body").setAttribute("aria-labelledby", tab.id);
       activeDetailPane = tab.dataset.pane;
       if (selectedCompKey && explorerData[selectedCompKey]) {
         renderDetailPane(explorerData[selectedCompKey], activeDetailPane);

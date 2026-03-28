@@ -34,12 +34,41 @@ const ALLOWED_PROTOCOLS = new Set(["http:", "https:"]);
 
 /** Reject private/loopback IP ranges to prevent SSRF */
 function isPrivateHostname(hostname: string): boolean {
-  if (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]") return true;
-  if (/^10\.\d+\.\d+\.\d+$/.test(hostname)) return true;
-  if (/^172\.(1[6-9]|2\d|3[01])\.\d+\.\d+$/.test(hostname)) return true;
-  if (/^192\.168\.\d+\.\d+$/.test(hostname)) return true;
-  if (/^0\./.test(hostname)) return true;
-  if (/^169\.254\./.test(hostname)) return true;
+  // Strip IPv6 brackets so pattern checks work uniformly
+  const bare = hostname.startsWith("[") && hostname.endsWith("]")
+    ? hostname.slice(1, -1)
+    : hostname;
+
+  // IPv4 loopback and well-known hostnames
+  if (bare === "localhost" || bare === "127.0.0.1") return true;
+
+  // IPv6 loopback (::1 and its verbose equivalents)
+  if (bare === "::1" || bare === "0:0:0:0:0:0:0:1") return true;
+
+  // IPv4-mapped IPv6 (::ffff:x.x.x.x) — recursively check the embedded address
+  const ipv4Mapped = bare.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/i);
+  if (ipv4Mapped) return isPrivateHostname(ipv4Mapped[1]);
+  // Hex-encoded IPv4-mapped form (::ffff:xxxx:xxxx) — block entire ::ffff: range conservatively
+  if (/^::ffff:/i.test(bare)) return true;
+
+  // IPv6 link-local (fe80::/10 — fe80 through febf)
+  if (/^fe[89ab]/i.test(bare)) return true;
+
+  // IPv6 Unique Local Address (fc00::/7 — fc00 through fdff)
+  if (/^f[cd]/i.test(bare)) return true;
+
+  // IPv4 private ranges
+  if (/^10\.\d+\.\d+\.\d+$/.test(bare)) return true;
+  if (/^172\.(1[6-9]|2\d|3[01])\.\d+\.\d+$/.test(bare)) return true;
+  if (/^192\.168\.\d+\.\d+$/.test(bare)) return true;
+
+  // CGNAT (100.64.0.0/10 = 100.64.x.x – 100.127.x.x)
+  if (/^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.\d+\.\d+$/.test(bare)) return true;
+
+  // Link-local / unspecified IPv4
+  if (/^0\./.test(bare)) return true;
+  if (/^169\.254\./.test(bare)) return true;
+
   return false;
 }
 

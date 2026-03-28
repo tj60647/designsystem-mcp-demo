@@ -141,3 +141,7 @@
   .topbar-spacer { display: none; }
   .topbar-btn { font-size: 11px; padding: 4px 8px; }
 }
+
+@media (max-width: 480px) {
+  .topbar-btn-hide-xs { display: none; }
+}

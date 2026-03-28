@@ -16,7 +16,11 @@
   background: var(--bg-panel);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+.right-tabs::-webkit-scrollbar { display: none; }
 .right-tab {
   font-size: 13px; font-weight: 500;
   padding: 10px 14px;
@@ -27,6 +31,7 @@
   margin-bottom: -1px;
   transition: color .15s, border-color .15s;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .right-tab:hover { color: var(--text); }
 .right-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
@@ -620,4 +625,6 @@
   .about-section { flex: none; height: 60vh; }
   .tools-section { max-height: 140px; }
   .comp-detail { max-height: 55%; }
+  .right-tab { font-size: 12px; padding: 9px 10px; }
+  .about-table td:first-child { white-space: normal; }
 }

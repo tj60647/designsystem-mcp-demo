@@ -200,8 +200,8 @@ async function handleSend() {
       const trace = getOrCreateTrace();
       const row = document.createElement("div");
       row.className = "trace-item trace-reasoning-row";
-      const short = content.slice(0, 90).replace(/\n/g, ' ');
-      row.innerHTML = `<span class="trace-reasoning-preview">${escapeHtml(short)}${content.length > 90 ? '…' : ''}</span>`;
+      const short = content.slice(0, 200).replace(/\n/g, ' ');
+      row.innerHTML = `<span class="trace-reasoning-preview">${escapeHtml(short)}${content.length > 200 ? '…' : ''}</span>`;
       const detail = document.createElement("div");
       detail.className = "trace-detail";
       detail.innerHTML = `<div class="trace-detail-section"><pre class="trace-detail-code trace-reasoning-full">${escapeHtml(content)}</pre></div>`;
@@ -238,7 +238,7 @@ async function handleSend() {
         : "Processed";
 
       const block = document.createElement("div");
-      block.className = "thinking-block";
+      block.className = "thinking-block expanded";
 
       const toggle = document.createElement("button");
       toggle.className = "thinking-toggle";
@@ -301,7 +301,7 @@ async function handleSend() {
           }
 
           appendMessage("assistant", message);
-          updateLivePreview(preview, toolsUsed, event.model, message);
+          updateLivePreview(preview, toolsUsed, event.model, preview ? message : null);
 
           if (event.generatedDesignSystem) {
             handleGeneratedDesignSystem(event.generatedDesignSystem);

@@ -285,8 +285,10 @@
   font-size: 11px;
   flex: 1;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
+  max-height: 80px;
+  overflow-y: hidden;
 }
 .trace-reasoning-full {
   font-style: italic;

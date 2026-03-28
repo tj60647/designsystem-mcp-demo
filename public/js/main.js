@@ -31,5 +31,6 @@ initValidationModal();
 initGenerateFromWebsiteModal();
 initTestLabModal();
 initRightTabs();
+document.getElementById('about-btn').addEventListener('click', () => window.switchToAboutTab());
 initComponentExplorer();
 initGallery();

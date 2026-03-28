@@ -283,7 +283,18 @@ router.post("/chat", async (req, res) => {
       if (!orResponse.ok) {
         const errText = await orResponse.text();
         clearTimeout(chatTimer);
-        endWithError(`OpenRouter API error: ${errText}`);
+        let errMsg = `OpenRouter API error (${orResponse.status})`;
+        try {
+          const errJson = JSON.parse(errText) as { error?: { message?: string } };
+          if (errJson.error?.message) {
+            errMsg += `: ${errJson.error.message}`;
+          } else {
+            errMsg += `: ${errText}`;
+          }
+        } catch {
+          errMsg += `: ${errText}`;
+        }
+        endWithError(errMsg);
         return;
       }
 
@@ -438,10 +449,11 @@ router.post("/chat", async (req, res) => {
     clearTimeout(chatTimer);
     console.error("Chat error:", err);
     const isTimeout = (err as { name?: string }).name === "AbortError";
+    const errMessage = (err as { message?: string }).message;
     endWithError(
       isTimeout
         ? "The AI took too long to respond. Please try a simpler question or try again."
-        : "Internal server error during chat.",
+        : `Internal server error during chat${errMessage ? `: ${errMessage}.` : "."}`,
     );
   }
 });

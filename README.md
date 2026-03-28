@@ -51,6 +51,28 @@ A **Design System MCP** applies this idea to a design system. Instead of pasting
 
 The result is AI-generated UI that is **grounded in your actual design system** — not hallucinated, not outdated, and not inconsistent.
 
+### Why not just use JSON, a database, or a REST API?
+
+Before MCP existed, teams used several other approaches to give AI access to structured data. Here's how they compare:
+
+| Approach | How it works | Key limitations |
+|---|---|---|
+| **Paste docs into a prompt** | Copy-paste Storybook, Notion, or Figma page content into the system prompt | Snapshot in time (stale within days); eats context window; AI guesses at token names; no validation |
+| **Static JSON in context** | Send `tokens.json` or `components.json` as part of every prompt | Still a snapshot; entire file occupies context budget even when you only need one token; no selectivity or validation |
+| **Database / REST API** | Expose design system data over a custom HTTP API; register it as a function in OpenAI/Anthropic/Gemini | Must write a custom function schema for every AI platform (they each use different formats); no standard protocol; versioning and capability negotiation are bespoke per integration |
+| **Figma Variables / Tokens Studio** | Query design tokens directly from Figma or Tokens Studio | Great for designer tooling, but not directly callable by AI coding tools without a translation layer and custom integration |
+| **MCP** | Design system exposed as named, typed tools over a standard protocol | One server, any MCP-compatible client — no custom integration code per platform |
+
+**Why MCP wins for this use case:**
+
+- **Live, selective querying.** The AI fetches only what it needs (e.g. `get_component("button")`) instead of receiving the entire design system file in every prompt. This keeps context usage low and responses fast.
+- **Write once, works everywhere.** One MCP server works with Claude Desktop, Cursor, GitHub Copilot, and any custom agent built with the MCP SDK — without rewriting function schemas for each platform.
+- **Validation at query time.** Tools like `validate_component_usage` let the AI check its own output against the design system *before* it writes code, not after a human reviews it.
+- **Composable tool calls.** In a single turn the AI can chain `get_component` → `get_component_tokens` → `check_contrast` → `validate_component_usage`, building up a grounded picture incrementally.
+- **Always current.** Because the MCP server reads from a live data store, swapping in an updated `components.json` via `POST /api/data` is reflected in the next tool call — no re-prompting, no context updates.
+
+The short version: a static JSON file is a document. A REST API is a custom integration. MCP is a **standard interface** — the same standard the AI already knows how to use.
+
 ---
 
 ## 2. Why this matters
@@ -74,6 +96,27 @@ This means AI-generated UI drifts from the design system over time, and there is
 | Component constraints exist only as prose | Constraints are machine-readable and enforceable |
 | Validation happens in code review | Validation happens before code is written |
 | Design system changes require re-prompting | AI always queries the current state of the system |
+
+### A real-world example
+
+Imagine a product team at a mid-size company. They have an established design system — tokens exported from Figma, component specs living in Storybook, and a handful of engineers who regularly ask "what's the right button variant for a destructive action?" or "which spacing token should I use between form fields?".
+
+Without MCP, an engineer asking their AI coding assistant to build a settings page gets back a component that uses `#e53e3e` instead of `color.semantic.error`, `gap: 12px` instead of `spacing.3`, and a button labelled "Delete account" in `variant="primary"` — all plausible guesses, all wrong.
+
+With a Design System MCP, the same workflow looks like this:
+
+1. **A design-ops engineer exports** `tokens.json`, `components.json`, and `themes.json` from their existing token pipeline (Style Dictionary, Tokens Studio, or a Figma export script) and loads them into the MCP server's data store.
+2. **The MCP server is deployed** to Vercel in a single `vercel` command. Total setup time: under an hour.
+3. **Engineers add the MCP URL** to their Claude Desktop or Cursor config. No other changes to their workflow.
+4. **From that point**, when any engineer asks their AI assistant to "build a settings page with a danger zone for account deletion", the assistant automatically calls:
+   - `get_component("button")` → learns `variant="destructive"` exists and what it looks like
+   - `get_tokens("spacing")` → fetches the spacing scale so layout values are grounded
+   - `get_accessibility_guidance("button")` → picks up the `aria-label` rule for icon-only buttons
+   - `validate_component_usage(...)` → self-checks before returning the code
+5. **The generated code uses real token names**, approved variants, and correct constraints — not guesses. Code review stops catching design system drift.
+6. **When the design system updates** (a new `color.semantic.warning` token, a new `size="xs"` variant on Badge), design-ops runs the export script and calls `POST /api/data`. Every engineer's AI assistant sees the change on the next query — no one has to update a shared system prompt.
+
+This is the core value proposition: the design system becomes a **live, queryable contract** between designers and the AI tools engineers use every day.
 
 ---
 

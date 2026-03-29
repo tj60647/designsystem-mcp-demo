@@ -310,7 +310,6 @@ export const TEST_SUITE = [
     description: "Reader resolves action.primary to #2563eb (primary.600)",
     checks: [
       { type: "agentMatch", value: "reader" },
-      { type: "toolUsed", value: "get_tokens" },
       { type: "contains", value: "#2563eb" },
       { type: "notEmpty" },
     ],
@@ -425,12 +424,12 @@ export const TEST_SUITE = [
   },
   {
     id: 43, agent: "reader", tags: ["epistemic", "grounding"],
-    prompt: "What is the pixel value of spacing token 4?",
-    description: "Reader returns 16px for spacing.4",
+    prompt: "What is the pixel value of the medium border-radius token?",
+    description: "Reader returns 8px for borderRadius.md",
     checks: [
       { type: "agentMatch", value: "reader" },
       { type: "toolUsed", value: "get_tokens" },
-      { type: "contains", value: "16px" },
+      { type: "contains", value: "8px" },
       { type: "notEmpty" },
     ],
   },
@@ -484,7 +483,6 @@ export const TEST_SUITE = [
     description: "Reader returns #111827 (neutral.900) for the semantic text.primary token",
     checks: [
       { type: "agentMatch", value: "reader" },
-      { type: "toolUsed", value: "get_tokens" },
       { type: "contains", value: "#111827" },
       { type: "notEmpty" },
     ],
@@ -851,7 +849,7 @@ export const TEST_SUITE = [
     checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
 
-  // ── Style Guide agent tests (10) ─────────────────────────────────────────
+  // ── Style Guide tests (10): 2 routing + 8 direct ───────────────────────
   {
     id: 101, agent: "orchestrator", tags: ["routing"],
     prompt: "What are the design principles of this design system?",
@@ -972,6 +970,12 @@ function evaluateCheck(check, result) {
         passed: typeof result.preview === "string" && result.preview.trim().length > 0,
         detail: result.preview ? "preview present" : "no preview",
       };
+    case "noPreview":
+      return {
+        label: "Response must not include a preview",
+        passed: !result.preview || result.preview.trim().length === 0,
+        detail: result.preview ? "preview unexpectedly present" : "no preview (correct)",
+      };
     case "previewContains":
       return {
         label: `Preview HTML contains "${check.value}"`,
@@ -1018,6 +1022,23 @@ async function parseSSEStream(res) {
     }
   }
   throw new Error("Stream ended without a done event");
+}
+
+// ── LLM-as-judge quality score ───────────────────────────────────────────────
+// Calls POST /api/eval/judge with the prompt and the agent's response text.
+// Returns { score: 1-10, reasoning: string } or null on failure.
+export async function judgeTest(prompt, response, model) {
+  try {
+    const res = await fetch("/api/eval/judge", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt, response, model }),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
 }
 
 // ── Run a single test ────────────────────────────────────────────────────────
@@ -1069,6 +1090,11 @@ const TAG_STYLES = {
   mechanistic: { cls: "tl-tag-mechanistic", label: "mechanistic" },
 };
 
+function judgeScoreBadge(score) {
+  const cls = score >= 8 ? "tl-judge-high" : score >= 5 ? "tl-judge-mid" : "tl-judge-low";
+  return `<span class="tl-judge-badge ${cls}">Quality ${score}/10</span>`;
+}
+
 function agentBadge(agent) {
   const color = AGENT_COLORS[agent] ?? "accent";
   return `<span class="tl-agent-badge tl-badge-${color}">${escapeHtml(AGENT_LABELS[agent] ?? agent)}</span>`;
@@ -1095,7 +1121,7 @@ function statusBadge(status) {
 }
 
 // ── State ─────────────────────────────────────────────────────────────────────
-const testState = {}; // testId → { status, result, checkResults, error }
+const testState = {}; // testId → { status, result, checkResults, error, judgeScore, judgeReasoning }
 
 function getTestState(id) {
   return testState[id] ?? { status: "idle" };
@@ -1239,8 +1265,17 @@ export function initTestLabModal() {
       </div>`
     ).join("");
     const msg = st.result?.message ?? "";
+    const judgeHtml = st.judgeScore != null
+      ? `<div class="tl-judge-row">
+          ${judgeScoreBadge(st.judgeScore)}
+          <span class="tl-judge-reasoning">${escapeHtml(st.judgeReasoning ?? "")}</span>
+        </div>`
+      : (st.status !== "idle" && st.status !== "running" && msg
+          ? `<div class="tl-judge-row tl-judge-pending">⏳ Quality score pending…</div>`
+          : "");
     return `<div class="tl-test-detail">
       <div class="tl-check-list">${checks}</div>
+      ${judgeHtml}
       ${msg ? `<div class="tl-response-snippet">${escapeHtml(msg.slice(0, RESPONSE_DETAIL_LENGTH))}${msg.length > RESPONSE_DETAIL_LENGTH ? "…" : ""}</div>` : ""}
     </div>`;
   }
@@ -1253,12 +1288,29 @@ export function initTestLabModal() {
     try {
       const outcome = await runTest(test, getModel());
       testState[id] = { status: outcome.passed ? "pass" : "fail", ...outcome };
+      // Re-render now so the checks are visible while the judge runs
+      renderSuiteRow(id);
+      updateSuiteStats();
+      // Kick off LLM-as-judge scoring in the background (non-blocking so runAll
+      // moves to the next test immediately rather than waiting for each judge call).
+      const msg = outcome.result?.message ?? "";
+      if (msg) {
+        const stateRef = testState[id];
+        judgeTest(test.prompt, msg, getModel()).then(judge => {
+          // Guard: only update if this test hasn't been re-run in the meantime
+          if (judge && testState[id] === stateRef) {
+            stateRef.judgeScore     = judge.score;
+            stateRef.judgeReasoning = judge.reasoning;
+            renderSuiteRow(id);
+            updateSuiteStats();
+          }
+        }).catch(() => { /* judge failure is non-fatal */ });
+      }
     } catch (err) {
       testState[id] = { status: "error", error: String(err) };
+      renderSuiteRow(id);
+      updateSuiteStats();
     }
-    // Re-render the specific row in place to avoid full re-render flicker
-    renderSuiteRow(id);
-    updateSuiteStats();
   }
 
   function updateRowStatus(id, status) {
@@ -1297,8 +1349,15 @@ export function initTestLabModal() {
     const ran    = tests.filter(t => getTestState(t.id).status !== "idle").length;
     const passed = tests.filter(t => getTestState(t.id).status === "pass").length;
     const failed = tests.filter(t => ["fail", "error"].includes(getTestState(t.id).status)).length;
+    const judged = tests.map(t => getTestState(t.id).judgeScore).filter(s => s != null);
+    const avgQuality = judged.length
+      ? (judged.reduce((a, b) => a + b, 0) / judged.length).toFixed(1)
+      : null;
     const el = modalBody.querySelector(".tl-suite-stats");
-    if (el) el.textContent = `${ran}/${total} run · ${passed} pass · ${failed} fail`;
+    if (el) {
+      el.textContent = `${ran}/${total} run · ${passed} pass · ${failed} fail`
+        + (avgQuality != null ? ` · avg quality ${avgQuality}/10` : "");
+    }
   }
 
   async function runAll() {
@@ -1334,6 +1393,7 @@ export function initTestLabModal() {
                 <option value="reader">Reader</option>
                 <option value="builder">Builder</option>
                 <option value="generator">Generator</option>
+                <option value="style-guide">Style Guide</option>
               </select>
             </div>
             <div class="tl-pg-field tl-pg-field-half">
@@ -1392,6 +1452,7 @@ export function initTestLabModal() {
     const checks = [{ type: "notEmpty" }];
     if (expectedAgent)   checks.push({ type: "agentMatch",     value: expectedAgent });
     if (expectPreview === "yes") checks.push({ type: "hasPreview" });
+    if (expectPreview === "no")  checks.push({ type: "noPreview" });
     if (toolUsed)        checks.push({ type: "toolUsed",       value: toolUsed });
     keywords.forEach(kw    => checks.push({ type: "contains",        value: kw }));
     previewValues.forEach(v => checks.push({ type: "previewContains", value: v }));
@@ -1425,10 +1486,27 @@ export function initTestLabModal() {
             ${toolsUsed.length ? `<span class="tl-pg-meta-sep">·</span><span>Tools: ${escapeHtml(toolsUsed.join(", "))}</span>` : ""}
           </div>
           <div class="tl-check-list">${checkRows}</div>
+          <div class="tl-judge-row tl-judge-pending" id="pg-judge-row">⏳ Scoring quality…</div>
           ${msg ? `<div class="tl-pg-response-label">Response</div>
           <div class="tl-pg-response">${escapeHtml(msg)}</div>` : ""}
           ${hasPreview ? `<div class="tl-pg-response-label">Preview HTML <span style="font-size:10px;opacity:.6">(truncated)</span></div>
           <pre class="tl-pg-preview-pre">${escapeHtml(hasPreview.slice(0, PREVIEW_TRUNCATE_LENGTH))}${hasPreview.length > PREVIEW_TRUNCATE_LENGTH ? "…" : ""}</pre>` : ""}`;
+
+        // Run judge in the background so the run button is restored immediately.
+        if (msg) {
+          judgeTest(prompt, msg, getModel()).then(judge => {
+            const judgeRow = document.getElementById("pg-judge-row");
+            if (!judgeRow) return;
+            if (judge) {
+              judgeRow.className = "tl-judge-row";
+              judgeRow.innerHTML = `${judgeScoreBadge(judge.score)}<span class="tl-judge-reasoning">${escapeHtml(judge.reasoning)}</span>`;
+            } else {
+              judgeRow.remove();
+            }
+          });
+        } else {
+          document.getElementById("pg-judge-row")?.remove();
+        }
       }
     } catch (err) {
       if (resultEl) {

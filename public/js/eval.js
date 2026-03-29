@@ -27,11 +27,12 @@ function showSection(id) {
   document.querySelectorAll('.eval-nav-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.section === id);
   });
-  if (id === 'suite')    initSuiteSection();
-  if (id === 'tools')    initToolsSection();
-  if (id === 'prompts')  initPromptsSection();
-  if (id === 'agents')   initAgentsSection();
-  if (id === 'metrics')  loadMetrics();
+  if (id === 'suite')      initSuiteSection();
+  if (id === 'tools')      initToolsSection();
+  if (id === 'prompts')    initPromptsSection();
+  if (id === 'playground') initPlaygroundSection();
+  if (id === 'agents')     initAgentsSection();
+  if (id === 'metrics')    loadMetrics();
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
@@ -889,4 +890,351 @@ function renderMetrics(wrap, m) {
     await fetch('/api/eval/metrics/reset', { method: 'POST' });
     loadMetrics();
   });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 6. PLAYGROUND
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const PLAYGROUND_SCENARIOS = {
+  token_audit: {
+    name: 'Token Audit',
+    description: 'Read primary colors → spacing → typography scale',
+    steps: [
+      { id: 'token_audit-1', agentId: 'reader', prompt: 'What are the primary color tokens?' },
+      { id: 'token_audit-2', agentId: 'reader', prompt: 'What spacing tokens are defined in the design system?' },
+      { id: 'token_audit-3', agentId: 'reader', prompt: 'What typography tokens are available — sizes, weights, and line-heights?' },
+    ],
+  },
+  build_flow: {
+    name: 'Read + Build Flow',
+    description: 'Inspect button specs → build component → get style guidance',
+    steps: [
+      { id: 'build_flow-1', agentId: 'reader', prompt: 'What are the button component variants and their token properties?' },
+      { id: 'build_flow-2', agentId: 'builder', prompt: 'Build a primary and secondary button component using design system tokens' },
+      { id: 'build_flow-3', agentId: 'style-guide', prompt: 'What are the best practices for choosing between primary and secondary buttons?' },
+    ],
+  },
+  compliance_check: {
+    name: 'Style Compliance',
+    description: 'Get color principles → read exact tokens → build a compliant form',
+    steps: [
+      { id: 'compliance_check-1', agentId: 'style-guide', prompt: 'What color usage principles and contrast requirements should I follow?' },
+      { id: 'compliance_check-2', agentId: 'reader', prompt: 'What is the exact hex value of the primary action color and its accessible text pair?' },
+      { id: 'compliance_check-3', agentId: 'builder', prompt: 'Build an accessible login form with a primary submit button following the design system color principles' },
+    ],
+  },
+};
+
+const PG_AGENT_LABELS = {
+  orchestrator: 'Orchestrator',
+  reader:        'Reader',
+  builder:       'Builder',
+  generator:     'Generator',
+  'style-guide': 'Style Guide',
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let pgSteps          = [];
+let pgObservations   = [];
+let pgRunning        = false;
+let pgStopFlag       = false;
+let pgSelectedKey    = 'token_audit';
+let pgInited         = false;
+let pgCustomStepSeq  = 0; // monotonic counter for custom step IDs
+
+function pgFreshStep(s) {
+  return { ...s, status: 'pending', output: undefined, model: undefined, latencyMs: undefined, toolCallsUsed: undefined, error: undefined };
+}
+
+function pgLoadScenario(key) {
+  pgSelectedKey  = key;
+  pgSteps        = PLAYGROUND_SCENARIOS[key].steps.map(pgFreshStep);
+  pgObservations = [];
+}
+
+// ── Step runner ───────────────────────────────────────────────────────────────
+async function pgRunStep(step, model) {
+  const start = Date.now();
+  const body = { messages: [{ role: 'user', content: step.prompt }], model };
+  if (step.agentId !== 'orchestrator') body.previousAgent = step.agentId;
+
+  const res = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || `HTTP ${res.status}`);
+  }
+
+  const reader  = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const parts = buf.split('\n\n');
+    buf = parts.pop() ?? '';
+    for (const part of parts) {
+      if (!part.startsWith('data: ')) continue;
+      let ev;
+      try { ev = JSON.parse(part.slice(6)); } catch { continue; }
+      if (ev.type === 'done') {
+        return {
+          output:        ev.message        ?? '',
+          model:         ev.model          ?? model,
+          latencyMs:     Date.now() - start,
+          toolCallsUsed: ev.toolCallsUsed  ?? [],
+        };
+      }
+      if (ev.type === 'error') throw new Error(ev.error ?? 'Unknown error');
+    }
+  }
+  throw new Error('Stream ended without a done event');
+}
+
+// ── Rendering ─────────────────────────────────────────────────────────────────
+function pgLog(msg) {
+  pgObservations.push(`[${new Date().toLocaleTimeString()}] ${msg}`);
+  pgRenderObservations();
+}
+
+function pgRenderObservations() {
+  const list = document.getElementById('pg-obs-list');
+  if (!list) return;
+  if (pgObservations.length === 0) {
+    list.innerHTML = '<span class="pg-obs-empty">Run the chain to see observations…</span>';
+    return;
+  }
+  list.innerHTML = pgObservations.map(o => `<div class="pg-obs-line">${escapeHtml(o)}</div>`).join('');
+  list.scrollTop = list.scrollHeight;
+}
+
+function pgRenderChain() {
+  const chainEl = document.getElementById('pg-chain');
+  if (!chainEl) return;
+  chainEl.innerHTML = pgSteps.map((step, idx) => `
+    ${idx > 0 ? '<div class="pg-chain-arrow">→</div>' : ''}
+    <div class="pg-chain-node pg-chain-node-${step.status}">
+      <span class="pg-node-num">${idx + 1}</span>
+      <span class="pg-node-agent">${escapeHtml(PG_AGENT_LABELS[step.agentId] ?? step.agentId)}</span>
+    </div>
+  `).join('');
+}
+
+function pgRenderTimeline() {
+  const timeline = document.getElementById('pg-timeline');
+  if (!timeline) return;
+
+  timeline.innerHTML = pgSteps.map((step, idx) => {
+    let content = '';
+    if (step.status === 'pending') {
+      content = `<div class="pg-prompt-preview">
+        <span class="pg-prompt-label">Prompt:</span>
+        <code class="pg-prompt-code">${escapeHtml(step.prompt.slice(0, 120))}${step.prompt.length > 120 ? '…' : ''}</code>
+      </div>`;
+    } else if (step.status === 'running') {
+      content = `<div class="pg-running-indicator"><span class="pg-spinner"></span>Executing…</div>`;
+    } else if (step.status === 'complete' && step.output) {
+      const tools = (step.toolCallsUsed ?? []).map(t => `<span class="pg-tool-chip">${escapeHtml(t)}</span>`).join('');
+      content = `
+        ${tools ? `<div class="pg-tool-chips">${tools}</div>` : ''}
+        <pre class="pg-step-output">${escapeHtml(step.output.slice(0, 400))}${step.output.length > 400 ? '…' : ''}</pre>`;
+    } else if (step.status === 'error') {
+      content = `<div class="pg-error-box">${escapeHtml(step.error ?? 'Error')}</div>`;
+    }
+
+    const chips = [
+      step.latencyMs !== undefined ? `<span class="pg-meta-chip">${step.latencyMs}ms</span>` : '',
+      step.model ? `<span class="pg-meta-chip">${escapeHtml(step.model)}</span>` : '',
+    ].join('');
+    const removeBtn = !pgRunning
+      ? `<button class="pg-remove-step-btn" data-remove="${escapeHtml(step.id)}" title="Remove step">×</button>`
+      : '';
+
+    return `<div class="pg-step-card pg-step-card-${step.status}" data-step="${escapeHtml(step.id)}">
+      <div class="pg-step-header">
+        <div class="pg-step-identity">
+          <span class="pg-status-dot pg-status-dot-${step.status}"></span>
+          <span class="pg-step-num">${idx + 1}</span>
+          <span class="pg-step-agent">${escapeHtml(PG_AGENT_LABELS[step.agentId] ?? step.agentId)}</span>
+        </div>
+        <div class="pg-step-meta">${chips}${removeBtn}</div>
+      </div>
+      ${content}
+    </div>`;
+  }).join('');
+
+  timeline.querySelectorAll('.pg-remove-step-btn[data-remove]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      pgSteps = pgSteps.filter(s => s.id !== btn.dataset.remove);
+      pgRenderChain();
+      pgRenderTimeline();
+      pgUpdateControls();
+    });
+  });
+}
+
+function pgUpdateControls() {
+  const runBtn   = document.getElementById('pg-run-btn');
+  const stopBtn  = document.getElementById('pg-stop-btn');
+  const resetBtn = document.getElementById('pg-reset-btn');
+  const addBtn   = document.getElementById('pg-add-step-btn');
+  if (runBtn)   { runBtn.disabled = pgRunning || pgSteps.length === 0; runBtn.textContent = pgRunning ? '⏳ Running…' : '▶ Run Chain'; }
+  if (stopBtn)  { stopBtn.style.display = pgRunning ? '' : 'none'; }
+  if (resetBtn) { resetBtn.disabled = pgRunning; }
+  if (addBtn)   { addBtn.disabled = pgRunning; }
+}
+
+// ── Orchestration ─────────────────────────────────────────────────────────────
+async function pgRunAll() {
+  if (pgRunning || pgSteps.length === 0) return;
+  pgRunning  = true;
+  pgStopFlag = false;
+  pgSteps = pgSteps.map(pgFreshStep);
+  pgObservations = [];
+  pgUpdateControls();
+  pgRenderChain();
+  pgRenderTimeline();
+  pgLog('Chain started.');
+
+  const model = getModel();
+  for (let i = 0; i < pgSteps.length; i++) {
+    if (pgStopFlag) { pgLog('Run stopped by user.'); break; }
+    pgSteps[i] = { ...pgSteps[i], status: 'running' };
+    pgRenderChain();
+    pgRenderTimeline();
+    pgLog(`Step ${i + 1}: ${pgSteps[i].agentId} — starting…`);
+    try {
+      const result = await pgRunStep(pgSteps[i], model);
+      pgSteps[i] = {
+        ...pgSteps[i],
+        status:        'complete',
+        output:        result.output,
+        model:         result.model,
+        latencyMs:     result.latencyMs,
+        toolCallsUsed: result.toolCallsUsed,
+      };
+      pgLog(`Step ${i + 1}: ${pgSteps[i].agentId} — done in ${result.latencyMs}ms (${result.model})`);
+    } catch (err) {
+      pgSteps[i] = { ...pgSteps[i], status: 'error', error: String(err) };
+      pgLog(`Step ${i + 1}: ${pgSteps[i].agentId} — error: ${String(err)}`);
+    }
+    pgRenderChain();
+    pgRenderTimeline();
+  }
+
+  pgRunning = false;
+  pgLog('Chain finished.');
+  pgUpdateControls();
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+function initPlaygroundSection() {
+  // Re-entering: just refresh rendering, no re-build of DOM
+  if (pgInited) {
+    pgRenderChain();
+    pgRenderTimeline();
+    pgRenderObservations();
+    pgUpdateControls();
+    return;
+  }
+
+  pgLoadScenario('token_audit');
+  const wrap = document.getElementById('eval-section-playground');
+  if (!wrap) return;
+
+  const scenarioOpts = Object.entries(PLAYGROUND_SCENARIOS)
+    .map(([k, s]) => `<option value="${k}">${escapeHtml(s.name)}</option>`)
+    .join('');
+
+  const agentOpts = ['orchestrator','reader','builder','generator','style-guide']
+    .map(a => `<option value="${a}">${escapeHtml(PG_AGENT_LABELS[a])}</option>`)
+    .join('');
+
+  wrap.insertAdjacentHTML('beforeend', `
+    <div class="pg-layout">
+      <div class="pg-header">
+        <div class="pg-scenario-group">
+          <label class="pg-field-label">Scenario</label>
+          <select class="pg-select" id="pg-scenario-select">${scenarioOpts}</select>
+          <p class="pg-scenario-desc" id="pg-scenario-desc">${escapeHtml(PLAYGROUND_SCENARIOS['token_audit'].description)}</p>
+        </div>
+        <div class="pg-actions">
+          <button class="eval-btn eval-btn-green" id="pg-run-btn">▶ Run Chain</button>
+          <button class="eval-btn" id="pg-stop-btn" style="display:none">⏹ Stop</button>
+          <button class="eval-btn" id="pg-reset-btn">↺ Reset</button>
+        </div>
+      </div>
+
+      <div class="pg-chain" id="pg-chain"></div>
+      <div class="pg-timeline" id="pg-timeline"></div>
+
+      <div class="pg-add-step-section">
+        <div class="pg-add-step-label">Add Custom Step</div>
+        <div class="pg-add-step-row">
+          <select class="pg-select-sm" id="pg-custom-agent">${agentOpts}</select>
+          <input class="pg-input-sm" id="pg-custom-prompt" placeholder="Enter a prompt for this step…" />
+          <button class="eval-btn" id="pg-add-step-btn">+ Add Step</button>
+        </div>
+      </div>
+
+      <div class="pg-observations">
+        <div class="pg-add-step-label">Observations</div>
+        <div class="pg-obs-list" id="pg-obs-list">
+          <span class="pg-obs-empty">Run the chain to see observations…</span>
+        </div>
+      </div>
+    </div>
+  `);
+
+  // Scenario change
+  document.getElementById('pg-scenario-select').addEventListener('change', e => {
+    pgLoadScenario(e.target.value);
+    document.getElementById('pg-scenario-desc').textContent = PLAYGROUND_SCENARIOS[e.target.value].description;
+    pgRenderChain();
+    pgRenderTimeline();
+    pgRenderObservations();
+    pgUpdateControls();
+  });
+
+  // Run / Stop / Reset
+  document.getElementById('pg-run-btn').addEventListener('click', pgRunAll);
+  document.getElementById('pg-stop-btn').addEventListener('click', () => { pgStopFlag = true; });
+  document.getElementById('pg-reset-btn').addEventListener('click', () => {
+    if (pgRunning) return;
+    pgSteps = pgSteps.map(pgFreshStep);
+    pgObservations = [];
+    pgRenderChain();
+    pgRenderTimeline();
+    pgRenderObservations();
+  });
+
+  // Add custom step
+  document.getElementById('pg-add-step-btn').addEventListener('click', () => {
+    const prompt = document.getElementById('pg-custom-prompt').value.trim();
+    if (!prompt || pgRunning) return;
+    const agentId = document.getElementById('pg-custom-agent').value;
+    pgSteps.push({ id: `pg-custom-${++pgCustomStepSeq}`, agentId, prompt, status: 'pending' });
+    document.getElementById('pg-custom-prompt').value = '';
+    pgRenderChain();
+    pgRenderTimeline();
+    pgUpdateControls();
+  });
+
+  // Also allow Enter in the prompt input
+  document.getElementById('pg-custom-prompt').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('pg-add-step-btn').click();
+  });
+
+  pgRenderChain();
+  pgRenderTimeline();
+  pgRenderObservations();
+  pgUpdateControls();
+  pgInited = true;
 }

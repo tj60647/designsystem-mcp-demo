@@ -48,6 +48,10 @@
       <span class="eval-nav-icon">💬</span>
       <span>Prompt Lab</span>
     </button>
+    <button class="eval-nav-btn" data-section="playground" title="Build and run chained agent sequences">
+      <span class="eval-nav-icon">🔗</span>
+      <span>Playground</span>
+    </button>
     <div class="eval-sidebar-section" style="margin-top:8px">Inspect</div>
     <button class="eval-nav-btn" data-section="agents" title="Browse live agent config, tool sets, and system diagram">
       <span class="eval-nav-icon">🤖</span>
@@ -89,7 +93,16 @@
       <!-- Populated by eval.js initPromptsSection() -->
     </section>
 
-    <!-- ── 4. Agents ─────────────────────────────────────────────────── -->
+    <!-- ── 4. Playground ─────────────────────────────────────────────── -->
+    <section id="eval-section-playground" class="eval-section" aria-label="Playground">
+      <div class="eval-section-header">
+        <span class="eval-section-title">Playground</span>
+        <span class="eval-section-subtitle">Build and run chained agent sequences — inspect each step in a live timeline</span>
+      </div>
+      <!-- Populated by eval.js initPlaygroundSection() -->
+    </section>
+
+    <!-- ── 5. Agents ─────────────────────────────────────────────────── -->
     <section id="eval-section-agents" class="eval-section" aria-label="Agent Config">
       <div class="eval-section-header">
         <span class="eval-section-title">Agents</span>

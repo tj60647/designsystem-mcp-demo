@@ -504,6 +504,21 @@
 }
 .tl-error-msg { font-size: 11.5px; color: var(--orange); }
 
+/* LLM-as-judge quality score */
+.tl-judge-row {
+  display: flex; align-items: baseline; gap: 8px; font-size: 11.5px;
+}
+.tl-judge-pending { color: var(--text-dim); font-style: italic; }
+.tl-judge-badge {
+  display: inline-flex; align-items: center; padding: 2px 8px;
+  border-radius: var(--radius-sm); font-size: 11px; font-weight: 600;
+  flex-shrink: 0; white-space: nowrap;
+}
+.tl-judge-high  { background: rgba(63,185,80,.12);  color: var(--green); border: 1px solid rgba(63,185,80,.3); }
+.tl-judge-mid   { background: rgba(210,153,34,.12); color: var(--orange); border: 1px solid rgba(210,153,34,.3); }
+.tl-judge-low   { background: rgba(248,81,73,.12);  color: var(--red);   border: 1px solid rgba(248,81,73,.3); }
+.tl-judge-reasoning { color: var(--text-muted); font-size: 11px; line-height: 1.4; }
+
 /* Playground */
 .tl-playground { padding: 16px 16px; display: flex; flex-direction: column; gap: 14px; }
 .tl-pg-fields { display: flex; flex-direction: column; gap: 10px; }

@@ -351,11 +351,13 @@ const TOOL_CATEGORIES = {
   'Generation':        ['generate_design_system','suggest_token','search'],
 };
 
+let _mcpSeq = 0;
+
 async function mcpRequest(method, params) {
   const res = await fetch('/mcp', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify({ jsonrpc: '2.0', id: Date.now(), method, params }),
+    body: JSON.stringify({ jsonrpc: '2.0', id: ++_mcpSeq, method, params }),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   // MCP transport may return JSON or SSE; try JSON first.

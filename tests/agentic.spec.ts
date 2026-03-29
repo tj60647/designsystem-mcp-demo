@@ -357,6 +357,7 @@ test.describe("previousAgent — single-turn continuation", () => {
 // Format used: MCP JSON-RPC 2.0 over HTTP (stateless StreamableHTTPTransport).
 
 type McpRequest = { jsonrpc: string; id: number; method: string; params: unknown };
+let _mcpSeq = 0;
 
 /** POST /mcp and return the parsed result, throwing on protocol error. */
 async function mcpCall(
@@ -364,7 +365,7 @@ async function mcpCall(
   method: string,
   params: unknown = {},
 ): Promise<unknown> {
-  const body: McpRequest = { jsonrpc: "2.0", id: Date.now(), method, params };
+  const body: McpRequest = { jsonrpc: "2.0", id: ++_mcpSeq, method, params };
   const res = await apiRequest.post("/mcp", {
     data: body,
     headers: { "Content-Type": "application/json", "Accept": "application/json" },

@@ -1020,7 +1020,6 @@ async function parseSSEStream(res) {
   throw new Error("Stream ended without a done event");
 }
 
-// ── Run a single test ────────────────────────────────────────────────────────
 // ── LLM-as-judge quality score ───────────────────────────────────────────────
 // Calls POST /api/eval/judge with the prompt and the agent's response text.
 // Returns { score: 1-10, reasoning: string } or null on failure.
@@ -1038,6 +1037,7 @@ export async function judgeTest(prompt, response, model) {
   }
 }
 
+// ── Run a single test ────────────────────────────────────────────────────────
 export async function runTest(test, model) {
   const res = await fetch("/api/chat", {
     method: "POST",
@@ -1287,16 +1287,20 @@ export function initTestLabModal() {
       // Re-render now so the checks are visible while the judge runs
       renderSuiteRow(id);
       updateSuiteStats();
-      // Kick off LLM-as-judge scoring asynchronously
+      // Kick off LLM-as-judge scoring in the background (non-blocking so runAll
+      // moves to the next test immediately rather than waiting for each judge call).
       const msg = outcome.result?.message ?? "";
       if (msg) {
-        const judge = await judgeTest(test.prompt, msg, getModel());
-        if (judge) {
-          testState[id].judgeScore     = judge.score;
-          testState[id].judgeReasoning = judge.reasoning;
-          renderSuiteRow(id);
-          updateSuiteStats();
-        }
+        const stateRef = testState[id];
+        judgeTest(test.prompt, msg, getModel()).then(judge => {
+          // Guard: only update if this test hasn't been re-run in the meantime
+          if (judge && testState[id] === stateRef) {
+            stateRef.judgeScore     = judge.score;
+            stateRef.judgeReasoning = judge.reasoning;
+            renderSuiteRow(id);
+            updateSuiteStats();
+          }
+        });
       }
     } catch (err) {
       testState[id] = { status: "error", error: String(err) };

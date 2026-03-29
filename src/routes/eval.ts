@@ -12,6 +12,22 @@
 import express from "express";
 import { getMetrics, resetMetrics } from "../metrics.js";
 
+// ── Judge constants ───────────────────────────────────────────────────────────
+const JUDGE_TIMEOUT_MS = 30_000;
+const MAX_JUDGE_RESPONSE_CHARS = 3_000;
+
+const JUDGE_SYSTEM_PROMPT = `You are an impartial quality evaluator for an AI design-system assistant.
+You will be given a USER PROMPT and the ASSISTANT RESPONSE.
+Score the response from 1 to 10 using these criteria:
+
+  Relevance    — Does the response directly address what the user asked?
+  Accuracy     — Is the information factually correct and free of hallucination?
+  Completeness — Does it cover all important aspects of the question?
+  Clarity      — Is it well-structured and easy to understand?
+
+Return ONLY a JSON object — no markdown fences, no extra text — in exactly this format:
+{"score": <integer 1-10>, "reasoning": "<one or two sentences explaining the score>"}`;
+
 const router = express.Router();
 
 // ── GET /api/eval/metrics ─────────────────────────────────────────────────
@@ -52,21 +68,14 @@ router.post("/eval/judge", async (req, res) => {
 
   const model = (typeof requestedModel === "string" && requestedModel.trim())
     ? requestedModel.trim()
-    : (process.env.OPENROUTER_MODEL ?? "openai/gpt-oss-20b:nitro");
+    : (process.env.OPENROUTER_JUDGE_MODEL ?? process.env.OPENROUTER_MODEL ?? "openai/gpt-oss-20b:nitro");
 
-  const JUDGE_SYSTEM_PROMPT = `You are an impartial quality evaluator for an AI design-system assistant.
-You will be given a USER PROMPT and the ASSISTANT RESPONSE.
-Score the response from 1 to 10 using these criteria:
+  const trimmedResponse = response.trim().slice(0, MAX_JUDGE_RESPONSE_CHARS);
+  const truncated = response.trim().length > MAX_JUDGE_RESPONSE_CHARS;
+  const userMessage = `USER PROMPT:\n${prompt.trim()}\n\nASSISTANT RESPONSE:\n${trimmedResponse}${truncated ? "\n[...response truncated for evaluation]" : ""}`;
 
-  Relevance    — Does the response directly address what the user asked?
-  Accuracy     — Is the information factually correct and free of hallucination?
-  Completeness — Does it cover all important aspects of the question?
-  Clarity      — Is it well-structured and easy to understand?
-
-Return ONLY a JSON object — no markdown fences, no extra text — in exactly this format:
-{"score": <integer 1-10>, "reasoning": "<one or two sentences explaining the score>"}`;
-
-  const userMessage = `USER PROMPT:\n${prompt.trim()}\n\nASSISTANT RESPONSE:\n${response.trim()}`;
+  const judgeAbort = new AbortController();
+  const judgeTimer = setTimeout(() => judgeAbort.abort(), JUDGE_TIMEOUT_MS);
 
   try {
     const orRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -86,6 +95,7 @@ Return ONLY a JSON object — no markdown fences, no extra text — in exactly t
           { role: "user",   content: userMessage },
         ],
       }),
+      signal: judgeAbort.signal,
     });
 
     if (!orRes.ok) {
@@ -118,6 +128,8 @@ Return ONLY a JSON object — no markdown fences, no extra text — in exactly t
     res.json({ score, reasoning });
   } catch (err) {
     res.status(500).json({ error: String(err) });
+  } finally {
+    clearTimeout(judgeTimer);
   }
 });
 

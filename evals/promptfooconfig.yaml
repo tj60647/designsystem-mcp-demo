@@ -1,0 +1,158 @@
+description: Design System Agent Evals
+
+# ── Provider ─────────────────────────────────────────────────────────────────
+# Custom provider wraps POST /api/chat and returns the `done` SSE event as the
+# output object.  Start the server before running evals:
+#   npm run dev          (in one terminal)
+#   npm run test:evals   (in another)
+#
+# Set EVAL_BASE_URL to override the default http://localhost:3033.
+providers:
+  - id: file://providers/chat.js
+
+# ── Prompt ───────────────────────────────────────────────────────────────────
+# The provider receives the rendered prompt as the user message.
+prompts:
+  - id: user-message
+    raw: "{{message}}"
+
+# ── Default options ──────────────────────────────────────────────────────────
+defaultTest:
+  options:
+    timeout: 120000
+
+# ── Test cases ───────────────────────────────────────────────────────────────
+tests:
+
+  # ── 1. Orchestrator routing ───────────────────────────────────────────────
+
+  - description: "Design token question routes to reader"
+    vars:
+      message: "What are the primary color tokens in the design system?"
+    assert:
+      - type: javascript
+        value: output.routedAgent === 'reader'
+
+  - description: "Component build request routes to builder"
+    vars:
+      message: "Generate the HTML and CSS for a primary button component."
+    assert:
+      - type: javascript
+        value: output.routedAgent === 'builder'
+
+  - description: "Style guide question routes to style-guide"
+    vars:
+      message: "Explain the design principles in the style guide."
+    assert:
+      - type: javascript
+        value: output.routedAgent === 'style-guide'
+
+  # ── 2. Reader agent — tool use and grounded response ──────────────────────
+
+  - description: "Reader calls a token tool for a color query"
+    vars:
+      message: "What is the value of the color.primary.600 token?"
+    assert:
+      - type: javascript
+        value: output.routedAgent === 'reader'
+      - type: javascript
+        value: >
+          ['get_token', 'get_tokens', 'list_token_categories']
+            .some(t => output.toolCallsUsed.includes(t))
+
+  - description: "Reader grounds response in MCP data — exact hex value for color.primary.600"
+    vars:
+      message: "What is the exact hex value of the color.primary.600 token?"
+    assert:
+      - type: javascript
+        value: output.routedAgent === 'reader'
+      - type: javascript
+        value: output.message.toLowerCase().includes('#2563eb')
+
+  - description: "Reader calls list_components when asked to enumerate components"
+    vars:
+      message: "List all the components available in the design system."
+    assert:
+      - type: javascript
+        value: output.routedAgent === 'reader'
+      - type: javascript
+        value: output.toolCallsUsed.includes('list_components')
+
+  - description: "Reader mentions 'button' when listing components"
+    vars:
+      message: "What components are available?"
+    assert:
+      - type: javascript
+        value: output.routedAgent === 'reader'
+      - type: javascript
+        value: output.message.toLowerCase().includes('button')
+
+  - description: "Response carries schemaVersion 1.0"
+    vars:
+      message: "What spacing tokens are available?"
+    assert:
+      - type: javascript
+        value: output.schemaVersion === '1.0'
+
+  # ── 3. Builder agent — tool use and preview ───────────────────────────────
+
+  - description: "Builder calls get_component when generating a button"
+    vars:
+      message: "Build a primary button component using the design system tokens."
+    assert:
+      - type: javascript
+        value: output.routedAgent === 'builder'
+      - type: javascript
+        value: output.toolCallsUsed.includes('get_component')
+
+  - description: "Builder calls get_component_tokens for a token-grounded build"
+    vars:
+      message: "Generate HTML for a primary button, using exact token values."
+    assert:
+      - type: javascript
+        value: output.routedAgent === 'builder'
+      - type: javascript
+        value: output.toolCallsUsed.includes('get_component_tokens')
+
+  - description: "Builder returns an HTML preview containing a <button> element"
+    vars:
+      message: "Generate the HTML markup for a primary button."
+    assert:
+      - type: javascript
+        value: output.routedAgent === 'builder'
+      - type: javascript
+        value: output.preview !== null && output.preview.toLowerCase().includes('<button')
+
+  # ── 4. Style Guide agent — tool use and grounded response ─────────────────
+
+  - description: "Style Guide calls get_style_guide for a principles question"
+    vars:
+      message: "What are the core design principles in the style guide?"
+    assert:
+      - type: javascript
+        value: output.routedAgent === 'style-guide'
+      - type: javascript
+        value: output.toolCallsUsed.includes('get_style_guide')
+
+  - description: "Style Guide grounds response in style guide content"
+    vars:
+      message: "Explain the color usage rules from the style guide."
+    assert:
+      - type: javascript
+        value: output.routedAgent === 'style-guide'
+      - type: javascript
+        value: output.message.trim().length > 0
+
+  # ── 5. previousAgent continuation — bypasses orchestrator ─────────────────
+
+  - description: "Follow-up with previousAgent=reader stays with reader and uses token tools"
+    vars:
+      message: "And what is the value of the spacing.4 token?"
+      previousAgent: "reader"
+    assert:
+      - type: javascript
+        value: output.routedAgent === 'reader'
+      - type: javascript
+        value: >
+          ['get_token', 'get_tokens', 'get_spacing_scale']
+            .some(t => output.toolCallsUsed.includes(t))

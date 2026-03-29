@@ -85,11 +85,14 @@
 
 .topbar-btn-about {
   color: var(--accent);
-  border-color: var(--accent-dim);
+  border-color: rgba(47,129,247,.4);
+  background: rgba(47,129,247,.1);
+  font-weight: 600;
 }
 .topbar-btn-about:hover {
   color: var(--accent);
   border-color: var(--accent);
+  background: rgba(47,129,247,.16);
 }
 
 /* ── Generated design system card ── */

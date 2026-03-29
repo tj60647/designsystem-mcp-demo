@@ -536,6 +536,43 @@
 .about-intro a { color: var(--accent); text-decoration: none; }
 .about-intro a:hover { text-decoration: underline; }
 
+.about-intro-cta {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.about-capabilities {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  margin-top: 4px;
+}
+.about-capability {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+.about-capability-title {
+  font-size: 12px; font-weight: 700;
+  color: var(--text);
+  margin-bottom: 5px;
+}
+.about-capability-desc {
+  font-size: 12px; color: var(--text-muted); line-height: 1.5;
+}
+
+.about-cta-block {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+.about-cta-block h3 { border-bottom: none; padding-bottom: 0; }
+
 .about-section-block {
   margin-bottom: 24px;
 }

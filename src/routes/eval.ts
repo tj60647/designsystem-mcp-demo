@@ -116,7 +116,8 @@ router.post("/eval/judge", async (req, res) => {
       // Strip optional markdown fences before parsing
       const cleaned = raw.replace(/^```[a-z]*\s*/i, "").replace(/\s*```$/, "").trim();
       const parsed = JSON.parse(cleaned) as { score?: unknown; reasoning?: unknown };
-      score     = Math.min(10, Math.max(1, Math.round(Number(parsed.score))));
+      const num = Number(parsed.score);
+      score     = Number.isFinite(num) ? Math.min(10, Math.max(1, Math.round(num))) : 5;
       reasoning = typeof parsed.reasoning === "string" ? parsed.reasoning : String(parsed.reasoning ?? "");
     } catch {
       // Fallback: extract digits from raw text

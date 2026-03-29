@@ -1486,18 +1486,18 @@ export function initTestLabModal() {
           ${hasPreview ? `<div class="tl-pg-response-label">Preview HTML <span style="font-size:10px;opacity:.6">(truncated)</span></div>
           <pre class="tl-pg-preview-pre">${escapeHtml(hasPreview.slice(0, PREVIEW_TRUNCATE_LENGTH))}${hasPreview.length > PREVIEW_TRUNCATE_LENGTH ? "…" : ""}</pre>` : ""}`;
 
-        // Run judge asynchronously and update the score row in place
+        // Run judge in the background so the run button is restored immediately.
         if (msg) {
-          const judge = await judgeTest(prompt, msg, getModel());
-          const judgeRow = document.getElementById("pg-judge-row");
-          if (judgeRow) {
+          judgeTest(prompt, msg, getModel()).then(judge => {
+            const judgeRow = document.getElementById("pg-judge-row");
+            if (!judgeRow) return;
             if (judge) {
               judgeRow.className = "tl-judge-row";
               judgeRow.innerHTML = `${judgeScoreBadge(judge.score)}<span class="tl-judge-reasoning">${escapeHtml(judge.reasoning)}</span>`;
             } else {
               judgeRow.remove();
             }
-          }
+          });
         } else {
           document.getElementById("pg-judge-row")?.remove();
         }

@@ -14,8 +14,11 @@ let historyIndex = -1;
 let previewBody, codeToggleBtn, modelBadge, toolsBody, notesBody;
 let previewNav, previewPrev, previewNext, previewNavCounter;
 let tabMcpTools, tabPreviewNotes;
+let isPreviewReady = false;
 
 export function initPreview() {
+  isPreviewReady = false;
+
   previewBody   = document.getElementById("preview-body");
   codeToggleBtn = document.getElementById("code-toggle-btn");
   modelBadge    = document.getElementById("model-badge");
@@ -27,6 +30,28 @@ export function initPreview() {
   previewNavCounter = document.getElementById("preview-nav-counter");
   tabMcpTools      = document.getElementById("tab-mcp-tools");
   tabPreviewNotes  = document.getElementById("tab-preview-notes");
+
+  const requiredNodes = [
+    ["preview-body", previewBody],
+    ["code-toggle-btn", codeToggleBtn],
+    ["model-badge", modelBadge],
+    ["tools-body", toolsBody],
+    ["preview-notes-body", notesBody],
+    ["preview-nav", previewNav],
+    ["preview-prev", previewPrev],
+    ["preview-next", previewNext],
+    ["preview-nav-counter", previewNavCounter],
+    ["tab-mcp-tools", tabMcpTools],
+    ["tab-preview-notes", tabPreviewNotes]
+  ];
+
+  const missing = requiredNodes.filter(([, node]) => !node).map(([id]) => id);
+  if (missing.length > 0) {
+    console.warn(`[preview] init skipped; missing DOM nodes: ${missing.join(", ")}`);
+    return;
+  }
+
+  isPreviewReady = true;
 
   codeToggleBtn.addEventListener("click", () => {
     showingCode = !showingCode;
@@ -60,6 +85,8 @@ function activateBottomTab(which) {
 }
 
 export function updateLivePreview(previewHtml, toolsUsed, model, notes) {
+  if (!isPreviewReady) return;
+
   // Push a new history entry (only when there's something to show)
   history.push({ html: previewHtml || null, toolsUsed: toolsUsed || [], model: model || null, notes: notes || null });
   historyIndex = history.length - 1;

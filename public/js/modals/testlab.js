@@ -7,7 +7,7 @@ const RESPONSE_DETAIL_LENGTH = 200;  // response preview in suite row details
 const PREVIEW_TRUNCATE_LENGTH = 400; // preview HTML truncation in playground
 
 // ── Test Suite Definition ────────────────────────────────────────────────────
-// 100 tests across 4 agent types.
+// 110 tests across 5 agent types (added 10 style-guide tests in v0.5.0).
 //
 // Each test has:
 //   id          – unique number
@@ -850,6 +850,99 @@ export const TEST_SUITE = [
     description: "Generator asks about calm brand direction before proceeding",
     checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
+
+  // ── Style Guide agent tests (10) ─────────────────────────────────────────
+  {
+    id: 101, agent: "orchestrator", tags: ["routing"],
+    prompt: "What are the design principles of this design system?",
+    description: "Route design principles query to the style-guide agent",
+    checks: [{ type: "agentMatch", value: "style-guide" }, { type: "notEmpty" }],
+  },
+  {
+    id: 102, agent: "orchestrator", tags: ["routing"],
+    prompt: "Explain the typography guidelines",
+    description: "Route typography guidelines query to the style-guide agent",
+    checks: [{ type: "agentMatch", value: "style-guide" }, { type: "notEmpty" }],
+  },
+  {
+    id: 103, agent: "style-guide", tags: ["grounding"],
+    prompt: "What does the style guide say about color usage?",
+    description: "Style guide agent uses get_style_guide to explain color usage rules",
+    checks: [
+      { type: "agentMatch", value: "style-guide" },
+      { type: "toolUsed",   value: "get_style_guide" },
+      { type: "notEmpty" },
+    ],
+  },
+  {
+    id: 104, agent: "style-guide", tags: ["grounding"],
+    prompt: "Does the primary blue (#2563eb) have sufficient contrast on a white background?",
+    description: "Style guide agent uses check_contrast to evaluate the contrast ratio",
+    checks: [
+      { type: "agentMatch", value: "style-guide" },
+      { type: "toolUsed",   value: "check_contrast" },
+      { type: "notEmpty" },
+    ],
+  },
+  {
+    id: 105, agent: "style-guide", tags: ["epistemic", "grounding"],
+    prompt: "What is the semantic intent of the primary color in this design system?",
+    description: "Style guide agent grounds its answer using get_token or get_style_guide",
+    checks: [
+      { type: "agentMatch", value: "style-guide" },
+      { type: "notEmpty" },
+    ],
+  },
+  {
+    id: 106, agent: "style-guide", tags: ["grounding"],
+    prompt: "What spacing principles guide the design system?",
+    description: "Style guide agent uses get_style_guide to explain spatial consistency principles",
+    checks: [
+      { type: "agentMatch", value: "style-guide" },
+      { type: "toolUsed",   value: "get_style_guide" },
+      { type: "notEmpty" },
+    ],
+  },
+  {
+    id: 107, agent: "style-guide", tags: ["grounding"],
+    prompt: "What color tokens are available for text and backgrounds?",
+    description: "Style guide agent uses get_tokens to look up text and surface color tokens",
+    checks: [
+      { type: "agentMatch", value: "style-guide" },
+      { type: "toolUsed",   value: "get_tokens" },
+      { type: "notEmpty" },
+    ],
+  },
+  {
+    id: 108, agent: "style-guide", tags: ["behavioral"],
+    prompt: "How should I use motion in this design system?",
+    description: "Style guide agent explains motion and animation guidance",
+    checks: [
+      { type: "agentMatch", value: "style-guide" },
+      { type: "notEmpty" },
+    ],
+  },
+  {
+    id: 109, agent: "style-guide", tags: ["epistemic", "grounding"],
+    prompt: "What is the value of the primary 600 color token according to the style guide?",
+    description: "Style guide agent uses get_token to retrieve color.primary.600 (#2563eb)",
+    checks: [
+      { type: "agentMatch", value: "style-guide" },
+      { type: "toolUsed",   value: "get_token" },
+      { type: "contains",   value: "#2563eb" },
+      { type: "notEmpty" },
+    ],
+  },
+  {
+    id: 110, agent: "style-guide", tags: ["grounding"],
+    prompt: "What composition patterns does the design system recommend?",
+    description: "Style guide agent uses get_style_guide to describe layout and composition patterns",
+    checks: [
+      { type: "agentMatch", value: "style-guide" },
+      { type: "toolUsed",   value: "get_style_guide" },
+      { type: "notEmpty" },
+    ],
+  },
 ];
 
 // ── Check evaluation ─────────────────────────────────────────────────────────
@@ -953,17 +1046,19 @@ export async function runTest(test, model) {
 
 // ── UI ────────────────────────────────────────────────────────────────────────
 const AGENT_COLORS = {
-  orchestrator: "purple",
-  reader: "accent",
-  builder: "orange",
-  generator: "green",
+  orchestrator:  "purple",
+  reader:        "accent",
+  builder:       "orange",
+  generator:     "green",
+  "style-guide": "red",
 };
 
 const AGENT_LABELS = {
-  orchestrator: "Orchestrator",
-  reader: "Reader",
-  builder: "Builder",
-  generator: "Generator",
+  orchestrator:  "Orchestrator",
+  reader:        "Reader",
+  builder:       "Builder",
+  generator:     "Generator",
+  "style-guide": "Style Guide",
 };
 
 const TAG_STYLES = {
@@ -1052,7 +1147,7 @@ export function initTestLabModal() {
     const passed = tests.filter(t => getTestState(t.id).status === "pass").length;
     const failed = tests.filter(t => ["fail", "error"].includes(getTestState(t.id).status)).length;
 
-    const agentTabs = ["all", "orchestrator", "reader", "builder", "generator"].map(f => {
+    const agentTabs = ["all", "orchestrator", "reader", "builder", "generator", "style-guide"].map(f => {
       const count = f === "all"
         ? TEST_SUITE.filter(t => typeFilter === "all" || (t.tags && t.tags.includes(typeFilter))).length
         : TEST_SUITE.filter(t => t.agent === f && (typeFilter === "all" || (t.tags && t.tags.includes(typeFilter)))).length;

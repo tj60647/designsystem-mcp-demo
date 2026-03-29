@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
+  <title>Eval Lab — Design System AI</title>
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/topbar.css" />
+  <link rel="stylesheet" href="/css/modals.css" />
+  <link rel="stylesheet" href="/css/eval.css" />
+</head>
+<body class="eval-body">
+
+<!-- Top bar -->
+<header class="eval-topbar">
+  <a href="/" class="eval-back-btn" title="Back to the demo">← Demo</a>
+  <span class="eval-topbar-title">Eval Lab</span>
+  <span class="eval-badge">EVAL</span>
+  <div class="eval-topbar-spacer"></div>
+  <div class="eval-topbar-model-wrap">
+    <label class="eval-topbar-model-label" for="eval-model-select">Model</label>
+    <select class="eval-topbar-model-select" id="eval-model-select" title="Select the model used for test runs">
+      <option value="openai/gpt-oss-20b:nitro">openai/gpt-oss-20b:nitro</option>
+      <option value="anthropic/claude-sonnet-4.6">anthropic/claude-sonnet-4.6</option>
+      <option value="anthropic/claude-3.7-sonnet">anthropic/claude-3.7-sonnet</option>
+      <option value="openai/gpt-4.1">openai/gpt-4.1</option>
+      <option value="google/gemini-2.5-pro">google/gemini-2.5-pro</option>
+    </select>
+  </div>
+</header>
+
+<!-- Workspace -->
+<div class="eval-workspace">
+
+  <!-- Left sidebar navigation -->
+  <nav class="eval-sidebar" role="navigation" aria-label="Eval Lab sections">
+    <div class="eval-sidebar-section">Evaluate</div>
+    <button class="eval-nav-btn active" data-section="suite" title="Run the 110-prompt test suite">
+      <span class="eval-nav-icon">📋</span>
+      <span>Test Suite</span>
+    </button>
+    <button class="eval-nav-btn" data-section="tools" title="Explore and invoke MCP tools directly">
+      <span class="eval-nav-icon">🔧</span>
+      <span>Tool Explorer</span>
+    </button>
+    <button class="eval-nav-btn" data-section="prompts" title="Test prompt templates with a full tool trace">
+      <span class="eval-nav-icon">💬</span>
+      <span>Prompt Lab</span>
+    </button>
+    <div class="eval-sidebar-section" style="margin-top:8px">Inspect</div>
+    <button class="eval-nav-btn" data-section="agents" title="Browse live agent config, tool sets, and system diagram">
+      <span class="eval-nav-icon">🤖</span>
+      <span>Agents</span>
+    </button>
+    <button class="eval-nav-btn" data-section="metrics" title="View in-process request and tool-call metrics">
+      <span class="eval-nav-icon">📊</span>
+      <span>Metrics</span>
+    </button>
+  </nav>
+
+  <!-- Main content area -->
+  <main class="eval-main">
+
+    <!-- ── 1. Test Suite ─────────────────────────────────────────────── -->
+    <section id="eval-section-suite" class="eval-section active" aria-label="Test Suite">
+      <div class="eval-section-header">
+        <span class="eval-section-title">Test Suite</span>
+        <span class="eval-section-subtitle">110 prompts across 5 agents — routing, grounding, epistemic, behavioral</span>
+      </div>
+      <!-- Populated by eval.js initSuiteSection() -->
+    </section>
+
+    <!-- ── 2. Tool Explorer ──────────────────────────────────────────── -->
+    <section id="eval-section-tools" class="eval-section" aria-label="Tool Explorer">
+      <div class="eval-section-header">
+        <span class="eval-section-title">MCP Tool Explorer</span>
+        <span class="eval-section-subtitle">Invoke any MCP tool directly via POST /mcp</span>
+      </div>
+      <!-- Populated by eval.js initToolsSection() -->
+    </section>
+
+    <!-- ── 3. Prompt Lab ────────────────────────────────────────────── -->
+    <section id="eval-section-prompts" class="eval-section" aria-label="Prompt Lab">
+      <div class="eval-section-header">
+        <span class="eval-section-title">Prompt Lab</span>
+        <span class="eval-section-subtitle">Send prompt templates and inspect the full tool trace</span>
+      </div>
+      <!-- Populated by eval.js initPromptsSection() -->
+    </section>
+
+    <!-- ── 4. Agents ─────────────────────────────────────────────────── -->
+    <section id="eval-section-agents" class="eval-section" aria-label="Agent Config">
+      <div class="eval-section-header">
+        <span class="eval-section-title">Agents</span>
+        <span class="eval-section-subtitle">Live agent configuration — system prompts, tool sets, and system diagram</span>
+      </div>
+      <!-- Populated by eval.js initAgentsSection() -->
+    </section>
+
+    <!-- ── 5. Metrics ────────────────────────────────────────────────── -->
+    <section id="eval-section-metrics" class="eval-section" aria-label="Metrics">
+      <div class="eval-section-header">
+        <span class="eval-section-title">Metrics</span>
+        <span class="eval-section-subtitle">In-process request, routing, and tool-call counters (resets on server restart)</span>
+      </div>
+      <!-- Populated by eval.js loadMetrics() -->
+    </section>
+
+  </main>
+</div>
+
+<script type="module" src="/js/eval.js"></script>
+</body>
+</html>

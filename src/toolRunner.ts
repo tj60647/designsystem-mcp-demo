@@ -12,6 +12,7 @@
 
 import { getData } from "./dataStore.js";
 import { DATA_SCHEMAS } from "./schemas.js";
+import { recordToolCall } from "./metrics.js";
 
 // ── Data ──────────────────────────────────────────────────────────────────
 interface TokenEntry {
@@ -131,6 +132,7 @@ function contrastRatio(fg: string, bg: string): number | null {
 // ── Tool runner ───────────────────────────────────────────────────────────
 
 export async function runMcpTool(name: string, args: Record<string, unknown>): Promise<string> {
+  recordToolCall(name);
   const tokens       = getData("tokens")       as TokensData;
   const components   = getData("components")   as ComponentsData;
   const icons        = getData("icons")        as IconsData;

@@ -35,6 +35,7 @@ router.get("/api/agent-info", (req, res) => {
     modelSource: requestedModel ? "request" : (process.env.OPENROUTER_MODEL ? "env" : "default"),
     agents: [
       {
+        key: "orchestrator",
         name: "Orchestrator",
         description: "Classifies the user's intent in a single LLM call and routes to the correct specialist agent. Never answers the user directly.",
         expectedInput: "Latest user message text from POST /api/chat.",
@@ -56,6 +57,7 @@ router.get("/api/agent-info", (req, res) => {
         ],
       },
       {
+        key: "reader",
         name: "Design System Reader",
         description: "Answers questions about tokens, components, themes, icons, layout, and accessibility using read-only MCP tools. Never mutates the design system.",
         expectedInput: "User + assistant message history and routed intent (reader). Uses read-only MCP tools.",
@@ -75,6 +77,7 @@ router.get("/api/agent-info", (req, res) => {
         })),
       },
       {
+        key: "builder",
         name: "Component Builder",
         description: "Generates HTML/CSS component code grounded in exact design system tokens. Validates all props and token values before emitting code.",
         expectedInput: "User + assistant message history and routed intent (builder). Uses component/token/validation tools.",
@@ -94,6 +97,7 @@ router.get("/api/agent-info", (req, res) => {
         })),
       },
       {
+        key: "generator",
         name: "System Generator",
         description: "Gathers brand requirements through conversation then generates a complete new design system (tokens, components, themes, icons) via AI.",
         expectedInput: "User + assistant message history and routed intent (generator). May call generate_design_system.",
@@ -115,6 +119,7 @@ router.get("/api/agent-info", (req, res) => {
         })),
       },
       {
+        key: "style-guide",
         name: "Style Guide",
         description: "Explains design principles, color usage rules, typography guidelines, and composition patterns from the style guide. Grounds answers in actual style guide content and token values.",
         expectedInput: "User + assistant message history and routed intent (style-guide). Uses style-guide/token/contrast tools.",

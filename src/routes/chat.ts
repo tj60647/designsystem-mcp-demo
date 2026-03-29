@@ -193,11 +193,22 @@ router.post("/chat", async (req, res) => {
   }
 
   const model = requestedModel ?? process.env.OPENROUTER_MODEL ?? "openai/gpt-oss-20b:nitro";
+  const fallbackModel = process.env.OPENROUTER_FALLBACK_MODEL ?? process.env.OPENROUTER_MODEL ?? "openai/gpt-oss-20b:nitro";
   const agentSettings = normalizeAgentSettings(rawAgentSettings, model);
   const getAgentRuntime = (key: AgentRuntimeKey): AgentRuntimeSettings => {
     if (agentSettings.useGlobalModel) return agentSettings.global;
     return agentSettings.agents[key] ?? agentSettings.global;
   };
+
+  async function readOpenRouterError(response: Response): Promise<string> {
+    const errText = await response.text();
+    try {
+      const errJson = JSON.parse(errText) as { error?: { message?: string } };
+      return errJson.error?.message || errText;
+    } catch {
+      return errText;
+    }
+  }
 
   // Stream progress updates via Server-Sent Events
   res.setHeader("Content-Type", "text/event-stream");
@@ -260,6 +271,7 @@ router.post("/chat", async (req, res) => {
   let agentTools: AnyTool[] = OPENROUTER_TOOLS as unknown as AnyTool[];
   let MAX_ITERATIONS = 8;
   let activeRuntime = getAgentRuntime("unified");
+  let hasRetriedWithFallbackModel = false;
 
   if (typeof previousAgent === "string" && previousAgent in SPECIALIST_CONFIGS) {
     const prev = previousAgent as SpecialistName;
@@ -316,7 +328,15 @@ router.post("/chat", async (req, res) => {
           }
         }
       } else {
-        console.warn(`[chat:orchestrator] non-ok response ${orchResponse.status}, falling back to unified agent`);
+        const orchErr = await readOpenRouterError(orchResponse);
+        if (orchResponse.status === 402 && activeRuntime.model !== fallbackModel) {
+          activeRuntime = { ...activeRuntime, model: fallbackModel };
+          hasRetriedWithFallbackModel = true;
+          sendProgress(`Selected model unavailable for routing. Using fallback model (${fallbackModel}).`);
+          console.warn(`[chat:orchestrator] non-ok response 402 (${orchErr}). Falling back to unified agent with model="${fallbackModel}"`);
+        } else {
+          console.warn(`[chat:orchestrator] non-ok response ${orchResponse.status} (${orchErr}), falling back to unified agent`);
+        }
       }
     } catch (err) {
       console.warn("[chat:orchestrator] routing failed, falling back to unified agent:", String(err));
@@ -361,19 +381,21 @@ router.post("/chat", async (req, res) => {
       });
 
       if (!orResponse.ok) {
-        const errText = await orResponse.text();
-        clearTimeout(chatTimer);
-        let errMsg = `OpenRouter API error (${orResponse.status})`;
-        try {
-          const errJson = JSON.parse(errText) as { error?: { message?: string } };
-          if (errJson.error?.message) {
-            errMsg += `: ${errJson.error.message}`;
-          } else {
-            errMsg += `: ${errText}`;
-          }
-        } catch {
-          errMsg += `: ${errText}`;
+        const errMsgBody = await readOpenRouterError(orResponse);
+        if (
+          orResponse.status === 402 &&
+          !hasRetriedWithFallbackModel &&
+          activeRuntime.model !== fallbackModel
+        ) {
+          hasRetriedWithFallbackModel = true;
+          activeRuntime = { ...activeRuntime, model: fallbackModel };
+          sendProgress(`Selected model unavailable. Retrying with fallback model (${fallbackModel})…`);
+          console.warn(`[chat] model payment/availability issue (402: ${errMsgBody}). Retrying with fallback model="${fallbackModel}"`);
+          continue;
         }
+
+        clearTimeout(chatTimer);
+        const errMsg = `OpenRouter API error (${orResponse.status}): ${errMsgBody}`;
         endWithError(errMsg);
         return;
       }

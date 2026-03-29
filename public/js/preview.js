@@ -187,8 +187,26 @@ function updateUsagePanel(usage) {
   }
 
   const costStr = (typeof usage.cost === "number" && Number.isFinite(usage.cost) && usage.cost > 0)
-    ? `$${usage.cost.toFixed(6)}`
+    ? usage.cost.toFixed(6)
     : "—";
+
+  const cachedRow = usage.cachedTokens > 0 ? `
+      <div class="usage-row usage-row-sub">
+        <span class="usage-label">↳ cached</span>
+        <span class="usage-value usage-value-sub">${usage.cachedTokens.toLocaleString()}</span>
+      </div>` : "";
+
+  const cacheWriteRow = usage.cacheWriteTokens > 0 ? `
+      <div class="usage-row usage-row-sub">
+        <span class="usage-label">↳ cache write</span>
+        <span class="usage-value usage-value-sub">${usage.cacheWriteTokens.toLocaleString()}</span>
+      </div>` : "";
+
+  const reasoningRow = usage.reasoningTokens > 0 ? `
+      <div class="usage-row usage-row-sub">
+        <span class="usage-label">↳ reasoning</span>
+        <span class="usage-value usage-value-sub">${usage.reasoningTokens.toLocaleString()}</span>
+      </div>` : "";
 
   usageBody.innerHTML = `
     <div class="usage-grid">
@@ -196,17 +214,20 @@ function updateUsagePanel(usage) {
         <span class="usage-label">Prompt tokens</span>
         <span class="usage-value">${usage.promptTokens.toLocaleString()}</span>
       </div>
+      ${cachedRow}
+      ${cacheWriteRow}
       <div class="usage-row">
         <span class="usage-label">Completion tokens</span>
         <span class="usage-value">${usage.completionTokens.toLocaleString()}</span>
       </div>
+      ${reasoningRow}
       <div class="usage-row usage-row-total">
         <span class="usage-label">Total tokens</span>
         <span class="usage-value">${usage.totalTokens.toLocaleString()}</span>
       </div>
       <div class="usage-row usage-row-cost">
-        <span class="usage-label">Estimated cost</span>
-        <span class="usage-value usage-cost">${escapeHtml(costStr)}</span>
+        <span class="usage-label">Cost</span>
+        <span class="usage-value usage-cost">${escapeHtml(costStr)} credits</span>
       </div>
     </div>`;
 }

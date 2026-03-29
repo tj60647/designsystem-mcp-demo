@@ -290,15 +290,38 @@ router.post("/chat", async (req, res) => {
   // Accumulated token usage and cost across the orchestrator call and every
   // specialist iteration.  OpenRouter follows the OpenAI response format and
   // includes a `usage` object on every completion response.
-  type UsageTotals = { promptTokens: number; completionTokens: number; totalTokens: number; cost: number };
-  const totalUsage: UsageTotals = { promptTokens: 0, completionTokens: 0, totalTokens: 0, cost: 0 };
+  type UsageTotals = {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+    cost: number;
+    cachedTokens: number;
+    cacheWriteTokens: number;
+    reasoningTokens: number;
+  };
+  const totalUsage: UsageTotals = {
+    promptTokens: 0, completionTokens: 0, totalTokens: 0, cost: 0,
+    cachedTokens: 0, cacheWriteTokens: 0, reasoningTokens: 0,
+  };
 
-  function addUsage(raw: { usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; cost?: number } | null } | null): void {
+  type OpenRouterUsage = {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+    cost?: number;
+    prompt_tokens_details?: { cached_tokens?: number; cache_write_tokens?: number; audio_tokens?: number } | null;
+    completion_tokens_details?: { reasoning_tokens?: number } | null;
+  } | null;
+
+  function addUsage(raw: { usage?: OpenRouterUsage } | null): void {
     if (!raw?.usage) return;
     totalUsage.promptTokens     += raw.usage.prompt_tokens     ?? 0;
     totalUsage.completionTokens += raw.usage.completion_tokens ?? 0;
     totalUsage.totalTokens      += raw.usage.total_tokens      ?? 0;
     totalUsage.cost             += raw.usage.cost              ?? 0;
+    totalUsage.cachedTokens     += raw.usage.prompt_tokens_details?.cached_tokens     ?? 0;
+    totalUsage.cacheWriteTokens += raw.usage.prompt_tokens_details?.cache_write_tokens ?? 0;
+    totalUsage.reasoningTokens  += raw.usage.completion_tokens_details?.reasoning_tokens ?? 0;
   }
 
   // ── Cache lookup ──────────────────────────────────────────────────────────
@@ -380,7 +403,7 @@ router.post("/chat", async (req, res) => {
       if (orchResponse.ok) {
         const orchData = await orchResponse.json() as {
           choices: Array<{ message: { tool_calls?: Array<{ function: { name: string; arguments: string } }> } }>;
-          usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; cost?: number } | null;
+          usage?: OpenRouterUsage;
         };
         addUsage(orchData);
         const delegateCall = orchData.choices?.[0]?.message?.tool_calls?.[0];
@@ -488,7 +511,7 @@ router.post("/chat", async (req, res) => {
           };
           finish_reason: string;
         }>;
-        usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; cost?: number } | null;
+        usage?: OpenRouterUsage;
       };
       addUsage(orData);
 
@@ -617,7 +640,7 @@ router.post("/chat", async (req, res) => {
       const rawResponse = assistantTextContent ?? "";
       const { message, preview, metadata, schemaVersion } = parseChatResponse(rawResponse);
       console.log("[chat:response]", message.slice(0, 300));
-      console.log(`[chat:usage] prompt=${totalUsage.promptTokens} completion=${totalUsage.completionTokens} total=${totalUsage.totalTokens} cost=$${Number.isFinite(totalUsage.cost) ? totalUsage.cost.toFixed(6) : "n/a"}`);
+      console.log(`[chat:usage] prompt=${totalUsage.promptTokens} (cached=${totalUsage.cachedTokens} cacheWrite=${totalUsage.cacheWriteTokens}) completion=${totalUsage.completionTokens} (reasoning=${totalUsage.reasoningTokens}) total=${totalUsage.totalTokens} cost=${Number.isFinite(totalUsage.cost) ? totalUsage.cost.toFixed(6) : "n/a"} credits`);
       clearTimeout(chatTimer);
       // Store in cache unless the design system was generated (that tool
       // mutates the data store so subsequent queries would return stale data).

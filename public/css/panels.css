@@ -419,6 +419,9 @@
 .usage-row-total .usage-label,
 .usage-row-total .usage-value { font-weight: 600; color: var(--text); }
 .usage-cost { color: var(--accent); }
+.usage-row-sub { padding: 2px 0 2px 10px; border-bottom: none; }
+.usage-row-sub .usage-label { font-size: 11px; }
+.usage-value-sub { font-size: 11px; color: var(--text-dim); font-weight: 400; }
 
 /* Token chips (in markdown/preview) */
 .token-chip {

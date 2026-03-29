@@ -8,6 +8,10 @@ marked.use({ gfm: true, breaks: true });
 // Populated once at init; used synchronously by highlightTokens().
 const tokenColorCache = new Map();
 
+const AGENT_SETTINGS_STORAGE_KEY = "designsystem-mcp-demo.chat.agent-settings";
+const AGENT_KEYS = ["orchestrator", "reader", "builder", "generator", "style-guide", "unified"];
+const DEFAULT_SAMPLING = { temperature: 0 };
+
 function flattenTokens(obj, prefix) {
   if (!obj || typeof obj !== "object") return;
   if ("value" in obj && typeof obj.value === "string") {
@@ -101,5 +105,70 @@ export function highlightTokens(container) {
     }
     parent.replaceChild(fragment, textNode);
     tokenRegex.lastIndex = 0;
+  }
+}
+
+function coerceNumber(value, fallback) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function makeAgentSampling(seed) {
+  const src = seed && typeof seed === "object" ? seed : {};
+  return {
+    temperature: coerceNumber(src.temperature, DEFAULT_SAMPLING.temperature),
+  };
+}
+
+export function createDefaultAgentSettings(defaultModel) {
+  const model = (defaultModel || "openai/gpt-oss-20b:nitro").trim();
+  const agents = {};
+  for (const key of AGENT_KEYS) {
+    agents[key] = { model, ...DEFAULT_SAMPLING };
+  }
+  return {
+    useGlobalModel: true,
+    global: { model, ...DEFAULT_SAMPLING },
+    agents,
+  };
+}
+
+export function loadAgentSettings(defaultModel) {
+  const fallback = createDefaultAgentSettings(defaultModel);
+  let raw = null;
+  try {
+    raw = localStorage.getItem(AGENT_SETTINGS_STORAGE_KEY);
+  } catch {
+    return fallback;
+  }
+  if (!raw) return fallback;
+
+  try {
+    const parsed = JSON.parse(raw);
+    const next = createDefaultAgentSettings(defaultModel);
+    next.useGlobalModel = Boolean(parsed?.useGlobalModel ?? true);
+    if (parsed?.global && typeof parsed.global === "object") {
+      next.global.model = String(parsed.global.model || next.global.model).trim() || next.global.model;
+      Object.assign(next.global, makeAgentSampling(parsed.global));
+    }
+    if (parsed?.agents && typeof parsed.agents === "object") {
+      for (const key of AGENT_KEYS) {
+        const src = parsed.agents[key];
+        if (!src || typeof src !== "object") continue;
+        next.agents[key].model = String(src.model || next.agents[key].model).trim() || next.agents[key].model;
+        Object.assign(next.agents[key], makeAgentSampling(src));
+      }
+    }
+    return next;
+  } catch {
+    return fallback;
+  }
+}
+
+export function saveAgentSettings(settings) {
+  try {
+    localStorage.setItem(AGENT_SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+  } catch {
+    // Non-fatal if storage is unavailable.
   }
 }

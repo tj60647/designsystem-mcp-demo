@@ -46,6 +46,64 @@ const router = express.Router();
 const VALID_TYPES: DataType[] = ["tokens", "components", "themes", "icons"];
 const ALLOWED_MESSAGE_ROLES = new Set(["user", "assistant"]);
 
+type AgentRuntimeKey = "orchestrator" | SpecialistName | "unified";
+type AgentRuntimeSettings = {
+  model: string;
+  temperature: number;
+  topP: number;
+  topK: number;
+};
+type AgentSettingsPayload = {
+  useGlobalModel?: unknown;
+  global?: Partial<AgentRuntimeSettings>;
+  agents?: Partial<Record<AgentRuntimeKey, Partial<AgentRuntimeSettings>>>;
+};
+
+function toNumber(value: unknown, fallback: number): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function normalizeAgentSettings(
+  payload: AgentSettingsPayload | undefined,
+  defaultModel: string,
+): { useGlobalModel: boolean; global: AgentRuntimeSettings; agents: Record<AgentRuntimeKey, AgentRuntimeSettings> } {
+  const makeEntry = (src: Partial<AgentRuntimeSettings> | undefined): AgentRuntimeSettings => ({
+    model: typeof src?.model === "string" && src.model.trim() ? src.model.trim() : defaultModel,
+    temperature: toNumber(src?.temperature, 0),
+    topP: toNumber(src?.topP, 1),
+    topK: toNumber(src?.topK, 0),
+  });
+
+  const global = makeEntry(payload?.global);
+  const agents = {
+    orchestrator: makeEntry(payload?.agents?.orchestrator),
+    reader: makeEntry(payload?.agents?.reader),
+    builder: makeEntry(payload?.agents?.builder),
+    generator: makeEntry(payload?.agents?.generator),
+    "style-guide": makeEntry(payload?.agents?.["style-guide"]),
+    unified: makeEntry(payload?.agents?.unified),
+  };
+
+  return {
+    useGlobalModel: Boolean(payload?.useGlobalModel ?? true),
+    global,
+    agents,
+  };
+}
+
+function buildSamplingParams(runtime: AgentRuntimeSettings): { temperature?: number; top_p?: number; top_k?: number } {
+  // Use one sampling control at a time to avoid overlapping randomness knobs.
+  // Priority: top_k (if > 0) -> top_p (if < 1) -> temperature (always).
+  if (runtime.topK > 0) {
+    return { top_k: runtime.topK };
+  }
+  if (runtime.topP > 0 && runtime.topP < 1) {
+    return { top_p: runtime.topP };
+  }
+  return { temperature: runtime.temperature };
+}
+
 // ── Response parser ───────────────────────────────────────────────────────
 // Parse the LLM's JSON response into {message, preview}.  Falls back to
 // treating the raw text as the message if JSON parsing fails, so a
@@ -112,11 +170,12 @@ router.post("/chat", async (req, res) => {
     return;
   }
 
-  const { messages, model: requestedModel, previousAgent } = req.body as {
+  const { messages, model: requestedModel, previousAgent, agentSettings: rawAgentSettings } = req.body as {
     messages: Array<{ role: "user" | "assistant"; content: string }>;
     model?: string;
     /** Agent name from the previous turn, sent by the client to skip re-routing. */
     previousAgent?: string;
+    agentSettings?: AgentSettingsPayload;
   };
 
   if (!Array.isArray(messages) || messages.length === 0) {
@@ -139,6 +198,11 @@ router.post("/chat", async (req, res) => {
   }
 
   const model = requestedModel ?? process.env.OPENROUTER_MODEL ?? "openai/gpt-oss-20b:nitro";
+  const agentSettings = normalizeAgentSettings(rawAgentSettings, model);
+  const getAgentRuntime = (key: AgentRuntimeKey): AgentRuntimeSettings => {
+    if (agentSettings.useGlobalModel) return agentSettings.global;
+    return agentSettings.agents[key] ?? agentSettings.global;
+  };
 
   // Stream progress updates via Server-Sent Events
   res.setHeader("Content-Type", "text/event-stream");
@@ -200,6 +264,7 @@ router.post("/chat", async (req, res) => {
   type AnyTool = { type: string; function: { name: string; description: string; parameters: unknown } };
   let agentTools: AnyTool[] = OPENROUTER_TOOLS as unknown as AnyTool[];
   let MAX_ITERATIONS = 8;
+  let activeRuntime = getAgentRuntime("unified");
 
   if (typeof previousAgent === "string" && previousAgent in SPECIALIST_CONFIGS) {
     const prev = previousAgent as SpecialistName;
@@ -207,10 +272,12 @@ router.post("/chat", async (req, res) => {
     systemPrompt   = SPECIALIST_CONFIGS[prev].systemPrompt;
     agentTools     = SPECIALIST_CONFIGS[prev].tools;
     MAX_ITERATIONS = SPECIALIST_CONFIGS[prev].maxIterations;
+    activeRuntime  = getAgentRuntime(prev);
     console.log(`[chat:orchestrator] reusing previousAgent="${prev}" (skip re-route)`);
   } else {
     try {
       sendProgress("Routing request…");
+      const orchestratorRuntime = getAgentRuntime("orchestrator");
       const orchMessages: OpenRouterMessage[] = [
         { role: "system", content: ORCHESTRATOR_SYSTEM_PROMPT },
         messages.at(-1)!,
@@ -224,7 +291,8 @@ router.post("/chat", async (req, res) => {
           "X-Title": "Design System MCP Demo",
         },
         body: JSON.stringify({
-          model,
+          model: orchestratorRuntime.model,
+          ...buildSamplingParams(orchestratorRuntime),
           messages: orchMessages,
           tools: [DELEGATE_TOOL],
           tool_choice: "required",
@@ -247,6 +315,7 @@ router.post("/chat", async (req, res) => {
             systemPrompt   = SPECIALIST_CONFIGS[agent].systemPrompt;
             agentTools     = SPECIALIST_CONFIGS[agent].tools;
             MAX_ITERATIONS = SPECIALIST_CONFIGS[agent].maxIterations;
+            activeRuntime  = getAgentRuntime(agent);
             console.log(`[chat:orchestrator] routed to "${agent}" — ${delegateArgs.reason ?? ""}`);
             sendAgentRouted(agent, delegateArgs.reason ?? "");
           }
@@ -274,7 +343,7 @@ router.post("/chat", async (req, res) => {
 
   try {
     for (let i = 0; i < MAX_ITERATIONS; i++) {
-      console.log(`[chat] iteration=${i} model=${model} messages=${loopMessages.length}`);
+      console.log(`[chat] iteration=${i} model=${activeRuntime.model} messages=${loopMessages.length}`);
 
       sendProgress("Thinking…");
 
@@ -287,7 +356,8 @@ router.post("/chat", async (req, res) => {
           "X-Title": "Design System MCP Demo",
         },
         body: JSON.stringify({
-          model,
+          model: activeRuntime.model,
+          ...buildSamplingParams(activeRuntime),
           messages: loopMessages,
           tools: agentTools,
           tool_choice: "auto",
@@ -397,7 +467,7 @@ router.post("/chat", async (req, res) => {
           if (toolName === "generate_design_system") {
             try {
               const description = (toolArgs.description as string) ?? "";
-              const result = await generateDesignSystem(description, apiKey, model, chatAbort.signal);
+              const result = await generateDesignSystem(description, apiKey, activeRuntime.model, chatAbort.signal);
 
               const loadedSections: string[] = [];
               for (const section of VALID_TYPES) {
@@ -450,7 +520,7 @@ router.post("/chat", async (req, res) => {
       const { message, preview } = parseChatResponse(rawResponse);
       console.log("[chat:response]", message.slice(0, 300));
       clearTimeout(chatTimer);
-      endWithDone({ message, preview, model, routedAgent, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
+      endWithDone({ message, preview, model: activeRuntime.model, routedAgent, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
       return;
     }
 
@@ -459,7 +529,7 @@ router.post("/chat", async (req, res) => {
     const rawLast = String(lastAssistant?.content ?? "");
     const { message: lastMessage, preview: lastPreview } = parseChatResponse(rawLast);
     clearTimeout(chatTimer);
-    endWithDone({ message: lastMessage, preview: lastPreview, model, routedAgent, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
+    endWithDone({ message: lastMessage, preview: lastPreview, model: activeRuntime.model, routedAgent, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
   } catch (err) {
     clearTimeout(chatTimer);
     console.error("Chat error:", err);

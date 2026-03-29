@@ -1,4 +1,4 @@
-import { escapeHtml, renderMarkdown, highlightTokens } from './utils.js';
+import { escapeHtml, renderMarkdown, highlightTokens, loadAgentSettings } from './utils.js';
 import { updateLivePreview } from './preview.js';
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -113,10 +113,21 @@ async function handleSend() {
   lastRoutedAgent = null;
 
   try {
+    const selectedModel = getSelectedModel();
+    const agentSettings = loadAgentSettings(selectedModel);
+    // Keep the topbar model as the canonical global model while allowing
+    // per-agent overrides when useGlobalModel is disabled.
+    agentSettings.global.model = selectedModel;
+
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: conversationHistory, model: getSelectedModel(), previousAgent: agentForThisTurn }),
+      body: JSON.stringify({
+        messages: conversationHistory,
+        model: selectedModel,
+        previousAgent: agentForThisTurn,
+        agentSettings,
+      }),
     });
 
     // Early validation errors (400, 503) are returned as plain JSON before SSE

@@ -9,10 +9,11 @@ export function initAgentsModal() {
   const lobbyTabs = overlay.querySelectorAll(".agents-lobby-tab");
 
   let allAgents = [];
+  let modelMeta = { model: "", modelSource: "" };
   let activeTab = "lobby";
 
   // Colour token per agent index — matches diagram node colours
-  const ROLE_COLORS = ["purple", "accent", "orange", "green"];
+  const ROLE_COLORS = ["purple", "accent", "orange", "green", "red"];
 
   // ── System Diagram ─────────────────────────────────────────────────────
   function renderDiagram() {
@@ -80,26 +81,56 @@ export function initAgentsModal() {
       const paramHtml = params.length
         ? params.map(p => `<span class="agents-param-chip">${escapeHtml(p)}${required.includes(p) ? "<sup style='color:var(--red)'>*</sup>" : ""}</span>`).join("")
         : "<span style='font-size:10.5px;color:var(--text-dim);font-style:italic'>no parameters</span>";
-      return `<div class="agents-tool-card">
-        <div class="agents-tool-name">${escapeHtml(t.name)}</div>
+      return `<details class="agents-tool-card">
+        <summary class="agents-tool-summary">
+          <span class="agents-tool-name">${escapeHtml(t.name)}</span>
+          <span class="agents-tool-toggle">show details</span>
+        </summary>
         <div class="agents-tool-desc">${escapeHtml(t.description)}</div>
         <div class="agents-tool-params">${paramHtml}</div>
-      </div>`;
+      </details>`;
     }).join("");
   }
 
   function renderLobby() {
+    const legendItems = allAgents.map((agent, i) => {
+      const color = ROLE_COLORS[i] ?? "accent";
+      return `<div class="lobby-legend-item"><span class="lobby-legend-dot" data-color="${color}"></span><span class="lobby-legend-label">${escapeHtml(agent.name)}</span></div>`;
+    }).join("");
+
+    const globalSettings = modelMeta.model
+      ? `<div class="lobby-global-settings">
+          <div class="lobby-global-title">Global Model</div>
+          <div class="lobby-global-row"><span class="lobby-global-key">model</span><span class="lobby-global-val">${escapeHtml(modelMeta.model)}</span></div>
+          <div class="lobby-global-row"><span class="lobby-global-key">source</span><span class="lobby-global-val">${escapeHtml(modelMeta.modelSource || "unknown")}</span></div>
+        </div>`
+      : "";
+
+    const legend = `<div class="lobby-legend"><div class="lobby-global-title">Agent Legend</div><div class="lobby-legend-row">${legendItems}</div></div>`;
+
     const cards = allAgents.map((agent, i) => {
       const color = ROLE_COLORS[i] ?? "accent";
       const paramsHtml = Object.entries(agent.parameters).map(([k, v]) =>
         `<div class="lobby-param-row"><span class="lobby-param-key">${escapeHtml(k)}</span><span class="lobby-param-val">${escapeHtml(String(v))}</span></div>`
       ).join("");
+      const expectedInput = typeof agent.expectedInput === "string" && agent.expectedInput.trim().length > 0
+        ? agent.expectedInput
+        : "Uses chat message history and available tool schemas.";
+      const expectedOutput = typeof agent.expectedOutput === "string" && agent.expectedOutput.trim().length > 0
+        ? agent.expectedOutput
+        : "Final assistant response text (often JSON-parsed by runtime).";
       return `
       <div class="lobby-card" data-color="${color}">
         <div class="lobby-card-header">
           <div class="lobby-card-name">${escapeHtml(agent.name)}</div>
           <div class="lobby-card-model">${escapeHtml(agent.model)}</div>
         </div>
+
+        <div class="lobby-section-label">Expected Input</div>
+        <div class="lobby-io">${escapeHtml(expectedInput)}</div>
+
+        <div class="lobby-section-label">Expected Output</div>
+        <div class="lobby-io">${escapeHtml(expectedOutput)}</div>
 
         <div class="lobby-section-label">Parameters</div>
         <div class="lobby-params">${paramsHtml}</div>
@@ -112,7 +143,7 @@ export function initAgentsModal() {
       </div>`;
     }).join("");
 
-    modalBody.innerHTML = `<div class="lobby-list">${cards}</div>`;
+    modalBody.innerHTML = `<div class="lobby-list">${legend}${globalSettings}${cards}</div>`;
   }
 
   // ── Tab switching ──────────────────────────────────────────────────────
@@ -131,12 +162,19 @@ export function initAgentsModal() {
     modalBody.innerHTML = '<div class="agents-loading">Loading agent info…</div>';
     overlay.classList.add("open");
     try {
-      if (allAgents.length === 0) {
-        const res = await fetch("/api/agent-info");
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const data = await res.json();
-        allAgents = data.agents ?? [];
-      }
+      const modelSelect = document.getElementById("model-select");
+      const selectedModel = modelSelect && "value" in modelSelect ? String(modelSelect.value || "").trim() : "";
+      const url = selectedModel
+        ? `/api/agent-info?model=${encodeURIComponent(selectedModel)}`
+        : "/api/agent-info";
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      allAgents = data.agents ?? [];
+      modelMeta = {
+        model: typeof data.model === "string" ? data.model : "",
+        modelSource: typeof data.modelSource === "string" ? data.modelSource : "",
+      };
       switchTab(activeTab);
     } catch (err) {
       modalBody.innerHTML = `<div class="agents-loading">Could not load agent info: ${escapeHtml(err.message)}</div>`;

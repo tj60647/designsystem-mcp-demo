@@ -25,17 +25,25 @@ const router = express.Router();
 // and the exact tool subset it is given.
 // Used by the "View Agents" modal in the demo UI.
 // ─────────────────────────────────────────────────────────────────────────
-router.get("/api/agent-info", (_req, res) => {
-  const model = process.env.OPENROUTER_MODEL ?? "openai/gpt-oss-20b:nitro";
+router.get("/api/agent-info", (req, res) => {
+  const requestedModel = typeof req.query.model === "string" && req.query.model.trim().length > 0
+    ? req.query.model.trim()
+    : undefined;
+  const model = requestedModel ?? process.env.OPENROUTER_MODEL ?? "openai/gpt-oss-20b:nitro";
   res.json({
+    model,
+    modelSource: requestedModel ? "request" : (process.env.OPENROUTER_MODEL ? "env" : "default"),
     agents: [
       {
         name: "Orchestrator",
         description: "Classifies the user's intent in a single LLM call and routes to the correct specialist agent. Never answers the user directly.",
+        expectedInput: "Latest user message text from POST /api/chat.",
+        expectedOutput: "One required tool call: delegate_to_agent({ agent, reason }). No direct user answer text.",
         model,
         parameters: {
           maxIterations: 1,
           toolChoice: "required",
+          temperature: "provider default",
           endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
         },
         systemPrompt: ORCHESTRATOR_SYSTEM_PROMPT,
@@ -50,10 +58,13 @@ router.get("/api/agent-info", (_req, res) => {
       {
         name: "Design System Reader",
         description: "Answers questions about tokens, components, themes, icons, layout, and accessibility using read-only MCP tools. Never mutates the design system.",
+        expectedInput: "User + assistant message history and routed intent (reader). Uses read-only MCP tools.",
+        expectedOutput: "Final assistant JSON object: { \"message\": string, \"preview\": string|null } (plain-text fallback accepted by parser).",
         model,
         parameters: {
           maxIterations: SPECIALIST_CONFIGS.reader.maxIterations,
           toolChoice: "auto",
+          temperature: "provider default",
           endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
         },
         systemPrompt: SPECIALIST_CONFIGS.reader.systemPrompt,
@@ -66,10 +77,13 @@ router.get("/api/agent-info", (_req, res) => {
       {
         name: "Component Builder",
         description: "Generates HTML/CSS component code grounded in exact design system tokens. Validates all props and token values before emitting code.",
+        expectedInput: "User + assistant message history and routed intent (builder). Uses component/token/validation tools.",
+        expectedOutput: "Final assistant JSON object: { \"message\": string, \"preview\": \"<html>...\" } where preview contains renderable HTML.",
         model,
         parameters: {
           maxIterations: SPECIALIST_CONFIGS.builder.maxIterations,
           toolChoice: "auto",
+          temperature: "provider default",
           endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
         },
         systemPrompt: SPECIALIST_CONFIGS.builder.systemPrompt,
@@ -82,10 +96,15 @@ router.get("/api/agent-info", (_req, res) => {
       {
         name: "System Generator",
         description: "Gathers brand requirements through conversation then generates a complete new design system (tokens, components, themes, icons) via AI.",
+        expectedInput: "User + assistant message history and routed intent (generator). May call generate_design_system.",
+        expectedOutput: "When generating: tool result with generatedDesignSystem payload; final assistant response still follows { \"message\": string, \"preview\": string|null }.",
         model,
         parameters: {
           maxIterations: SPECIALIST_CONFIGS.generator.maxIterations,
           toolChoice: "auto",
+          temperature: "provider default",
+          generateDesignSystemTemperature: 0.4,
+          generateDesignSystemMaxTokens: 8000,
           endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
         },
         systemPrompt: SPECIALIST_CONFIGS.generator.systemPrompt,
@@ -98,10 +117,13 @@ router.get("/api/agent-info", (_req, res) => {
       {
         name: "Style Guide",
         description: "Explains design principles, color usage rules, typography guidelines, and composition patterns from the style guide. Grounds answers in actual style guide content and token values.",
+        expectedInput: "User + assistant message history and routed intent (style-guide). Uses style-guide/token/contrast tools.",
+        expectedOutput: "Final assistant JSON object: { \"message\": string, \"preview\": string|null } with guidance-focused content.",
         model,
         parameters: {
           maxIterations: SPECIALIST_CONFIGS["style-guide"].maxIterations,
           toolChoice: "auto",
+          temperature: "provider default",
           endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
         },
         systemPrompt: SPECIALIST_CONFIGS["style-guide"].systemPrompt,

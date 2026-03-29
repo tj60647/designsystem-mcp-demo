@@ -901,27 +901,27 @@ const PLAYGROUND_SCENARIOS = {
     name: 'Token Audit',
     description: 'Read primary colors → spacing → typography scale',
     steps: [
-      { id: 'pg-1', agentId: 'reader', prompt: 'What are the primary color tokens?' },
-      { id: 'pg-2', agentId: 'reader', prompt: 'What spacing tokens are defined in the design system?' },
-      { id: 'pg-3', agentId: 'reader', prompt: 'What typography tokens are available — sizes, weights, and line-heights?' },
+      { id: 'token_audit-1', agentId: 'reader', prompt: 'What are the primary color tokens?' },
+      { id: 'token_audit-2', agentId: 'reader', prompt: 'What spacing tokens are defined in the design system?' },
+      { id: 'token_audit-3', agentId: 'reader', prompt: 'What typography tokens are available — sizes, weights, and line-heights?' },
     ],
   },
   build_flow: {
     name: 'Read + Build Flow',
     description: 'Inspect button specs → build component → get style guidance',
     steps: [
-      { id: 'pg-1', agentId: 'reader', prompt: 'What are the button component variants and their token properties?' },
-      { id: 'pg-2', agentId: 'builder', prompt: 'Build a primary and secondary button component using design system tokens' },
-      { id: 'pg-3', agentId: 'style-guide', prompt: 'What are the best practices for choosing between primary and secondary buttons?' },
+      { id: 'build_flow-1', agentId: 'reader', prompt: 'What are the button component variants and their token properties?' },
+      { id: 'build_flow-2', agentId: 'builder', prompt: 'Build a primary and secondary button component using design system tokens' },
+      { id: 'build_flow-3', agentId: 'style-guide', prompt: 'What are the best practices for choosing between primary and secondary buttons?' },
     ],
   },
   compliance_check: {
     name: 'Style Compliance',
     description: 'Get color principles → read exact tokens → build a compliant form',
     steps: [
-      { id: 'pg-1', agentId: 'style-guide', prompt: 'What color usage principles and contrast requirements should I follow?' },
-      { id: 'pg-2', agentId: 'reader', prompt: 'What is the exact hex value of the primary action color and its accessible text pair?' },
-      { id: 'pg-3', agentId: 'builder', prompt: 'Build an accessible login form with a primary submit button following the design system color principles' },
+      { id: 'compliance_check-1', agentId: 'style-guide', prompt: 'What color usage principles and contrast requirements should I follow?' },
+      { id: 'compliance_check-2', agentId: 'reader', prompt: 'What is the exact hex value of the primary action color and its accessible text pair?' },
+      { id: 'compliance_check-3', agentId: 'builder', prompt: 'Build an accessible login form with a primary submit button following the design system color principles' },
     ],
   },
 };
@@ -941,6 +941,7 @@ let pgRunning        = false;
 let pgStopFlag       = false;
 let pgSelectedKey    = 'token_audit';
 let pgInited         = false;
+let pgCustomStepSeq  = 0; // monotonic counter for custom step IDs
 
 function pgFreshStep(s) {
   return { ...s, status: 'pending', output: undefined, model: undefined, latencyMs: undefined, toolCallsUsed: undefined, error: undefined };
@@ -1219,7 +1220,7 @@ function initPlaygroundSection() {
     const prompt = document.getElementById('pg-custom-prompt').value.trim();
     if (!prompt || pgRunning) return;
     const agentId = document.getElementById('pg-custom-agent').value;
-    pgSteps.push({ id: `pg-custom-${Date.now()}`, agentId, prompt, status: 'pending' });
+    pgSteps.push({ id: `pg-custom-${++pgCustomStepSeq}`, agentId, prompt, status: 'pending' });
     document.getElementById('pg-custom-prompt').value = '';
     pgRenderChain();
     pgRenderTimeline();

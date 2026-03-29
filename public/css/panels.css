@@ -399,6 +399,30 @@
 }
 .tool-item::before { content: "⚙"; font-size: 10px; opacity: .7; }
 
+/* ── Usage panel ── */
+.usage-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.usage-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 12px;
+}
+.usage-row:last-child { border-bottom: none; }
+.usage-label { color: var(--text-dim); }
+.usage-value { font-variant-numeric: tabular-nums; color: var(--text); font-weight: 500; }
+.usage-row-total .usage-label,
+.usage-row-total .usage-value { font-weight: 600; color: var(--text); }
+.usage-cost { color: var(--accent); }
+.usage-row-sub { padding: 2px 0 2px 10px; border-bottom: none; }
+.usage-row-sub .usage-label { font-size: 11px; }
+.usage-value-sub { font-size: 11px; color: var(--text-dim); font-weight: 400; }
+
 /* Token chips (in markdown/preview) */
 .token-chip {
   display: inline-flex; align-items: center; gap: 5px;

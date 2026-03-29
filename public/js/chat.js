@@ -375,8 +375,16 @@ async function handleSend() {
             lastRoutedAgent = event.routedAgent;
           }
 
-          appendMessage("assistant", message);
-          updateLivePreview(preview, toolsUsed, event.model, preview ? message : null);
+          const msgEl = appendMessage("assistant", message);
+          if (event.fromCache) {
+            const badge = document.createElement("span");
+            badge.className = "cache-badge";
+            badge.textContent = "cached";
+            badge.title = "This response was served from cache — the same question was answered earlier.";
+            msgEl.querySelector(".msg-bubble").appendChild(badge);
+          }
+
+          updateLivePreview(preview, toolsUsed, event.model, preview ? message : null, event.usage || null);
 
           if (event.generatedDesignSystem) {
             handleGeneratedDesignSystem(event.generatedDesignSystem);

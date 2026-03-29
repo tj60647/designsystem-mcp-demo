@@ -18,8 +18,11 @@
  *  4. Orchestrator last-message scoping — the server must expose only one
  *     specialist agent for routing (verified via /api/agent-info shape).
  *
- * All /api/chat calls are intercepted; the real /api/agent-info is served by
- * the dev server started in playwright.config.ts.
+ *  5. MCP tool correctness — POST /mcp tool calls return well-formed, semantically
+ *     correct results verified against the bundled design system data.
+ *
+ * All /api/chat calls are intercepted; the real /api/agent-info and POST /mcp
+ * are served by the dev server started in playwright.config.ts.
  */
 import { test, expect, Page } from "@playwright/test";
 
@@ -344,5 +347,241 @@ test.describe("previousAgent — single-turn continuation", () => {
     await sendAndWait(page, "Now show me the button component");
 
     expect((bodies[2] as { previousAgent: unknown }).previousAgent).toBeNull();
+  });
+});
+
+// ── 3. MCP tool correctness ───────────────────────────────────────────────────
+// These tests call POST /mcp directly (no mocking) and verify that the MCP
+// server returns well-formed, semantically correct responses.
+//
+// Format used: MCP JSON-RPC 2.0 over HTTP (stateless StreamableHTTPTransport).
+
+type McpRequest = { jsonrpc: string; id: number; method: string; params: unknown };
+let _mcpSeq = 0;
+
+/** POST /mcp and return the parsed result, throwing on protocol error. */
+async function mcpCall(
+  apiRequest: import("@playwright/test").APIRequestContext,
+  method: string,
+  params: unknown = {},
+): Promise<unknown> {
+  const body: McpRequest = { jsonrpc: "2.0", id: ++_mcpSeq, method, params };
+  const res = await apiRequest.post("/mcp", {
+    data: body,
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+  });
+
+  // The transport may reply with JSON or SSE.  Handle both.
+  const ct = res.headers()["content-type"] ?? "";
+  if (ct.includes("application/json")) {
+    const json = await res.json() as { result?: unknown; error?: { message?: string } };
+    if (json.error) throw new Error(json.error.message ?? "MCP error");
+    return json.result;
+  }
+
+  // SSE path — scan for a result event
+  const text = await res.text();
+  for (const line of text.split("\n")) {
+    if (!line.startsWith("data: ")) continue;
+    try {
+      const event = JSON.parse(line.slice(6)) as { result?: unknown; error?: { message?: string } };
+      if (event.result !== undefined) return event.result;
+      if (event.error) throw new Error(event.error.message ?? "MCP error");
+    } catch { /* skip non-JSON lines */ }
+  }
+  throw new Error("No result in MCP response");
+}
+
+test.describe("MCP tool correctness", () => {
+
+  // ── tools/list ──────────────────────────────────────────────────────────────
+
+  test("tools/list returns at least 27 tools", async ({ request }) => {
+    const result = await mcpCall(request, "tools/list") as {
+      tools: Array<{ name: string; description: string }>;
+    };
+    expect(Array.isArray(result.tools)).toBe(true);
+    expect(result.tools.length).toBeGreaterThanOrEqual(27);
+  });
+
+  test("tools/list includes all expected tool names", async ({ request }) => {
+    const result = await mcpCall(request, "tools/list") as {
+      tools: Array<{ name: string }>;
+    };
+    const names = result.tools.map(t => t.name);
+    const required = [
+      "list_token_categories", "get_tokens", "get_token",
+      "list_components", "get_component", "get_component_tokens",
+      "check_contrast", "validate_color", "diff_against_system",
+      "get_accessibility_guidance", "get_layout_guidance",
+      "get_changelog", "get_deprecations", "get_style_guide",
+      "list_themes", "get_theme",
+      "list_icons", "get_icon", "search_icons",
+    ];
+    for (const name of required) {
+      expect(names, `tools/list is missing "${name}"`).toContain(name);
+    }
+  });
+
+  test("each tool in tools/list has a description and inputSchema", async ({ request }) => {
+    const result = await mcpCall(request, "tools/list") as {
+      tools: Array<{ name: string; description?: string; inputSchema?: unknown }>;
+    };
+    for (const tool of result.tools) {
+      expect(tool.description, `${tool.name} is missing description`).toBeTruthy();
+      expect(tool.inputSchema, `${tool.name} is missing inputSchema`).toBeDefined();
+    }
+  });
+
+  // ── resources/list ──────────────────────────────────────────────────────────
+
+  test("resources/list returns design-system:// URIs", async ({ request }) => {
+    const result = await mcpCall(request, "resources/list") as {
+      resources: Array<{ uri: string }>;
+    };
+    expect(Array.isArray(result.resources)).toBe(true);
+    const uris = result.resources.map(r => r.uri);
+    expect(uris.some(u => u.startsWith("design-system://"))).toBe(true);
+    expect(uris).toContain("design-system://tokens");
+    expect(uris).toContain("design-system://components");
+  });
+
+  // ── prompts/list ────────────────────────────────────────────────────────────
+
+  test("prompts/list returns at least 9 prompt definitions", async ({ request }) => {
+    const result = await mcpCall(request, "prompts/list") as {
+      prompts: Array<{ name: string }>;
+    };
+    expect(Array.isArray(result.prompts)).toBe(true);
+    expect(result.prompts.length).toBeGreaterThanOrEqual(9);
+  });
+
+  // ── tools/call — token queries ───────────────────────────────────────────────
+
+  test("get_token returns correct value for color.primary.600", async ({ request }) => {
+    const result = await mcpCall(request, "tools/call", {
+      name: "get_token",
+      arguments: { tokenPath: "color.primary.600" },
+    }) as { content: Array<{ text: string }> };
+    const text = result.content.map(c => c.text).join("");
+    expect(text.toLowerCase()).toContain("#2563eb");
+  });
+
+  test("get_tokens with category 'color' returns a non-empty token tree", async ({ request }) => {
+    const result = await mcpCall(request, "tools/call", {
+      name: "get_tokens",
+      arguments: { category: "color" },
+    }) as { content: Array<{ text: string }> };
+    const text = result.content.map(c => c.text).join("");
+    const parsed = JSON.parse(text) as { category: string };
+    expect(parsed.category).toBe("color");
+  });
+
+  test("list_token_categories returns an array of category names", async ({ request }) => {
+    const result = await mcpCall(request, "tools/call", {
+      name: "list_token_categories",
+      arguments: {},
+    }) as { content: Array<{ text: string }> };
+    const text = result.content.map(c => c.text).join("");
+    expect(text).toContain("color");
+    expect(text).toContain("typography");
+    expect(text).toContain("spacing");
+  });
+
+  // ── tools/call — component queries ───────────────────────────────────────────
+
+  test("list_components returns button and modal in the component list", async ({ request }) => {
+    const result = await mcpCall(request, "tools/call", {
+      name: "list_components",
+      arguments: {},
+    }) as { content: Array<{ text: string }> };
+    const text = result.content.map(c => c.text).join("").toLowerCase();
+    expect(text).toContain("button");
+    expect(text).toContain("modal");
+  });
+
+  test("get_component returns spec for button with variants and accessibility", async ({ request }) => {
+    const result = await mcpCall(request, "tools/call", {
+      name: "get_component",
+      arguments: { componentName: "button" },
+    }) as { content: Array<{ text: string }> };
+    const text = result.content.map(c => c.text).join("");
+    const spec = JSON.parse(text) as { name: string; variants?: string[]; accessibility?: unknown };
+    expect(spec.name.toLowerCase()).toBe("button");
+    expect(Array.isArray(spec.variants)).toBe(true);
+    expect(spec.accessibility).toBeDefined();
+  });
+
+  // ── tools/call — validation ───────────────────────────────────────────────────
+
+  test("check_contrast returns a result with contrastRatio for high-contrast pair", async ({ request }) => {
+    const result = await mcpCall(request, "tools/call", {
+      name: "check_contrast",
+      arguments: { foreground: "#ffffff", background: "#000000" },
+    }) as { content: Array<{ text: string }> };
+    const text = result.content.map(c => c.text).join("");
+    const parsed = JSON.parse(text) as { contrastRatio: number; wcagAA: boolean };
+    expect(typeof parsed.contrastRatio).toBe("number");
+    expect(parsed.contrastRatio).toBeGreaterThan(18);
+    expect(parsed.wcagAA).toBe(true);
+  });
+
+  test("check_contrast identifies a low-contrast pair as failing WCAG AA", async ({ request }) => {
+    const result = await mcpCall(request, "tools/call", {
+      name: "check_contrast",
+      arguments: { foreground: "#aaaaaa", background: "#bbbbbb" },
+    }) as { content: Array<{ text: string }> };
+    const text = result.content.map(c => c.text).join("");
+    const parsed = JSON.parse(text) as { wcagAA: boolean };
+    expect(parsed.wcagAA).toBe(false);
+  });
+
+  // ── tools/call — style guide ──────────────────────────────────────────────────
+
+  test("get_style_guide returns a non-empty style guide object", async ({ request }) => {
+    const result = await mcpCall(request, "tools/call", {
+      name: "get_style_guide",
+      arguments: {},
+    }) as { content: Array<{ text: string }> };
+    const text = result.content.map(c => c.text).join("");
+    expect(text.trim().length).toBeGreaterThan(0);
+    // Should include at least one principle or section
+    const parsed = JSON.parse(text) as Record<string, unknown>;
+    expect(Object.keys(parsed).length).toBeGreaterThan(0);
+  });
+
+  // ── tools/call — themes & icons ───────────────────────────────────────────────
+
+  test("list_themes returns both light and dark themes", async ({ request }) => {
+    const result = await mcpCall(request, "tools/call", {
+      name: "list_themes",
+      arguments: {},
+    }) as { content: Array<{ text: string }> };
+    const text = result.content.map(c => c.text).join("").toLowerCase();
+    expect(text).toContain("light");
+    expect(text).toContain("dark");
+  });
+
+  test("search_icons returns results for query 'arrow'", async ({ request }) => {
+    const result = await mcpCall(request, "tools/call", {
+      name: "search_icons",
+      arguments: { query: "arrow" },
+    }) as { content: Array<{ text: string }> };
+    const text = result.content.map(c => c.text).join("");
+    // Should return either matching icons or an empty results array — not an error
+    expect(text.trim().length).toBeGreaterThan(0);
+  });
+
+  // ── tools/call — versioning ───────────────────────────────────────────────────
+
+  test("get_changelog returns at least one entry", async ({ request }) => {
+    const result = await mcpCall(request, "tools/call", {
+      name: "get_changelog",
+      arguments: {},
+    }) as { content: Array<{ text: string }> };
+    const text = result.content.map(c => c.text).join("");
+    const parsed = JSON.parse(text) as unknown[];
+    expect(Array.isArray(parsed)).toBe(true);
+    expect(parsed.length).toBeGreaterThan(0);
   });
 });

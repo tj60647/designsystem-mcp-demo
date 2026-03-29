@@ -40,6 +40,7 @@ import {
   DELEGATE_TOOL,
   type SpecialistName,
 } from "../agentConfig.js";
+import { recordRequest, recordCacheHit, recordRouting } from "../metrics.js";
 
 const router = express.Router();
 
@@ -260,6 +261,8 @@ router.post("/chat", async (req, res) => {
   res.setHeader("Connection", "keep-alive");
   res.flushHeaders();
 
+  recordRequest();
+
   const sendEvent       = (data: object) => res.write(`data: ${JSON.stringify(data)}\n\n`);
   const sendProgress    = (message: string) => sendEvent({ type: "progress", message });
   const endWithDone     = (payload: object) => { sendEvent({ type: "done", ...payload }); res.end(); };
@@ -332,6 +335,8 @@ router.post("/chat", async (req, res) => {
   const cached = getCachedResponse(cacheKey);
   if (cached) {
     console.log(`[chat:cache] hit for key="${cacheKey.slice(0, 80)}"`);
+    recordCacheHit();
+    recordRouting((cached as Record<string, unknown>).routedAgent as string ?? "unified");
     sendProgress("Answering from cache…");
     endWithDone({ ...cached, fromCache: true });
     return;
@@ -647,6 +652,7 @@ router.post("/chat", async (req, res) => {
       if (!toolCallsUsed.includes("generate_design_system")) {
         setCachedResponse(cacheKey, { message, preview, metadata, schemaVersion, model: activeRuntime.model, routedAgent, toolCallsUsed, thinkingSteps, usage: totalUsage });
       }
+      recordRouting(routedAgent);
       endWithDone({ message, preview, metadata, schemaVersion, model: activeRuntime.model, routedAgent, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData, usage: totalUsage });
       return;
     }
@@ -656,6 +662,7 @@ router.post("/chat", async (req, res) => {
     const rawLast = String(lastAssistant?.content ?? "");
     const { message: lastMessage, preview: lastPreview, metadata: lastMetadata, schemaVersion: lastSchemaVersion } = parseChatResponse(rawLast);
     clearTimeout(chatTimer);
+    recordRouting(routedAgent);
     endWithDone({ message: lastMessage, preview: lastPreview, metadata: lastMetadata, schemaVersion: lastSchemaVersion, model: activeRuntime.model, routedAgent, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData, usage: totalUsage });
   } catch (err) {
     clearTimeout(chatTimer);

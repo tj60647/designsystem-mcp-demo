@@ -95,6 +95,19 @@
   background: rgba(47,129,247,.16);
 }
 
+.topbar-btn-eval {
+  text-decoration: none;
+  color: var(--purple);
+  border-color: rgba(188,140,255,.4);
+  background: rgba(188,140,255,.08);
+  font-weight: 600;
+}
+.topbar-btn-eval:hover {
+  color: var(--purple);
+  border-color: var(--purple);
+  background: rgba(188,140,255,.16);
+}
+
 /* ── Generated design system card ── */
 .generated-ds-card {
   background: rgba(63,185,80,.07);

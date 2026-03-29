@@ -1,0 +1,498 @@
+/* ── Eval Lab — dedicated full-page evaluation workspace ── */
+
+/* ── Layout ───────────────────────────────────────────────────────────────── */
+.eval-body {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.eval-topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.eval-back-btn {
+  font-size: 12px; font-weight: 500; padding: 5px 12px;
+  background: var(--bg-input); color: var(--text-muted);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  text-decoration: none; transition: color .15s, border-color .15s;
+}
+.eval-back-btn:hover { color: var(--text); border-color: var(--text-muted); }
+.eval-topbar-title { font-weight: 600; font-size: 15px; }
+.eval-badge {
+  font-size: 10px; font-weight: 600; letter-spacing: .5px;
+  background: rgba(188,140,255,.15); color: var(--purple);
+  border: 1px solid rgba(188,140,255,.4); border-radius: 20px;
+  padding: 2px 8px;
+}
+.eval-topbar-spacer { flex: 1; }
+.eval-topbar-model-wrap { display: flex; align-items: center; gap: 6px; }
+.eval-topbar-model-label {
+  font-size: 11px; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: .5px;
+}
+.eval-topbar-model-select {
+  font-size: 12px; font-weight: 500; padding: 5px 8px;
+  background: var(--bg-input); color: var(--text-muted);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  min-width: 200px;
+}
+.eval-topbar-model-select:hover, .eval-topbar-model-select:focus {
+  color: var(--text); border-color: var(--text-muted);
+}
+
+.eval-workspace {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Sidebar ──────────────────────────────────────────────────────────────── */
+.eval-sidebar {
+  width: 180px;
+  flex-shrink: 0;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0;
+  overflow-y: auto;
+}
+.eval-sidebar-section {
+  font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .7px;
+  color: var(--text-dim); padding: 0 14px 6px; margin-top: 8px;
+}
+.eval-nav-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 14px;
+  background: none; border: none;
+  font-size: 13px; font-weight: 500; color: var(--text-muted);
+  cursor: pointer; text-align: left; width: 100%;
+  border-left: 2px solid transparent;
+  transition: color .15s, background .15s;
+}
+.eval-nav-btn:hover { color: var(--text); background: rgba(255,255,255,.04); }
+.eval-nav-btn.active {
+  color: var(--purple); background: rgba(188,140,255,.08);
+  border-left-color: var(--purple);
+}
+.eval-nav-icon { font-size: 14px; flex-shrink: 0; }
+
+/* ── Main content ─────────────────────────────────────────────────────────── */
+.eval-main {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.eval-section {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+.eval-section.active { display: flex; }
+
+.eval-section-header {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.eval-section-title {
+  font-size: 15px; font-weight: 600;
+}
+.eval-section-subtitle {
+  font-size: 12px; color: var(--text-dim);
+}
+.eval-section-actions { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+
+.eval-section-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+/* ── Shared button styles ─────────────────────────────────────────────────── */
+.eval-btn {
+  font-size: 12px; font-weight: 500; padding: 5px 12px;
+  background: var(--bg-input); color: var(--text-muted);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  cursor: pointer; transition: color .15s, border-color .15s;
+}
+.eval-btn:hover { color: var(--text); border-color: var(--text-muted); }
+.eval-btn-primary {
+  background: var(--accent); color: #fff; border-color: var(--accent);
+}
+.eval-btn-primary:hover { opacity: .9; color: #fff; border-color: var(--accent); }
+.eval-btn-green {
+  background: rgba(63,185,80,.12); color: var(--green);
+  border-color: rgba(63,185,80,.4);
+}
+.eval-btn-green:hover { background: rgba(63,185,80,.2); color: var(--green); border-color: var(--green); }
+.eval-btn-red {
+  background: rgba(248,81,73,.1); color: var(--red);
+  border-color: rgba(248,81,73,.35);
+}
+.eval-btn-red:hover { background: rgba(248,81,73,.18); color: var(--red); border-color: var(--red); }
+
+/* ── Dashboard stats bar ──────────────────────────────────────────────────── */
+.eval-stats-bar {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  padding: 12px 20px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.eval-stat-card {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 8px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  min-width: 80px;
+}
+.eval-stat-label {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .5px;
+  color: var(--text-dim);
+}
+.eval-stat-value {
+  font-size: 20px; font-weight: 700; color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.eval-stat-card.stat-pass .eval-stat-value { color: var(--green); }
+.eval-stat-card.stat-fail .eval-stat-value { color: var(--red); }
+.eval-stat-card.stat-rate .eval-stat-value { color: var(--accent); }
+
+/* ── Test Suite section (eval page version) ───────────────────────────────── */
+.eval-suite-filters {
+  padding: 10px 20px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  flex-shrink: 0;
+}
+.eval-suite-filter-group {
+  display: flex; gap: 2px; flex-wrap: wrap;
+}
+.eval-suite-divider {
+  width: 1px; height: 20px; background: var(--border); margin: 0 4px;
+}
+.eval-suite-actions {
+  display: flex; gap: 8px; align-items: center; margin-left: auto;
+}
+.eval-test-list-wrap {
+  flex: 1; overflow-y: auto;
+}
+
+/* ── Tool Explorer section ────────────────────────────────────────────────── */
+.eval-tools-layout {
+  display: flex; gap: 0; flex: 1; overflow: hidden;
+}
+.eval-tools-list {
+  width: 260px; flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.eval-tools-search-wrap {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-soft);
+  flex-shrink: 0;
+}
+.eval-tools-search {
+  width: 100%; background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 6px 10px;
+  font-size: 12px; color: var(--text);
+}
+.eval-tools-search:focus { outline: none; border-color: var(--accent); }
+.eval-tools-scroll { flex: 1; overflow-y: auto; }
+.eval-tool-group-label {
+  font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .6px;
+  color: var(--text-dim); padding: 10px 12px 4px;
+}
+.eval-tool-item {
+  padding: 7px 12px;
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  font-size: 12px; color: var(--text-muted);
+  transition: background .12s, color .12s;
+  font-family: "SFMono-Regular", Consolas, monospace;
+}
+.eval-tool-item:hover { background: var(--bg-input); color: var(--text); }
+.eval-tool-item.active {
+  background: rgba(188,140,255,.08); color: var(--purple);
+  border-left-color: var(--purple);
+}
+
+.eval-tool-detail {
+  flex: 1; overflow-y: auto; padding: 16px 20px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.eval-tool-empty {
+  display: flex; align-items: center; justify-content: center;
+  height: 100%; color: var(--text-dim); font-size: 13px; font-style: italic;
+}
+.eval-tool-name {
+  font-size: 16px; font-weight: 600; font-family: "SFMono-Regular", Consolas, monospace;
+  color: var(--purple);
+}
+.eval-tool-desc {
+  font-size: 13px; color: var(--text-muted); line-height: 1.6;
+}
+.eval-tool-form-label {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px;
+  color: var(--text-dim); margin-bottom: 8px;
+}
+.eval-tool-form {
+  display: flex; flex-direction: column; gap: 10px;
+}
+.eval-form-field {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.eval-form-field-label {
+  font-size: 11px; color: var(--text-muted);
+  display: flex; align-items: center; gap: 5px;
+}
+.eval-form-field-label .req { color: var(--red); }
+.eval-form-field-desc { font-size: 10.5px; color: var(--text-dim); font-style: italic; }
+.eval-form-input, .eval-form-select, .eval-form-textarea {
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 6px 10px;
+  font-size: 12px; color: var(--text); font-family: inherit;
+  width: 100%;
+}
+.eval-form-input:focus, .eval-form-select:focus, .eval-form-textarea:focus {
+  outline: none; border-color: var(--accent);
+}
+.eval-form-textarea { resize: vertical; min-height: 60px; font-family: "SFMono-Regular", Consolas, monospace; }
+.eval-tool-run-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.eval-tool-latency { font-size: 11px; color: var(--text-dim); }
+
+.eval-tool-result {
+  background: var(--bg); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); padding: 12px 14px;
+  font-size: 11.5px; font-family: "SFMono-Regular", Consolas, monospace;
+  color: var(--text-muted); white-space: pre-wrap; word-break: break-all;
+  max-height: 360px; overflow-y: auto; line-height: 1.6;
+}
+.eval-tool-result.result-error { color: var(--red); }
+.eval-tool-result.result-loading { color: var(--text-dim); font-style: italic; font-family: inherit; }
+
+/* ── Prompt Lab section ───────────────────────────────────────────────────── */
+.eval-pl-layout {
+  display: flex; gap: 0; flex: 1; overflow: hidden;
+}
+.eval-pl-sidebar {
+  width: 280px; flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.eval-pl-sidebar-label {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .6px;
+  color: var(--text-dim); padding: 12px 14px 6px;
+  flex-shrink: 0; border-bottom: 1px solid var(--border-soft);
+}
+.eval-pl-templates-scroll { flex: 1; overflow-y: auto; }
+.eval-pl-template-card {
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-soft);
+  transition: background .12s;
+  border-left: 2px solid transparent;
+}
+.eval-pl-template-card:hover { background: var(--bg-input); }
+.eval-pl-template-card.active {
+  background: rgba(47,129,247,.06);
+  border-left-color: var(--accent);
+}
+.eval-pl-tpl-title {
+  font-size: 12px; font-weight: 600; color: var(--text);
+  margin-bottom: 2px;
+}
+.eval-pl-tpl-desc {
+  font-size: 11px; color: var(--text-dim);
+}
+
+.eval-pl-workspace {
+  flex: 1; overflow-y: auto; padding: 16px 20px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.eval-pl-field-label {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px;
+  color: var(--text-dim); margin-bottom: 6px;
+}
+.eval-pl-textarea {
+  width: 100%; background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 12px;
+  font-size: 13px; color: var(--text); font-family: inherit;
+  resize: vertical; min-height: 80px;
+}
+.eval-pl-textarea:focus { outline: none; border-color: var(--accent); }
+.eval-pl-controls {
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+}
+.eval-pl-agent-select {
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 5px 10px;
+  font-size: 12px; color: var(--text-muted);
+}
+.eval-pl-agent-select:focus { outline: none; border-color: var(--accent); color: var(--text); }
+
+.eval-pl-trace {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.eval-pl-trace-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px; font-weight: 600; color: var(--text-muted);
+}
+.eval-pl-trace-body {
+  display: flex; flex-direction: column;
+}
+.eval-pl-trace-step {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 12px;
+}
+.eval-pl-trace-step:last-child { border-bottom: none; }
+.eval-pl-step-type {
+  font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .6px;
+  margin-bottom: 4px;
+}
+.eval-pl-step-type.type-agent   { color: var(--purple); }
+.eval-pl-step-type.type-tool    { color: var(--orange); }
+.eval-pl-step-type.type-result  { color: var(--green); }
+.eval-pl-step-type.type-error   { color: var(--red); }
+.eval-pl-step-content {
+  color: var(--text-muted); line-height: 1.6;
+  white-space: pre-wrap; word-break: break-word;
+}
+.eval-pl-step-tools {
+  display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;
+}
+.eval-pl-tool-chip {
+  font-size: 11px; font-family: "SFMono-Regular", Consolas, monospace;
+  padding: 2px 8px; background: rgba(210,153,34,.1);
+  color: var(--orange); border: 1px solid rgba(210,153,34,.3);
+  border-radius: 20px;
+}
+.eval-pl-preview-wrap {
+  margin-top: 8px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.eval-pl-preview-pre {
+  font-size: 11px; font-family: "SFMono-Regular", Consolas, monospace;
+  color: var(--text-dim); background: var(--bg);
+  padding: 10px 12px; margin: 0;
+  white-space: pre-wrap; word-break: break-all;
+  max-height: 200px; overflow-y: auto;
+}
+
+/* ── Agent Config section ─────────────────────────────────────────────────── */
+.eval-agents-tabs {
+  display: flex; gap: 2px; padding: 0 4px;
+}
+.eval-agents-tab {
+  font-size: 12px; font-weight: 500; padding: 7px 14px;
+  background: none; border: none; border-bottom: 2px solid transparent;
+  color: var(--text-muted); cursor: pointer; margin-bottom: -1px;
+  transition: color .15s, border-color .15s;
+}
+.eval-agents-tab:hover { color: var(--text); }
+.eval-agents-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.eval-agents-section-body {
+  flex: 1; overflow-y: auto; padding: 16px 20px;
+}
+
+/* ── Metrics section ──────────────────────────────────────────────────────── */
+.eval-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.eval-metrics-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+.eval-metrics-card-title {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .6px;
+  color: var(--text-dim); margin-bottom: 6px;
+}
+.eval-metrics-card-value {
+  font-size: 28px; font-weight: 700; color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.eval-metrics-card-sub {
+  font-size: 11px; color: var(--text-dim); margin-top: 4px;
+}
+
+.eval-metrics-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 12px;
+}
+.eval-metrics-table th {
+  text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .6px;
+  color: var(--text-dim); padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.eval-metrics-table td {
+  padding: 7px 10px; border-bottom: 1px solid var(--border-soft);
+  color: var(--text-muted);
+}
+.eval-metrics-table td:first-child {
+  font-family: "SFMono-Regular", Consolas, monospace; color: var(--text);
+}
+.eval-metrics-table td.count-cell {
+  font-variant-numeric: tabular-nums; color: var(--accent); font-weight: 600;
+}
+.eval-metrics-section-title {
+  font-size: 12px; font-weight: 600; color: var(--text);
+  margin: 16px 0 8px;
+}
+.eval-metrics-reset-at {
+  font-size: 11px; color: var(--text-dim); margin-top: 8px;
+}
+
+/* ── Loading / empty states ───────────────────────────────────────────────── */
+.eval-loading {
+  padding: 32px; text-align: center;
+  color: var(--text-dim); font-size: 13px; font-style: italic;
+}
+.eval-error {
+  padding: 16px; font-size: 12px; color: var(--red);
+  background: rgba(248,81,73,.08); border: 1px solid rgba(248,81,73,.3);
+  border-radius: var(--radius-sm);
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .eval-sidebar { width: 48px; overflow: hidden; }
+  .eval-nav-btn { padding: 10px; justify-content: center; }
+  .eval-nav-icon { font-size: 16px; }
+  .eval-nav-btn span:not(.eval-nav-icon) { display: none; }
+  .eval-sidebar-section { display: none; }
+  .eval-tools-layout, .eval-pl-layout { flex-direction: column; }
+  .eval-tools-list, .eval-pl-sidebar { width: 100%; max-height: 200px; border-right: none; border-bottom: 1px solid var(--border); }
+}

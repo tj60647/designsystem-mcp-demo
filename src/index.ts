@@ -11,6 +11,7 @@
  *   routes/agent.ts    — /api/agent-info, /prompt-templates
  *   routes/generate.ts — /api/generate-from-website
  *   routes/chat.ts     — /api/chat  (OpenRouter agentic loop)
+ *   routes/eval.ts     — /api/eval/metrics  (evaluation dashboard metrics)
  *
  * All agent constants (tool definitions, system prompts, SPECIALIST_CONFIGS)
  * live in src/agentConfig.ts and are imported by the relevant route files.
@@ -25,6 +26,7 @@ import dataRouter     from "./routes/data.js";
 import agentRouter    from "./routes/agent.js";
 import generateRouter from "./routes/generate.js";
 import chatRouter     from "./routes/chat.js";
+import evalRouter     from "./routes/eval.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
@@ -49,6 +51,11 @@ app.get("/demo", (_req, res) => {
 // ─────────────────────────────────────────────────────────────────────────
 app.get("/", (_req, res) => {
   res.redirect("/demo");
+});
+
+// ── Eval Lab redirect ─────────────────────────────────────────────────────
+app.get("/eval", (_req, res) => {
+  res.redirect("/eval.html");
 });
 
 // ── Health check ──────────────────────────────────────────────────────────
@@ -135,6 +142,7 @@ app.use("/api", dataRouter);  // /api/data*, /api/schema*, /api/validate
 app.use(agentRouter);         // /api/agent-info, /prompt-templates
 app.use("/api", generateRouter); // /api/generate-from-website
 app.use("/api", chatRouter);  // /api/chat
+app.use("/api", evalRouter);  // /api/eval/metrics
 
 // ── Server startup ────────────────────────────────────────────────────────
 // On Heroku, the PORT environment variable is set automatically by the

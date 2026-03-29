@@ -384,7 +384,7 @@ async function handleSend() {
             msgEl.querySelector(".msg-bubble").appendChild(badge);
           }
 
-          updateLivePreview(preview, toolsUsed, event.model, preview ? message : null);
+          updateLivePreview(preview, toolsUsed, event.model, preview ? message : null, event.usage || null);
 
           if (event.generatedDesignSystem) {
             handleGeneratedDesignSystem(event.generatedDesignSystem);

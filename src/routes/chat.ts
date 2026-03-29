@@ -287,6 +287,20 @@ router.post("/chat", async (req, res) => {
 
   const toolCallsUsed: string[] = [];
 
+  // Accumulated token usage and cost across the orchestrator call and every
+  // specialist iteration.  OpenRouter follows the OpenAI response format and
+  // includes a `usage` object on every completion response.
+  type UsageTotals = { promptTokens: number; completionTokens: number; totalTokens: number; cost: number };
+  const totalUsage: UsageTotals = { promptTokens: 0, completionTokens: 0, totalTokens: 0, cost: 0 };
+
+  function addUsage(raw: { usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; cost?: number } | null } | null): void {
+    if (!raw?.usage) return;
+    totalUsage.promptTokens     += raw.usage.prompt_tokens     ?? 0;
+    totalUsage.completionTokens += raw.usage.completion_tokens ?? 0;
+    totalUsage.totalTokens      += raw.usage.total_tokens      ?? 0;
+    totalUsage.cost             += raw.usage.cost              ?? 0;
+  }
+
   // ── Cache lookup ──────────────────────────────────────────────────────────
   // Check whether this exact question has already been answered.  If so, emit
   // the cached payload immediately and skip the LLM round-trip entirely.
@@ -364,7 +378,11 @@ router.post("/chat", async (req, res) => {
         signal: chatAbort.signal,
       });
       if (orchResponse.ok) {
-        const orchData = await orchResponse.json() as { choices: Array<{ message: { tool_calls?: Array<{ function: { name: string; arguments: string } }> } }> };
+        const orchData = await orchResponse.json() as {
+          choices: Array<{ message: { tool_calls?: Array<{ function: { name: string; arguments: string } }> } }>;
+          usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; cost?: number } | null;
+        };
+        addUsage(orchData);
         const delegateCall = orchData.choices?.[0]?.message?.tool_calls?.[0];
         if (delegateCall?.function?.name === "delegate_to_agent") {
           let delegateArgs: { agent?: string; reason?: string } = {};
@@ -470,7 +488,9 @@ router.post("/chat", async (req, res) => {
           };
           finish_reason: string;
         }>;
+        usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; cost?: number } | null;
       };
+      addUsage(orData);
 
       const choice = orData.choices[0];
       if (!choice) {
@@ -597,13 +617,14 @@ router.post("/chat", async (req, res) => {
       const rawResponse = assistantTextContent ?? "";
       const { message, preview, metadata, schemaVersion } = parseChatResponse(rawResponse);
       console.log("[chat:response]", message.slice(0, 300));
+      console.log(`[chat:usage] prompt=${totalUsage.promptTokens} completion=${totalUsage.completionTokens} total=${totalUsage.totalTokens} cost=$${Number.isFinite(totalUsage.cost) ? totalUsage.cost.toFixed(6) : "n/a"}`);
       clearTimeout(chatTimer);
       // Store in cache unless the design system was generated (that tool
       // mutates the data store so subsequent queries would return stale data).
       if (!toolCallsUsed.includes("generate_design_system")) {
-        setCachedResponse(cacheKey, { message, preview, metadata, schemaVersion, model: activeRuntime.model, routedAgent, toolCallsUsed, thinkingSteps });
+        setCachedResponse(cacheKey, { message, preview, metadata, schemaVersion, model: activeRuntime.model, routedAgent, toolCallsUsed, thinkingSteps, usage: totalUsage });
       }
-      endWithDone({ message, preview, metadata, schemaVersion, model: activeRuntime.model, routedAgent, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
+      endWithDone({ message, preview, metadata, schemaVersion, model: activeRuntime.model, routedAgent, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData, usage: totalUsage });
       return;
     }
 
@@ -612,7 +633,7 @@ router.post("/chat", async (req, res) => {
     const rawLast = String(lastAssistant?.content ?? "");
     const { message: lastMessage, preview: lastPreview, metadata: lastMetadata, schemaVersion: lastSchemaVersion } = parseChatResponse(rawLast);
     clearTimeout(chatTimer);
-    endWithDone({ message: lastMessage, preview: lastPreview, metadata: lastMetadata, schemaVersion: lastSchemaVersion, model: activeRuntime.model, routedAgent, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
+    endWithDone({ message: lastMessage, preview: lastPreview, metadata: lastMetadata, schemaVersion: lastSchemaVersion, model: activeRuntime.model, routedAgent, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData, usage: totalUsage });
   } catch (err) {
     clearTimeout(chatTimer);
     console.error("Chat error:", err);

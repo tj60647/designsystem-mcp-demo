@@ -6,14 +6,14 @@ let showingCode = false;
 let currentBlobUrl = null;
 
 // ── Preview history ───────────────────────────────────────────────────────────
-// Each entry: { html, toolsUsed, model, notes }
+// Each entry: { html, toolsUsed, model, notes, usage }
 const history = [];
 let historyIndex = -1;
 
 // ── DOM refs (populated by initPreview) ──────────────────────────────────────
-let previewBody, codeToggleBtn, modelBadge, toolsBody, notesBody;
+let previewBody, codeToggleBtn, modelBadge, toolsBody, notesBody, usageBody;
 let previewNav, previewPrev, previewNext, previewNavCounter;
-let tabMcpTools, tabPreviewNotes;
+let tabMcpTools, tabPreviewNotes, tabUsage;
 let isPreviewReady = false;
 
 export function initPreview() {
@@ -24,12 +24,14 @@ export function initPreview() {
   modelBadge    = document.getElementById("model-badge");
   toolsBody     = document.getElementById("tools-body");
   notesBody     = document.getElementById("preview-notes-body");
+  usageBody     = document.getElementById("usage-body");
   previewNav    = document.getElementById("preview-nav");
   previewPrev   = document.getElementById("preview-prev");
   previewNext   = document.getElementById("preview-next");
   previewNavCounter = document.getElementById("preview-nav-counter");
   tabMcpTools      = document.getElementById("tab-mcp-tools");
   tabPreviewNotes  = document.getElementById("tab-preview-notes");
+  tabUsage         = document.getElementById("tab-usage");
 
   const requiredNodes = [
     ["preview-body", previewBody],
@@ -37,12 +39,14 @@ export function initPreview() {
     ["model-badge", modelBadge],
     ["tools-body", toolsBody],
     ["preview-notes-body", notesBody],
+    ["usage-body", usageBody],
     ["preview-nav", previewNav],
     ["preview-prev", previewPrev],
     ["preview-next", previewNext],
     ["preview-nav-counter", previewNavCounter],
     ["tab-mcp-tools", tabMcpTools],
-    ["tab-preview-notes", tabPreviewNotes]
+    ["tab-preview-notes", tabPreviewNotes],
+    ["tab-usage", tabUsage]
   ];
 
   const missing = requiredNodes.filter(([, node]) => !node).map(([id]) => id);
@@ -72,23 +76,29 @@ export function initPreview() {
   // Bottom panel sub-tab switching
   tabMcpTools.addEventListener("click", () => activateBottomTab("tools"));
   tabPreviewNotes.addEventListener("click", () => activateBottomTab("notes"));
+  tabUsage.addEventListener("click", () => activateBottomTab("usage"));
 }
 
 function activateBottomTab(which) {
-  const showTools = which === "tools";
-  tabMcpTools.classList.toggle("active", showTools);
-  tabPreviewNotes.classList.toggle("active", !showTools);
-  tabMcpTools.setAttribute("aria-selected", String(showTools));
-  tabPreviewNotes.setAttribute("aria-selected", String(!showTools));
-  toolsBody.style.display  = showTools ? "" : "none";
-  notesBody.style.display  = showTools ? "none" : "";
+  const isTools = which === "tools";
+  const isNotes = which === "notes";
+  const isUsage = which === "usage";
+  tabMcpTools.classList.toggle("active", isTools);
+  tabPreviewNotes.classList.toggle("active", isNotes);
+  tabUsage.classList.toggle("active", isUsage);
+  tabMcpTools.setAttribute("aria-selected", String(isTools));
+  tabPreviewNotes.setAttribute("aria-selected", String(isNotes));
+  tabUsage.setAttribute("aria-selected", String(isUsage));
+  toolsBody.style.display = isTools ? "" : "none";
+  notesBody.style.display = isNotes ? "" : "none";
+  usageBody.style.display = isUsage ? "" : "none";
 }
 
-export function updateLivePreview(previewHtml, toolsUsed, model, notes) {
+export function updateLivePreview(previewHtml, toolsUsed, model, notes, usage) {
   if (!isPreviewReady) return;
 
   // Push a new history entry (only when there's something to show)
-  history.push({ html: previewHtml || null, toolsUsed: toolsUsed || [], model: model || null, notes: notes || null });
+  history.push({ html: previewHtml || null, toolsUsed: toolsUsed || [], model: model || null, notes: notes || null, usage: usage || null });
   historyIndex = history.length - 1;
   renderHistoryEntry(historyIndex);
 }
@@ -128,6 +138,7 @@ function renderHistoryEntry(idx) {
 
   updateToolsPanel(entry.toolsUsed);
   updateNotesPanel(entry.notes, !!entry.html);
+  updateUsagePanel(entry.usage);
   syncNavControls();
 }
 
@@ -167,6 +178,37 @@ function updateNotesPanel(notes, hasPreview) {
   if (hasPreview) {
     activateBottomTab("notes");
   }
+}
+
+function updateUsagePanel(usage) {
+  if (!usage || (usage.totalTokens === 0 && usage.cost === 0 && usage.promptTokens === 0)) {
+    usageBody.innerHTML = `<div class="tools-empty">No usage data available for this response.</div>`;
+    return;
+  }
+
+  const costStr = (typeof usage.cost === "number" && Number.isFinite(usage.cost) && usage.cost > 0)
+    ? `$${usage.cost.toFixed(6)}`
+    : "—";
+
+  usageBody.innerHTML = `
+    <div class="usage-grid">
+      <div class="usage-row">
+        <span class="usage-label">Prompt tokens</span>
+        <span class="usage-value">${usage.promptTokens.toLocaleString()}</span>
+      </div>
+      <div class="usage-row">
+        <span class="usage-label">Completion tokens</span>
+        <span class="usage-value">${usage.completionTokens.toLocaleString()}</span>
+      </div>
+      <div class="usage-row usage-row-total">
+        <span class="usage-label">Total tokens</span>
+        <span class="usage-value">${usage.totalTokens.toLocaleString()}</span>
+      </div>
+      <div class="usage-row usage-row-cost">
+        <span class="usage-label">Estimated cost</span>
+        <span class="usage-value usage-cost">${escapeHtml(costStr)}</span>
+      </div>
+    </div>`;
 }
 
 function renderIframeView() {

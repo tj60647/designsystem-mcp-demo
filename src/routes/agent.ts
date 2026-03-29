@@ -59,7 +59,7 @@ router.get("/api/agent-info", (req, res) => {
         name: "Design System Reader",
         description: "Answers questions about tokens, components, themes, icons, layout, and accessibility using read-only MCP tools. Never mutates the design system.",
         expectedInput: "User + assistant message history and routed intent (reader). Uses read-only MCP tools.",
-        expectedOutput: "Final assistant JSON object: { \"message\": string, \"preview\": string|null } (plain-text fallback accepted by parser).",
+        expectedOutput: "Final assistant JSON object: { \"schemaVersion\": \"1.0\", \"message\": string, \"preview\"?: string, \"metadata\"?: object } (plain-text fallback accepted by parser).",
         model,
         parameters: {
           maxIterations: SPECIALIST_CONFIGS.reader.maxIterations,
@@ -78,7 +78,7 @@ router.get("/api/agent-info", (req, res) => {
         name: "Component Builder",
         description: "Generates HTML/CSS component code grounded in exact design system tokens. Validates all props and token values before emitting code.",
         expectedInput: "User + assistant message history and routed intent (builder). Uses component/token/validation tools.",
-        expectedOutput: "Final assistant JSON object: { \"message\": string, \"preview\": \"<html>...\" } where preview contains renderable HTML.",
+        expectedOutput: "Final assistant JSON object: { \"schemaVersion\": \"1.0\", \"message\": string, \"preview\": \"<html>...\", \"metadata\"?: object }.",
         model,
         parameters: {
           maxIterations: SPECIALIST_CONFIGS.builder.maxIterations,
@@ -97,7 +97,7 @@ router.get("/api/agent-info", (req, res) => {
         name: "System Generator",
         description: "Gathers brand requirements through conversation then generates a complete new design system (tokens, components, themes, icons) via AI.",
         expectedInput: "User + assistant message history and routed intent (generator). May call generate_design_system.",
-        expectedOutput: "When generating: tool result with generatedDesignSystem payload; final assistant response still follows { \"message\": string, \"preview\": string|null }.",
+        expectedOutput: "When generating: tool result with generatedDesignSystem payload; final assistant response follows { \"schemaVersion\": \"1.0\", \"message\": string, \"preview\"?: string, \"metadata\"?: object }.",
         model,
         parameters: {
           maxIterations: SPECIALIST_CONFIGS.generator.maxIterations,
@@ -118,7 +118,7 @@ router.get("/api/agent-info", (req, res) => {
         name: "Style Guide",
         description: "Explains design principles, color usage rules, typography guidelines, and composition patterns from the style guide. Grounds answers in actual style guide content and token values.",
         expectedInput: "User + assistant message history and routed intent (style-guide). Uses style-guide/token/contrast tools.",
-        expectedOutput: "Final assistant JSON object: { \"message\": string, \"preview\": string|null } with guidance-focused content.",
+        expectedOutput: "Final assistant JSON object: { \"schemaVersion\": \"1.0\", \"message\": string, \"preview\"?: string, \"metadata\"?: object } with guidance-focused content.",
         model,
         parameters: {
           maxIterations: SPECIALIST_CONFIGS["style-guide"].maxIterations,

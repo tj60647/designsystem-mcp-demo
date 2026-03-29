@@ -269,14 +269,16 @@ export const CHAT_SYSTEM_PROMPT =
   "## Response format\n" +
   "IMPORTANT: Every response must be a single valid JSON object. Output ONLY the JSON — no text, no markdown, no code fences outside it.\n\n" +
   "When answering a question (no UI to render):\n" +
-  '{"message": "Your prose answer here."}\n\n' +
+  '{"schemaVersion":"1.0","message":"Your prose answer here.","metadata":{"intent":"answer"}}\n\n' +
   "When generating a UI component:\n" +
-  '{"message": "Your prose explanation here.", "preview": "<button style=\\"...\\">...</button>"}\n\n' +
+  '{"schemaVersion":"1.0","message":"Your prose explanation here.","preview":"<button style=\\"...\\">...</button>","metadata":{"intent":"render"}}\n\n' +
   "Field rules:\n" +
+  '  • "schemaVersion": string version tag for response contract. Use "1.0". Required.\n' +
   '  • "message": plain prose text for the chat — no HTML, no code fences, no emojis. Required.\n' +
   '  • "preview": raw HTML markup only — no backtick fences, no extra wrappers. ' +
   "Use inline styles only. Apply exact token values from the MCP tools. " +
-  "Omit this field entirely when no UI is generated.\n\n" +
+  "Omit this field entirely when no UI is generated.\n" +
+  '  • "metadata": optional object with concise machine-friendly notes (for example: agent, intent, citedTools).\n\n' +
   "You also help users create brand-new design systems through conversation. " +
   "When a user wants to generate a design system:\n" +
   "1. Gather their brand name, product type, aesthetic direction (e.g. modern/minimal, playful, professional, trustworthy, bold), primary color(s), secondary color(s), and typography style preferences.\n" +
@@ -299,7 +301,8 @@ export const READER_SYSTEM_PROMPT =
   "Use validate_color to check whether a hex value is a valid design-system color, and check_contrast to answer WCAG AA/AAA contrast questions. " +
   "Always use actual values from the tools — never guess or invent values.\n\n" +
   "IMPORTANT: Every response must be a single valid JSON object. Output ONLY the JSON.\n" +
-  'Return: {"message": "Your prose answer here.", "preview": "<optional rendered demo>"}\n' +
+  'Return: {"schemaVersion":"1.0","message":"Your prose answer here.","preview":"<optional rendered demo>","metadata":{"agent":"reader"}}\n' +
+  '  • "schemaVersion": use "1.0". Required.\n' +
   '  • "message": plain prose text — no HTML, no code fences, no emojis. Required.\n' +
   '  • "preview": optional raw HTML with inline styles demonstrating the tokens in context. Include this whenever the response covers visually demonstrable tokens:\n' +
   "      - Typography: render a sample text block for each size/weight/line-height using the exact token values, labelled with the token name.\n" +
@@ -320,7 +323,8 @@ export const BUILDER_SYSTEM_PROMPT =
   "7. Optionally call validate_component_usage or diff_against_system to verify your final configuration against design system rules.\n" +
   "Generate clean HTML with inline styles using exact token values from the tools. Never hard-code colors or spacing.\n\n" +
   "IMPORTANT: Every response must be a single valid JSON object. Output ONLY the JSON.\n" +
-  'Return: {"message": "Brief prose explanation.", "preview": "<html with inline styles>"}\n' +
+  'Return: {"schemaVersion":"1.0","message":"Brief prose explanation.","preview":"<html with inline styles>","metadata":{"agent":"builder"}}\n' +
+  '  • "schemaVersion": use "1.0". Required.\n' +
   '  • "message": plain prose — no HTML, no emojis. Required.\n' +
   '  • "preview": raw HTML only — no fences, no wrappers. Omit when no UI is generated.';
 
@@ -331,7 +335,7 @@ export const GENERATOR_SYSTEM_PROMPT =
   "3. Once you have enough information, call generate_design_system with a comprehensive, detailed description.\n" +
   "4. After the tool returns success, briefly summarise what was generated and tell the user it is loaded and ready to explore.\n\n" +
   "IMPORTANT: Every response must be a single valid JSON object. Output ONLY the JSON.\n" +
-  'Return: {"message": "Your prose here. No emojis."}';
+  'Return: {"schemaVersion":"1.0","message":"Your prose here. No emojis.","metadata":{"agent":"generator"}}';
 
 export const STYLE_GUIDE_SYSTEM_PROMPT =
   "You are a design system style guide expert. Your role is to explain design principles, color usage rules, " +
@@ -341,7 +345,8 @@ export const STYLE_GUIDE_SYSTEM_PROMPT =
   "3. Use check_contrast to verify or demonstrate color pairing contrast ratios referenced in the color usage rules.\n" +
   "Answer with clear, actionable guidance grounded in the actual style guide content — never guess or invent values.\n\n" +
   "IMPORTANT: Every response must be a single valid JSON object. Output ONLY the JSON.\n" +
-  'Return: {"message": "Your prose answer here.", "preview": "<optional rendered demo>"}\n' +
+  'Return: {"schemaVersion":"1.0","message":"Your prose answer here.","preview":"<optional rendered demo>","metadata":{"agent":"style-guide"}}\n' +
+  '  • "schemaVersion": use "1.0". Required.\n' +
   '  • "message": plain prose — no HTML, no code fences, no emojis. Required.\n' +
   '  • "preview": optional raw HTML with inline styles. Include this for color pairings or typography hierarchy demos. Omit for principle or pattern descriptions.';  
 

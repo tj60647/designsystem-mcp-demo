@@ -50,8 +50,6 @@ type AgentRuntimeKey = "orchestrator" | SpecialistName | "unified";
 type AgentRuntimeSettings = {
   model: string;
   temperature: number;
-  topP: number;
-  topK: number;
 };
 type AgentSettingsPayload = {
   useGlobalModel?: unknown;
@@ -71,8 +69,6 @@ function normalizeAgentSettings(
   const makeEntry = (src: Partial<AgentRuntimeSettings> | undefined): AgentRuntimeSettings => ({
     model: typeof src?.model === "string" && src.model.trim() ? src.model.trim() : defaultModel,
     temperature: toNumber(src?.temperature, 0),
-    topP: toNumber(src?.topP, 1),
-    topK: toNumber(src?.topK, 0),
   });
 
   const global = makeEntry(payload?.global);
@@ -93,14 +89,7 @@ function normalizeAgentSettings(
 }
 
 function buildSamplingParams(runtime: AgentRuntimeSettings): { temperature?: number; top_p?: number; top_k?: number } {
-  // Use one sampling control at a time to avoid overlapping randomness knobs.
-  // Priority: top_k (if > 0) -> top_p (if < 1) -> temperature (always).
-  if (runtime.topK > 0) {
-    return { top_k: runtime.topK };
-  }
-  if (runtime.topP > 0 && runtime.topP < 1) {
-    return { top_p: runtime.topP };
-  }
+  // Temperature-only sampling keeps behaviour predictable across providers.
   return { temperature: runtime.temperature };
 }
 
@@ -109,21 +98,27 @@ function buildSamplingParams(runtime: AgentRuntimeSettings): { temperature?: num
 // treating the raw text as the message if JSON parsing fails, so a
 // non-compliant model reply still works rather than throwing.
 // ─────────────────────────────────────────────────────────────────────────
-function parseChatResponse(raw: string): { message: string; preview: string | null } {
+function parseChatResponse(raw: string): { message: string; preview: string | null; metadata: Record<string, unknown> | null; schemaVersion: string } {
   const text = raw.trim();
 
   // Attempt to extract a {message, preview} object from the text using several
   // strategies, in order of specificity.  Models sometimes emit prose before or
   // after the JSON, so we scan the whole string rather than requiring it to start
   // at position 0.
-  function tryParse(candidate: string): { message: string; preview: string | null } | null {
+  function tryParse(candidate: string): { message: string; preview: string | null; metadata: Record<string, unknown> | null; schemaVersion: string } | null {
     try {
-      const parsed = JSON.parse(candidate) as { message?: unknown; preview?: unknown };
+      const parsed = JSON.parse(candidate) as { message?: unknown; preview?: unknown; metadata?: unknown; schemaVersion?: unknown };
       if (typeof parsed !== "object" || parsed === null) return null;
       const message = typeof parsed.message === "string" ? parsed.message : null;
       if (!message) return null;
       const preview = typeof parsed.preview === "string" && parsed.preview.trim() ? parsed.preview.trim() : null;
-      return { message, preview };
+      const metadata = parsed.metadata && typeof parsed.metadata === "object" && !Array.isArray(parsed.metadata)
+        ? parsed.metadata as Record<string, unknown>
+        : null;
+      const schemaVersion = typeof parsed.schemaVersion === "string" && parsed.schemaVersion.trim()
+        ? parsed.schemaVersion.trim()
+        : "1.0";
+      return { message, preview, metadata, schemaVersion };
     } catch {
       return null;
     }
@@ -157,7 +152,7 @@ function parseChatResponse(raw: string): { message: string; preview: string | nu
   }
 
   // 4. Nothing parseable — return the raw text as the message.
-  return { message: raw, preview: null };
+  return { message: raw, preview: null, metadata: null, schemaVersion: "fallback-text" };
 }
 
 // ── POST /api/chat ────────────────────────────────────────────────────────
@@ -517,19 +512,19 @@ router.post("/chat", async (req, res) => {
 
       // No tool calls — return the final answer
       const rawResponse = assistantTextContent ?? "";
-      const { message, preview } = parseChatResponse(rawResponse);
+      const { message, preview, metadata, schemaVersion } = parseChatResponse(rawResponse);
       console.log("[chat:response]", message.slice(0, 300));
       clearTimeout(chatTimer);
-      endWithDone({ message, preview, model: activeRuntime.model, routedAgent, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
+      endWithDone({ message, preview, metadata, schemaVersion, model: activeRuntime.model, routedAgent, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
       return;
     }
 
     // Reached max iterations without a final text response
     const lastAssistant = [...loopMessages].reverse().find((m: OpenRouterMessage) => m.role === "assistant" && m.content);
     const rawLast = String(lastAssistant?.content ?? "");
-    const { message: lastMessage, preview: lastPreview } = parseChatResponse(rawLast);
+    const { message: lastMessage, preview: lastPreview, metadata: lastMetadata, schemaVersion: lastSchemaVersion } = parseChatResponse(rawLast);
     clearTimeout(chatTimer);
-    endWithDone({ message: lastMessage, preview: lastPreview, model: activeRuntime.model, routedAgent, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
+    endWithDone({ message: lastMessage, preview: lastPreview, metadata: lastMetadata, schemaVersion: lastSchemaVersion, model: activeRuntime.model, routedAgent, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
   } catch (err) {
     clearTimeout(chatTimer);
     console.error("Chat error:", err);

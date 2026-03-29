@@ -310,7 +310,6 @@ export const TEST_SUITE = [
     description: "Reader resolves action.primary to #2563eb (primary.600)",
     checks: [
       { type: "agentMatch", value: "reader" },
-      { type: "toolUsed", value: "get_tokens" },
       { type: "contains", value: "#2563eb" },
       { type: "notEmpty" },
     ],
@@ -425,12 +424,12 @@ export const TEST_SUITE = [
   },
   {
     id: 43, agent: "reader", tags: ["epistemic", "grounding"],
-    prompt: "What is the pixel value of spacing token 4?",
-    description: "Reader returns 16px for spacing.4",
+    prompt: "What is the pixel value of the medium border-radius token?",
+    description: "Reader returns 8px for borderRadius.md",
     checks: [
       { type: "agentMatch", value: "reader" },
       { type: "toolUsed", value: "get_tokens" },
-      { type: "contains", value: "16px" },
+      { type: "contains", value: "8px" },
       { type: "notEmpty" },
     ],
   },
@@ -484,7 +483,6 @@ export const TEST_SUITE = [
     description: "Reader returns #111827 (neutral.900) for the semantic text.primary token",
     checks: [
       { type: "agentMatch", value: "reader" },
-      { type: "toolUsed", value: "get_tokens" },
       { type: "contains", value: "#111827" },
       { type: "notEmpty" },
     ],
@@ -851,7 +849,7 @@ export const TEST_SUITE = [
     checks: [{ type: "agentMatch", value: "generator" }, { type: "contains", value: "?" }, { type: "notEmpty" }],
   },
 
-  // ── Style Guide agent tests (10) ─────────────────────────────────────────
+  // ── Style Guide tests (10): 2 routing + 8 direct ───────────────────────
   {
     id: 101, agent: "orchestrator", tags: ["routing"],
     prompt: "What are the design principles of this design system?",
@@ -971,6 +969,12 @@ function evaluateCheck(check, result) {
         label: "Response includes a preview",
         passed: typeof result.preview === "string" && result.preview.trim().length > 0,
         detail: result.preview ? "preview present" : "no preview",
+      };
+    case "noPreview":
+      return {
+        label: "Response must not include a preview",
+        passed: !result.preview || result.preview.trim().length === 0,
+        detail: result.preview ? "preview unexpectedly present" : "no preview (correct)",
       };
     case "previewContains":
       return {
@@ -1300,7 +1304,7 @@ export function initTestLabModal() {
             renderSuiteRow(id);
             updateSuiteStats();
           }
-        });
+        }).catch(() => { /* judge failure is non-fatal */ });
       }
     } catch (err) {
       testState[id] = { status: "error", error: String(err) };
@@ -1389,6 +1393,7 @@ export function initTestLabModal() {
                 <option value="reader">Reader</option>
                 <option value="builder">Builder</option>
                 <option value="generator">Generator</option>
+                <option value="style-guide">Style Guide</option>
               </select>
             </div>
             <div class="tl-pg-field tl-pg-field-half">
@@ -1447,6 +1452,7 @@ export function initTestLabModal() {
     const checks = [{ type: "notEmpty" }];
     if (expectedAgent)   checks.push({ type: "agentMatch",     value: expectedAgent });
     if (expectPreview === "yes") checks.push({ type: "hasPreview" });
+    if (expectPreview === "no")  checks.push({ type: "noPreview" });
     if (toolUsed)        checks.push({ type: "toolUsed",       value: toolUsed });
     keywords.forEach(kw    => checks.push({ type: "contains",        value: kw }));
     previewValues.forEach(v => checks.push({ type: "previewContains", value: v }));

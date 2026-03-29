@@ -190,11 +190,18 @@ describe("MCP tool correctness", () => {
       "list_components",
       "get_component",
       "get_component_tokens",
+      "get_component_constraints",
+      "get_component_variants",
+      "get_component_anatomy",
+      "get_component_relationships",
+      "validate_component_usage",
+      "suggest_token",
       "check_contrast",
       "validate_color",
       "diff_against_system",
       "get_accessibility_guidance",
       "get_layout_guidance",
+      "get_spacing_scale",
       "get_changelog",
       "get_deprecations",
       "get_style_guide",
@@ -203,6 +210,8 @@ describe("MCP tool correctness", () => {
       "list_icons",
       "get_icon",
       "search_icons",
+      "search",
+      "get_schema",
     ]) {
       assert.ok(names.includes(name), `tools/list is missing "${name}"`);
     }

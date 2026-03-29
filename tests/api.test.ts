@@ -374,4 +374,87 @@ describe("MCP tool correctness", () => {
     assert.ok(Array.isArray(parsed));
     assert.ok(parsed.length > 0);
   });
+
+  test("get_deprecations returns Overlay as a deprecated item", async () => {
+    const result = (await mcpCall("tools/call", {
+      name: "get_deprecations",
+      arguments: {},
+    })) as { content: Array<{ text: string }> };
+    const parsed = JSON.parse(
+      result.content.map((c) => c.text).join("")
+    ) as { deprecations: Array<{ name: string }>; total: number };
+    assert.ok(Array.isArray(parsed.deprecations));
+    assert.ok(parsed.total > 0);
+    assert.ok(
+      parsed.deprecations.some((d) => d.name === "Overlay"),
+      "expected Overlay in deprecations"
+    );
+  });
+
+  test("get_theme returns dark theme with neutral.900 background reference", async () => {
+    const result = (await mcpCall("tools/call", {
+      name: "get_theme",
+      arguments: { themeName: "dark" },
+    })) as { content: Array<{ text: string }> };
+    const text = result.content.map((c) => c.text).join("");
+    const parsed = JSON.parse(text) as {
+      key: string;
+      semantic: Record<string, string>;
+    };
+    assert.equal(parsed.key, "dark");
+    assert.ok(
+      parsed.semantic["color.semantic.background.default"].includes("neutral.900"),
+      "dark theme background should reference neutral.900"
+    );
+  });
+
+  test("get_accessibility_guidance for button includes role and keyboard support", async () => {
+    const result = (await mcpCall("tools/call", {
+      name: "get_accessibility_guidance",
+      arguments: { componentName: "button" },
+    })) as { content: Array<{ text: string }> };
+    const text = result.content.map((c) => c.text).join("");
+    const parsed = JSON.parse(text) as {
+      component: string;
+      accessibility: { role: string; keyboardSupport: string[] };
+    };
+    assert.equal(parsed.component, "Button");
+    assert.equal(parsed.accessibility.role, "button");
+    assert.ok(
+      Array.isArray(parsed.accessibility.keyboardSupport) &&
+        parsed.accessibility.keyboardSupport.length > 0,
+      "keyboardSupport should be a non-empty array"
+    );
+  });
+
+  test("get_layout_guidance returns xl container max-width of 1280px", async () => {
+    const result = (await mcpCall("tools/call", {
+      name: "get_layout_guidance",
+      arguments: {},
+    })) as { content: Array<{ text: string }> };
+    const text = result.content.map((c) => c.text).join("");
+    const parsed = JSON.parse(text) as {
+      containerMaxWidth: Record<string, { value: string }>;
+    };
+    assert.equal(
+      parsed.containerMaxWidth.xl?.value,
+      "1280px",
+      "xl container max-width should be 1280px"
+    );
+  });
+
+  test("get_component_anatomy for card includes header and footer slots", async () => {
+    const result = (await mcpCall("tools/call", {
+      name: "get_component_anatomy",
+      arguments: { componentName: "card" },
+    })) as { content: Array<{ text: string }> };
+    const text = result.content.map((c) => c.text).join("");
+    const parsed = JSON.parse(text) as {
+      component: string;
+      anatomy: { slots: Record<string, string> };
+    };
+    assert.equal(parsed.component, "Card");
+    assert.ok("header" in parsed.anatomy.slots, "card anatomy should have header slot");
+    assert.ok("footer" in parsed.anatomy.slots, "card anatomy should have footer slot");
+  });
 });

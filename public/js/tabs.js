@@ -26,12 +26,16 @@ export function initRightTabs() {
     });
 
     panelPreview.style.display  = isPreview  ? "" : "none";
+    panelPreview.setAttribute("aria-hidden", String(!isPreview));
     panelExplorer.classList.toggle("active", isExplorer);
     panelGallery.classList.toggle("active",  isGallery);
     panelAbout.classList.toggle("active",    isAbout);
 
     // Hide the bottom tools/notes panel on About tab — it relates to preview output
-    if (toolsSection) toolsSection.style.display = isAbout ? "none" : "";
+    if (toolsSection) {
+      toolsSection.style.display = isAbout ? "none" : "";
+      toolsSection.setAttribute("aria-hidden", String(isAbout));
+    }
 
     if (isExplorer && !isExplorerLoaded()) loadExplorer();
     if (isGallery  && !isGalleryLoaded())  loadGallery();

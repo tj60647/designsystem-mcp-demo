@@ -21,8 +21,10 @@ export default defineConfig({
     timeout: 60_000,
     reuseExistingServer: !process.env.CI,
     env: {
-      // Tests never hit the real LLM — all /api/chat calls are intercepted
-      OPENROUTER_API_KEY: "test-key",
+      // Pass the real key through when available so agent-behavior tests can
+      // make live LLM calls.  Structural / UI tests that intercept /api/chat
+      // are unaffected — the key only matters when the route is not mocked.
+      OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY ?? "test-key",
     },
   },
 });

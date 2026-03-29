@@ -46,6 +46,50 @@ const router = express.Router();
 const VALID_TYPES: DataType[] = ["tokens", "components", "themes", "icons"];
 const ALLOWED_MESSAGE_ROLES = new Set(["user", "assistant"]);
 
+// ── Response cache ────────────────────────────────────────────────────────────
+// Caches the "done" payload for each unique (normalised) user question so that
+// repeated identical questions skip the LLM round-trip entirely.  The cache is
+// intentionally simple and in-process — no persistence across restarts.
+//
+// Responses that involved `generate_design_system` are never cached because
+// that tool mutates the server-side design-system data store.
+// ─────────────────────────────────────────────────────────────────────────────
+const CACHE_TTL_MS  = 60 * 60 * 1_000; // 60 minutes
+const CACHE_MAX     = 200;
+
+type CacheEntry = { payload: Record<string, unknown>; timestamp: number };
+const responseCache = new Map<string, CacheEntry>();
+
+/** Normalise a user message into a stable cache key. */
+function normalizeCacheKey(text: string): string {
+  return text.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function getCachedResponse(key: string): Record<string, unknown> | null {
+  const entry = responseCache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
+    responseCache.delete(key);
+    return null;
+  }
+  return entry.payload;
+}
+
+function setCachedResponse(key: string, payload: Record<string, unknown>): void {
+  if (responseCache.size >= CACHE_MAX) {
+    // Evict the oldest entry (Map preserves insertion order).
+    const oldestKey = responseCache.keys().next().value;
+    if (oldestKey !== undefined) responseCache.delete(oldestKey);
+  }
+  responseCache.set(key, { payload, timestamp: Date.now() });
+}
+
+/** Clear all cached entries — call when the design-system data store changes. */
+export function clearResponseCache(): void {
+  responseCache.clear();
+  console.log("[chat:cache] cache cleared");
+}
+
 type AgentRuntimeKey = "orchestrator" | SpecialistName | "unified";
 type AgentRuntimeSettings = {
   model: string;
@@ -242,6 +286,19 @@ router.post("/chat", async (req, res) => {
   };
 
   const toolCallsUsed: string[] = [];
+
+  // ── Cache lookup ──────────────────────────────────────────────────────────
+  // Check whether this exact question has already been answered.  If so, emit
+  // the cached payload immediately and skip the LLM round-trip entirely.
+  // ─────────────────────────────────────────────────────────────────────────
+  const cacheKey = normalizeCacheKey(messages.at(-1)!.content);
+  const cached = getCachedResponse(cacheKey);
+  if (cached) {
+    console.log(`[chat:cache] hit for key="${cacheKey.slice(0, 80)}"`);
+    sendProgress("Answering from cache…");
+    endWithDone({ ...cached, fromCache: true });
+    return;
+  }
 
   // Abort the whole loop after a generous timeout. Progress is streamed so
   // the user sees activity. Keep a hard minimum of 5 minutes so long-running
@@ -494,6 +551,10 @@ router.post("/chat", async (req, res) => {
                 }
               }
 
+              // A new design system was loaded — previous cached responses
+              // about tokens/components/etc. are now stale.
+              clearResponseCache();
+
               generatedDesignSystemData = result.data;
 
               toolResult = JSON.stringify({
@@ -537,6 +598,11 @@ router.post("/chat", async (req, res) => {
       const { message, preview, metadata, schemaVersion } = parseChatResponse(rawResponse);
       console.log("[chat:response]", message.slice(0, 300));
       clearTimeout(chatTimer);
+      // Store in cache unless the design system was generated (that tool
+      // mutates the data store so subsequent queries would return stale data).
+      if (!toolCallsUsed.includes("generate_design_system")) {
+        setCachedResponse(cacheKey, { message, preview, metadata, schemaVersion, model: activeRuntime.model, routedAgent, toolCallsUsed, thinkingSteps });
+      }
       endWithDone({ message, preview, metadata, schemaVersion, model: activeRuntime.model, routedAgent, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData });
       return;
     }

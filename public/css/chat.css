@@ -58,6 +58,23 @@
 }
 .msg-meta { font-size: 11px; color: var(--text-dim); }
 
+/* Cached-response badge */
+.cache-badge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  background: rgba(var(--accent-rgb, 99, 102, 241), .12);
+  color: var(--accent, #6366f1);
+  border: 1px solid rgba(var(--accent-rgb, 99, 102, 241), .25);
+  cursor: default;
+  user-select: none;
+}
+
 /* Rendered markdown inside chat bubbles */
 .msg-bubble h1, .msg-bubble h2, .msg-bubble h3 {
   color: inherit; font-weight: 600; margin: .7em 0 .3em;

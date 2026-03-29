@@ -243,10 +243,10 @@ router.post("/chat", async (req, res) => {
 
   const toolCallsUsed: string[] = [];
 
-  // Abort the whole loop after a generous timeout.  Progress is streamed so
-  // the user sees activity; 120 s gives multi-step tasks (including
-  // generate_design_system) time to complete.  Override with CHAT_TIMEOUT_MS.
-  const CHAT_TIMEOUT_MS = Number(process.env.CHAT_TIMEOUT_MS ?? 120_000);
+  // Abort the whole loop after a generous timeout. Progress is streamed so
+  // the user sees activity. Keep a hard minimum of 5 minutes so long-running
+  // tool chains and generation tasks are not cut off too early.
+  const CHAT_TIMEOUT_MS = Math.max(300_000, Number(process.env.CHAT_TIMEOUT_MS ?? 300_000));
   const chatAbort = new AbortController();
   const chatTimer = setTimeout(() => chatAbort.abort(), CHAT_TIMEOUT_MS);
 

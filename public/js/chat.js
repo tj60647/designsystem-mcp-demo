@@ -151,6 +151,49 @@ async function handleSend() {
     let traceEl = null;
     const liveToolRows = new Map(); // callId → <div.trace-item>
 
+    const feedbackState = {
+      agent: "Routing",
+      phase: "Preparing",
+      action: "Waiting for first model step…",
+      thought: "",
+    };
+
+    function summarizeThought(content) {
+      const text = String(content || "").replace(/\s+/g, " ").trim();
+      if (!text) return "";
+      return text.length > 160 ? `${text.slice(0, 160)}…` : text;
+    }
+
+    function ensureLiveFeedback() {
+      let panel = loadingEl.querySelector(".agent-live-feedback");
+      if (panel) return panel;
+      panel = document.createElement("div");
+      panel.className = "agent-live-feedback";
+      panel.innerHTML = `
+        <div class="agent-live-title">Agent Feedback</div>
+        <div class="agent-live-row"><span class="agent-live-key">Agent</span><span class="agent-live-val" data-live="agent"></span></div>
+        <div class="agent-live-row"><span class="agent-live-key">Phase</span><span class="agent-live-val" data-live="phase"></span></div>
+        <div class="agent-live-row"><span class="agent-live-key">Doing</span><span class="agent-live-val" data-live="action"></span></div>
+        <div class="agent-live-row"><span class="agent-live-key">Thinking</span><span class="agent-live-val" data-live="thought"></span></div>
+      `;
+      loadingEl.querySelector(".loading-bubble").appendChild(panel);
+      return panel;
+    }
+
+    function updateLiveFeedback() {
+      const panel = ensureLiveFeedback();
+      const setText = (key, value) => {
+        const el = panel.querySelector(`[data-live="${key}"]`);
+        if (el) el.textContent = value;
+      };
+      setText("agent", feedbackState.agent || "-");
+      setText("phase", feedbackState.phase || "-");
+      setText("action", feedbackState.action || "-");
+      setText("thought", feedbackState.thought || "Waiting for reasoning…");
+    }
+
+    updateLiveFeedback();
+
     function getOrCreateTrace() {
       if (traceEl) return traceEl;
       traceEl = document.createElement("div");
@@ -172,6 +215,11 @@ async function handleSend() {
         row.appendChild(tip);
       }
       trace.appendChild(row);
+
+      feedbackState.agent = agentLabel;
+      feedbackState.phase = "Routed";
+      feedbackState.action = reason || "Delegated to specialist agent.";
+      updateLiveFeedback();
       scrollToBottom();
     }
 
@@ -204,6 +252,10 @@ async function handleSend() {
 
       trace.appendChild(row);
       liveToolRows.set(callId, { row, detail });
+
+      feedbackState.phase = "Tool Call";
+      feedbackState.action = `Calling ${tool}`;
+      updateLiveFeedback();
       scrollToBottom();
     }
 
@@ -219,6 +271,11 @@ async function handleSend() {
       row.appendChild(detail);
       row.addEventListener("click", () => row.classList.toggle("trace-expanded"));
       trace.appendChild(row);
+
+      feedbackState.phase = "Reasoning";
+      feedbackState.thought = summarizeThought(content);
+      feedbackState.action = "Analyzing request and planning next step.";
+      updateLiveFeedback();
       scrollToBottom();
     }
 
@@ -238,6 +295,10 @@ async function handleSend() {
       resultSection.className = "trace-detail-section";
       resultSection.innerHTML = `<span class="trace-detail-label">Result</span><pre class="trace-detail-code">${escapeHtml(preview)}</pre>`;
       detail.appendChild(resultSection);
+
+      feedbackState.phase = "Tool Result";
+      feedbackState.action = "Tool completed; integrating result.";
+      updateLiveFeedback();
     }
 
     function finalizeTrace(routedAgent) {
@@ -287,6 +348,9 @@ async function handleSend() {
 
         if (event.type === "progress") {
           updateLoadingStatus(loadingEl, event.message);
+          feedbackState.phase = "Progress";
+          feedbackState.action = event.message;
+          updateLiveFeedback();
           scrollToBottom();
         } else if (event.type === "agent_routed") {
           addTraceAgentRouted(event.agent, event.reason);

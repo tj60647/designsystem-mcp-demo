@@ -296,6 +296,42 @@
   max-height: 260px;
   overflow-y: auto;
 }
+
+/* Live agent feedback while waiting */
+.agent-live-feedback {
+  margin-top: 8px;
+  border: 1px solid var(--border-soft);
+  background: rgba(255,255,255,.02);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.agent-live-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .45px;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+.agent-live-row {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 8px;
+  align-items: start;
+}
+.agent-live-key {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: .35px;
+}
+.agent-live-val {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
 /* ──────────────────────────────────────────────────────────────────────── */
 
 /* Chips */

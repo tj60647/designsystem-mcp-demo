@@ -66,6 +66,7 @@ router.post("/generate-from-website", async (req, res) => {
       warnings: [...(result.warnings ?? []), ...ingestResult.warnings],
       loaded: ingestResult.loaded,
       normalizationSummary: ingestResult.normalizationSummary,
+      readiness: ingestResult.readiness,
     });
   } catch (err) {
     if (!res.headersSent) {

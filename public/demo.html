@@ -394,6 +394,28 @@
       </div>
 
     </div><!-- /.ds-ops-grid -->
+
+    <!-- Readiness panel (Phase 4 — populated dynamically after each ingest operation) -->
+    <div id="ds-ops-readiness" class="ds-ops-readiness" style="display:none" aria-live="polite">
+      <div class="ds-ops-readiness-header">
+        <span id="ds-ops-readiness-status-badge" class="ds-ops-readiness-badge"></span>
+        <span class="ds-ops-readiness-title">Design System Readiness</span>
+        <span id="ds-ops-readiness-score" class="ds-ops-readiness-score"></span>
+        <button class="ds-ops-readiness-dismiss" id="ds-ops-readiness-dismiss" aria-label="Dismiss readiness panel">✕</button>
+      </div>
+      <div id="ds-ops-readiness-findings" class="ds-ops-readiness-findings"></div>
+      <div id="ds-ops-readiness-next-steps" class="ds-ops-readiness-next-steps"></div>
+    </div>
+
+    <!-- Warnings panel (Phase 4 — populated dynamically after each ingest operation) -->
+    <div id="ds-ops-warnings" class="ds-ops-warnings-panel" style="display:none" aria-live="polite">
+      <div class="ds-ops-warnings-header">
+        <span class="ds-ops-warnings-title" id="ds-ops-warnings-title">Normalization notes</span>
+        <button class="ds-ops-readiness-dismiss" id="ds-ops-warnings-dismiss" aria-label="Dismiss warnings panel">✕</button>
+      </div>
+      <ul id="ds-ops-warnings-list" class="ds-ops-warnings-list"></ul>
+    </div>
+
   </div><!-- /.ds-ops-body -->
 </div><!-- /#section-ds-ops -->
 

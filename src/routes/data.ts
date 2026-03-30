@@ -251,6 +251,7 @@ router.post("/data", async (req, res) => {
     loaded: result.loaded,
     warnings: result.warnings,
     normalizationSummary: result.normalizationSummary,
+    readiness: result.readiness,
     message: result.message,
   });
 });

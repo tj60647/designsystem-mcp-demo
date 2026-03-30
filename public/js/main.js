@@ -11,6 +11,7 @@ import { initViewSchemaModal } from './modals/schema.js';
 import { initValidationModal } from './modals/validation.js';
 import { initAgentsModal } from './modals/agents.js';
 import { initGenerateFromWebsiteModal } from './modals/generate-from-website.js';
+import { initDsOpsPanel, notifyDsOpsResult } from './dsOps.js';
 
 // ── Product-level section navigation ─────────────────────────────────────
 // Manages top-level sections: Workspace, Design System Ops, Agent Sandbox, About.
@@ -36,6 +37,9 @@ window.switchToWorkspace = () => switchSection('section-workspace');
 window.switchToDsOps = () => switchSection('section-ds-ops');
 window.switchToAgentSandbox = () => switchSection('section-agent-sandbox');
 window.switchToAbout = () => switchSection('section-about');
+
+// Expose DS Ops result notifier globally so modal modules can call it after ingest.
+window.notifyDsOpsResult = notifyDsOpsResult;
 
 function initProductNav() {
   document.querySelectorAll('.product-nav-btn').forEach(btn => {
@@ -97,6 +101,7 @@ initValidationModal();
 initGenerateFromWebsiteModal();
 initRightTabs();
 initProductNav();
+initDsOpsPanel();
 
 // Wire DS Ops card buttons to hidden trigger buttons (attached by modal modules)
 const dsOpsLoadJsonBtn = document.getElementById('ds-ops-load-json-btn');

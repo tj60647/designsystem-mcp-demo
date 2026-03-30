@@ -931,3 +931,133 @@
   .sandbox-body { padding: 16px; }
   #section-about .about-body { padding: 16px; }
 }
+
+/* ── DS Ops readiness panel (Phase 4) ───────────────────────────────────── */
+.ds-ops-readiness {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-panel);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ds-ops-readiness-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ds-ops-readiness-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+}
+.ds-ops-readiness-score {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.ds-ops-readiness-dismiss {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  transition: color .15s;
+}
+.ds-ops-readiness-dismiss:hover { color: var(--text-muted); }
+.ds-ops-readiness-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.ds-ops-readiness-badge.ready {
+  color: var(--green);
+  border-color: rgba(63,185,80,.4);
+  background: rgba(63,185,80,.08);
+}
+.ds-ops-readiness-badge.usable-with-warnings {
+  color: var(--orange);
+  border-color: rgba(210,153,34,.4);
+  background: rgba(210,153,34,.08);
+}
+.ds-ops-readiness-badge.insufficient {
+  color: var(--red);
+  border-color: rgba(248,81,73,.4);
+  background: rgba(248,81,73,.08);
+}
+.ds-ops-readiness-findings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ds-ops-readiness-finding {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.5;
+}
+.ds-ops-readiness-finding-icon { flex-shrink: 0; }
+.ds-ops-readiness-finding.critical .ds-ops-readiness-finding-icon { color: var(--red); }
+.ds-ops-readiness-finding.warning .ds-ops-readiness-finding-icon { color: var(--orange); }
+.ds-ops-readiness-finding.info    .ds-ops-readiness-finding-icon { color: var(--accent); }
+.ds-ops-readiness-next-steps {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+.ds-ops-readiness-next-steps strong { color: var(--text-muted); }
+
+/* ── DS Ops warnings panel (Phase 4) ─────────────────────────────────────── */
+.ds-ops-warnings-panel {
+  border: 1px solid rgba(210,153,34,.3);
+  border-radius: var(--radius);
+  background: rgba(210,153,34,.05);
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ds-ops-warnings-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ds-ops-warnings-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--orange);
+  flex: 1;
+}
+.ds-ops-warnings-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ds-ops-warnings-list li {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding-left: 14px;
+  position: relative;
+  line-height: 1.5;
+}
+.ds-ops-warnings-list li::before {
+  content: '•';
+  position: absolute;
+  left: 4px;
+  color: var(--orange);
+}
+.ds-ops-warnings-list li.info::before { color: var(--accent); }

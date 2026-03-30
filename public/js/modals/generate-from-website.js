@@ -66,6 +66,10 @@ export function initGenerateFromWebsiteModal() {
       if (typeof window.notifyDataReloaded === "function") {
         window.notifyDataReloaded({ type: "design-system", loaded: data.loaded ?? [] });
       }
+      // Phase 4: surface readiness and warnings in DS Ops section
+      if (typeof window.notifyDsOpsResult === "function") {
+        window.notifyDsOpsResult(data);
+      }
     } catch (err) {
       hint.textContent = "Network error. Please check your connection and try again.";
       hint.style.color = "var(--red)";

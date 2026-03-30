@@ -12,10 +12,29 @@ import { initValidationModal } from './modals/validation.js';
 import { initAgentsModal } from './modals/agents.js';
 import { initGenerateFromWebsiteModal } from './modals/generate-from-website.js';
 
-// Wire up the global data-reload hook used by load-json and generate-from-website
-window.notifyDataReloaded = () => {
-  if (isExplorerLoaded()) resetAndReloadExplorer();
-  if (isGalleryLoaded())  resetAndReloadGallery();
+// Wire up the global data-reload hook used by load-json and generate-from-website.
+// The payload is optional and lets callers scope refreshes to affected UI panels.
+window.notifyDataReloaded = (payload = {}) => {
+  const type = payload?.type;
+  const loaded = Array.isArray(payload?.loaded) ? payload.loaded : [];
+
+  const includesLoaded = (section) => loaded.includes(section);
+
+  // Explorer depends on components only.
+  const shouldRefreshExplorer =
+    type === "components" ||
+    (type === "design-system" && includesLoaded("components")) ||
+    !type;
+
+  // Gallery depends on components (cards) and tokens (preview styling).
+  const shouldRefreshGallery =
+    type === "components" ||
+    type === "tokens" ||
+    (type === "design-system" && (includesLoaded("components") || includesLoaded("tokens"))) ||
+    !type;
+
+  if (shouldRefreshExplorer && isExplorerLoaded()) resetAndReloadExplorer();
+  if (shouldRefreshGallery && isGalleryLoaded())  resetAndReloadGallery();
 };
 
 // Boot

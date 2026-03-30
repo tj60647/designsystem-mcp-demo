@@ -1,6 +1,44 @@
 import { appendMessage, scrollToBottom } from '../chat.js';
 import { openValidationModal } from './validation.js';
 
+function unique(arr) {
+  return Array.from(new Set(arr));
+}
+
+function describeUiImpact(dataType, loadedSections = []) {
+  const sections = Array.isArray(loadedSections) ? loadedSections : [];
+
+  if (dataType === "tokens") {
+    return {
+      updated: ["Gallery"],
+      detail: "Updated Gallery previews (token-driven styling).",
+    };
+  }
+  if (dataType === "components") {
+    return {
+      updated: ["Explorer", "Gallery"],
+      detail: "Updated Explorer and Gallery component content.",
+    };
+  }
+  if (dataType === "design-system") {
+    const updated = [];
+    if (sections.includes("components")) updated.push("Explorer", "Gallery");
+    if (sections.includes("tokens")) updated.push("Gallery");
+    const deduped = unique(updated);
+    return {
+      updated: deduped,
+      detail: deduped.length
+        ? `Updated ${deduped.join(" and ")} based on loaded sections.`
+        : "No Explorer/Gallery refresh was needed for the loaded sections.",
+    };
+  }
+
+  return {
+    updated: [],
+    detail: "No Explorer/Gallery refresh needed for this data type.",
+  };
+}
+
 export function initLoadJsonModal() {
   const overlay       = document.getElementById("load-json-modal");
   const typeSelect    = document.getElementById("modal-type-select");
@@ -100,12 +138,15 @@ export function initLoadJsonModal() {
       const result = await res.json();
       if (!res.ok) { alert("Error: " + (result.error ?? "Unknown error")); return; }
       closeModal();
+      const impact = describeUiImpact(dataType, result.loaded);
       const msg = dataType === "design-system"
-        ? `✓ Design system data loaded (${result.loaded?.join(", ") ?? "all"}). MCP tools now reflect the new data.`
-        : `✓ ${dataType} data loaded. MCP tools now reflect the new data.`;
+        ? `✓ Design system data loaded (${result.loaded?.join(", ") ?? "all"}). MCP tools now reflect the new data. ${impact.detail}`
+        : `✓ ${dataType} data loaded. MCP tools now reflect the new data. ${impact.detail}`;
       appendMessage("assistant", msg);
       scrollToBottom();
-      if (typeof window.notifyDataReloaded === "function") window.notifyDataReloaded();
+      if (typeof window.notifyDataReloaded === "function") {
+        window.notifyDataReloaded({ type: dataType, loaded: result.loaded });
+      }
     } catch (err) {
       alert("Network error: " + err.message);
     }
@@ -123,9 +164,11 @@ export function initLoadJsonModal() {
       const result = await res.json();
       if (!res.ok) { alert("Error: " + (result.error ?? "Unknown error")); return; }
       for (const k in schemaCache) { delete schemaCache[k]; }
-      appendMessage("assistant", "✓ All data reset to bundled defaults. MCP tools now reflect the original design system.");
+      appendMessage("assistant", "✓ All data reset to bundled defaults. MCP tools now reflect the original design system. Explorer and Gallery were refreshed where needed.");
       scrollToBottom();
-      if (typeof window.notifyDataReloaded === "function") window.notifyDataReloaded();
+      if (typeof window.notifyDataReloaded === "function") {
+        window.notifyDataReloaded({ type: "design-system", loaded: ["tokens", "components", "themes", "icons", "style-guide"] });
+      }
     } catch (err) {
       alert("Network error: " + err.message);
     } finally {

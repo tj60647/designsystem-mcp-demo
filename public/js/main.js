@@ -81,13 +81,6 @@ window.notifyDataReloaded = (payload = {}) => {
 
   if (shouldRefreshExplorer && isExplorerLoaded()) resetAndReloadExplorer();
   if (shouldRefreshGallery && isGalleryLoaded())  resetAndReloadGallery();
-
-  // Sync the ds-ops download button visibility with the topbar download button
-  const topbarDownload = document.getElementById('download-ds-btn');
-  const dsOpsDownload = document.getElementById('ds-ops-download-btn');
-  if (topbarDownload && dsOpsDownload) {
-    dsOpsDownload.style.display = topbarDownload.style.display;
-  }
 };
 
 // Boot
@@ -128,23 +121,25 @@ if (dsOpsResetBtn) {
 }
 const dsOpsDownloadBtn = document.getElementById('ds-ops-download-btn');
 if (dsOpsDownloadBtn) {
-  dsOpsDownloadBtn.addEventListener('click', () => document.getElementById('download-ds-btn')?.click());
+  dsOpsDownloadBtn.addEventListener('click', downloadCurrentDesignSystem);
 }
 
-// Keep DS Ops download button in sync with the topbar download button visibility.
-// chat.js shows the topbar button directly (downloadDsBtn.style.display = ""); we
-// mirror that via a MutationObserver so the DS Ops panel stays consistent.
-const topbarDownloadBtn = document.getElementById('download-ds-btn');
-if (topbarDownloadBtn && dsOpsDownloadBtn) {
-  const syncDownloadVisibility = () => {
-    dsOpsDownloadBtn.style.display = topbarDownloadBtn.style.display;
-  };
-  // Store at module level so the observer isn't garbage collected
-  const _downloadSyncObserver = new MutationObserver(syncDownloadVisibility);
-  _downloadSyncObserver.observe(topbarDownloadBtn, {
-    attributes: true,
-    attributeFilter: ['style'],
-  });
+async function downloadCurrentDesignSystem() {
+  try {
+    const res = await fetch('/api/data/design-system');
+    if (!res.ok) { alert('Could not export design system: ' + res.statusText); return; }
+    const json = await res.json();
+    const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    a.download = `design-system-${stamp}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    alert('Export failed: ' + err.message);
+  }
 }
 
 initComponentExplorer();

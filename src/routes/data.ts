@@ -8,14 +8,15 @@
  *
  * Routes:
  *   GET  /api/data/:type      — return active data for tokens/components/themes/icons
- *   POST /api/data            — replace active data (or a combined design-system payload)
+ *   POST /api/data            — replace active data via the shared ingest service
  *   POST /api/data/reset      — reset one or all data types to bundled defaults
  *   GET  /api/schema/:type    — download JSON Schema for a data type
  *   POST /api/validate        — validate JSON against a schema without loading it
  */
 
 import express from "express";
-import { setData, getData, resetData, type DataType } from "../dataStore.js";
+import { getData, resetData, type DataType } from "../dataStore.js";
+import { ingest } from "../ingestService.js";
 import { DATA_SCHEMAS } from "../schemas.js";
 
 const router = express.Router();
@@ -215,9 +216,10 @@ router.get("/data/:type", (req, res) => {
 // ── POST /api/data ────────────────────────────────────────────────────────
 // Body: { "type": "tokens"|"components"|"themes"|"icons"|"design-system", "data": <object> }
 // Replaces the active data for the given type with the supplied JSON.
-// "design-system" accepts a combined payload with any sub-sections present.
+// Delegates to the shared ingest service for consistent processing.
+// Response includes "loaded", "warnings", and "normalizationSummary" fields.
 // ─────────────────────────────────────────────────────────────────────────
-router.post("/data", (req, res) => {
+router.post("/data", async (req, res) => {
   const { type, data } = req.body as { type?: string; data?: unknown };
 
   if (!type || (!VALID_TYPES.includes(type as DataType) && type !== "design-system")) {
@@ -232,31 +234,25 @@ router.post("/data", (req, res) => {
     return;
   }
 
-  if (type === "design-system") {
-    const combined = data as Record<string, unknown>;
-    const loaded: string[] = [];
-    const ALL_SECTIONS: DataType[] = ["tokens", "components", "themes", "icons", "style-guide"];
-    for (const section of ALL_SECTIONS) {
-      const sectionData = combined[section];
-      if (sectionData !== undefined) {
-        if (sectionData === null || typeof sectionData !== "object" || Array.isArray(sectionData)) {
-          res.status(400).json({ error: `"${section}" must be a JSON object.` });
-          return;
-        }
-        setData(section, sectionData);
-        loaded.push(section);
-      }
-    }
-    if (loaded.length === 0) {
-      res.status(400).json({ error: 'design-system JSON must contain at least one of: tokens, components, themes, icons, style-guide.' });
-      return;
-    }
-    res.json({ ok: true, type: "design-system", loaded, message: `Design system data loaded (${loaded.join(", ")}). MCP tools now reflect the new data.` });
+  const result = await ingest("api/data", type as "design-system" | DataType, data as Record<string, unknown>);
+
+  if (!result.ok) {
+    res.status(400).json({
+      error: result.message,
+      errors: result.errors,
+      warnings: result.warnings,
+    });
     return;
   }
 
-  setData(type as DataType, data);
-  res.json({ ok: true, type, message: `${type} data replaced. MCP tools now reflect the new data.` });
+  res.json({
+    ok: true,
+    type: result.type,
+    loaded: result.loaded,
+    warnings: result.warnings,
+    normalizationSummary: result.normalizationSummary,
+    message: result.message,
+  });
 });
 
 // ── POST /api/data/reset ──────────────────────────────────────────────────

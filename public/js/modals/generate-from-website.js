@@ -62,6 +62,10 @@ export function initGenerateFromWebsiteModal() {
 
       closeModal();
       handleGeneratedDesignSystem(data.generatedDesignSystem);
+      // Notify with loaded sections for scoped Explorer/Gallery refresh (Workstream E)
+      if (typeof window.notifyDataReloaded === "function") {
+        window.notifyDataReloaded({ type: "design-system", loaded: data.loaded ?? [] });
+      }
     } catch (err) {
       hint.textContent = "Network error. Please check your connection and try again.";
       hint.style.color = "var(--red)";

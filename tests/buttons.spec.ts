@@ -422,6 +422,45 @@ test.describe("Explorer Refresh button", () => {
     await page.click("#explorer-refresh-btn");
     await expect(page.locator("#explorer-body")).not.toContainText("Loading", { timeout: 5000 });
   });
+
+  test("explorer derives variants and sizes from props metadata when top-level arrays are absent", async ({ page }) => {
+    await page.route("**/api/data/components", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          badge: {
+            name: "Badge",
+            description: "Status label",
+            props: {
+              variant: {
+                type: "enum",
+                values: ["info", "success", "warning"],
+                default: "info",
+              },
+              size: {
+                type: "enum",
+                values: ["sm", "lg"],
+                default: "sm",
+              },
+            },
+          },
+        }),
+      })
+    );
+
+    await openDemo(page);
+    await page.click("#tab-explorer");
+
+    const card = page.locator(".comp-card").first();
+    await expect(card.locator(".comp-card-chip.variant")).toHaveCount(3);
+    await expect(card.locator(".comp-card-chip.size")).toHaveCount(2);
+
+    await card.click();
+    await expect(page.locator("#comp-detail-body")).toContainText("info");
+    await expect(page.locator("#comp-detail-body")).toContainText("warning");
+    await expect(page.locator("#comp-detail-body")).toContainText("lg");
+  });
 });
 
 test.describe("Gallery Refresh button", () => {
@@ -437,6 +476,77 @@ test.describe("Gallery Refresh button", () => {
     await expect(page.locator("#gallery-body")).not.toContainText("Loading", { timeout: 5000 });
     await page.click("#gallery-refresh-btn");
     await expect(page.locator("#gallery-body")).not.toContainText("Loading", { timeout: 5000 });
+  });
+
+  test("gallery derives variants from props metadata when top-level variants are absent", async ({ page }) => {
+    await page.route("**/api/data/components", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          button: {
+            name: "Button",
+            description: "Action trigger",
+            props: {
+              variant: {
+                type: "enum",
+                values: ["solid", "outline", "danger"],
+                default: "solid",
+              },
+            },
+            tokens: {
+              background: {
+                solid: "{color.semantic.action.primary}",
+                danger: "{color.error.default}",
+              },
+              text: {
+                solid: "#ffffff",
+                danger: "#ffffff",
+              },
+              border: {
+                outline: "{color.semantic.action.primary}",
+              },
+            },
+          },
+        }),
+      })
+    );
+
+    await page.route("**/api/data/tokens", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          color: {
+            semantic: {
+              action: {
+                primary: { value: "#0f766e", type: "color" },
+              },
+            },
+            error: {
+              default: { value: "#b91c1c", type: "color" },
+            },
+            neutral: {
+              200: { value: "#e5e7eb", type: "color" },
+              700: { value: "#374151", type: "color" },
+            },
+          },
+          borderRadius: {
+            md: { value: "8px", type: "dimension" },
+          },
+        }),
+      })
+    );
+
+    await openDemo(page);
+    await page.click("#tab-gallery");
+
+    const card = page.locator(".gallery-card").first();
+    await expect(card.locator(".gallery-variant-btn")).toHaveCount(3);
+    await expect(card.locator(".gallery-variant-btn.active")).toContainText("solid");
+
+    await card.locator(".gallery-variant-btn", { hasText: "danger" }).click();
+    await expect(card.locator(".gallery-preview")).toContainText("Danger");
   });
 });
 

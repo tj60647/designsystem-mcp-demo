@@ -18,12 +18,13 @@ export default defineConfig({
     },
   ],
   webServer: {
-    // Build first so `node dist/index.js` is available, then start the server.
-    command: "npm run build && PORT=3033 node dist/index.js",
+    // Build and start the app via a cross-platform Node launcher.
+    command: "node scripts/playwright-webserver.mjs",
     url: "http://localhost:3033/health",
     timeout: 60_000,
     reuseExistingServer: !process.env.CI,
     env: {
+      PORT: "3033",
       OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY ?? "test-key",
     },
   },

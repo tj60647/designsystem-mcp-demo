@@ -6,49 +6,179 @@ let galleryComponents = {};
 let galleryTokens = {};
 let galleryActiveVariants = {};  // { componentKey: variant string }
 
-// Resolve a dot-path token from the token tree (e.g. "color.primary.600" → "#2563eb")
-function getTok(tokens, path) {
+function getTokNode(tokens, path) {
   const parts = path.split(".");
   let cur = tokens;
   for (const p of parts) {
     if (cur == null) return null;
     cur = cur[p];
   }
-  if (cur && typeof cur === "object" && "value" in cur) return cur.value;
+  return cur;
+}
+
+function resolveTokenValue(tokens, ref, visited = new Set()) {
+  if (typeof ref !== "string") return null;
+
+  const trimmed = ref.trim();
+  if (!trimmed) return null;
+
+  const looksLikeLiteral = /^(#|rgb\(|rgba\(|hsl\(|hsla\(|var\(|calc\()/i.test(trimmed);
+  const tokenPath = trimmed.startsWith("{") && trimmed.endsWith("}")
+    ? trimmed.slice(1, -1).trim()
+    : (!looksLikeLiteral && trimmed.includes(".") ? trimmed : null);
+
+  if (!tokenPath) return trimmed;
+  if (visited.has(tokenPath)) return null;
+  visited.add(tokenPath);
+
+  const node = getTokNode(tokens, tokenPath);
+  if (node == null) return null;
+  if (typeof node === "string") return node;
+  if (node && typeof node === "object") {
+    if (typeof node.resolvedValue === "string" && node.resolvedValue.trim()) return node.resolvedValue;
+    if (typeof node.value === "string") {
+      return resolveTokenValue(tokens, node.value, visited) || node.value;
+    }
+  }
+  return null;
+}
+
+// Resolve a dot-path token from the token tree (e.g. "color.primary.600" → "#2563eb")
+function getTok(tokens, path) {
+  return resolveTokenValue(tokens, path);
+}
+
+function uniqStrings(values) {
+  return Array.from(new Set(
+    values.filter((value) => typeof value === "string" && value.trim()).map((value) => value.trim())
+  ));
+}
+
+function getPropEnumValues(prop) {
+  if (!prop || typeof prop !== "object") return [];
+  if (Array.isArray(prop.values)) return uniqStrings(prop.values);
+  if (Array.isArray(prop.enum)) return uniqStrings(prop.enum);
+  if (Array.isArray(prop.options)) {
+    return uniqStrings(prop.options.map((option) => {
+      if (typeof option === "string") return option;
+      if (option && typeof option === "object") return option.value || option.name || option.label;
+      return null;
+    }));
+  }
+  return [];
+}
+
+function getPropDefaultValue(comp, propName) {
+  const prop = comp?.props?.[propName];
+  return typeof prop?.default === "string" && prop.default.trim() ? prop.default.trim() : null;
+}
+
+function getComponentVariants(comp) {
+  return uniqStrings([
+    ...(Array.isArray(comp?.variants) ? comp.variants : []),
+    ...getPropEnumValues(comp?.props?.variant),
+    ...Object.keys(comp?.variantGuidance || {}),
+  ]);
+}
+
+function getComponentSizes(comp) {
+  return uniqStrings([
+    ...(Array.isArray(comp?.sizes) ? comp.sizes : []),
+    ...getPropEnumValues(comp?.props?.size),
+  ]);
+}
+
+function getVariantAliases(variant) {
+  const value = typeof variant === "string" ? variant.toLowerCase() : "";
+  const aliases = new Set(value ? [value] : []);
+
+  if (value === "default") aliases.add("primary");
+  if (value === "primary") aliases.add("default");
+  if (value === "filled" || value === "solid") {
+    aliases.add("primary");
+    aliases.add("default");
+  }
+  if (value === "outline") aliases.add("outlined");
+  if (value === "outlined") aliases.add("outline");
+  if (value === "danger" || value === "error") aliases.add("destructive");
+  if (value === "destructive") {
+    aliases.add("danger");
+    aliases.add("error");
+  }
+  if (value === "success") aliases.add("positive");
+  if (value === "warning") aliases.add("caution");
+
+  return Array.from(aliases);
+}
+
+function pickComponentToken(source, tokens, candidates = []) {
+  if (!source) return null;
+  if (typeof source === "string") return resolveTokenValue(tokens, source);
+  if (typeof source !== "object") return null;
+
+  for (const candidate of uniqStrings(candidates)) {
+    const direct = source[candidate];
+    const resolved = typeof direct === "object" && direct !== null && !Array.isArray(direct)
+      ? null
+      : resolveTokenValue(tokens, direct);
+    if (resolved) return resolved;
+  }
+
+  for (const fallbackKey of ["default", "base", "primary", "value", "others"]) {
+    const fallback = source[fallbackKey];
+    const resolved = typeof fallback === "object" && fallback !== null && !Array.isArray(fallback)
+      ? null
+      : resolveTokenValue(tokens, fallback);
+    if (resolved) return resolved;
+  }
+
   return null;
 }
 
 // Visual renderers: each returns an HTML string ready to inject into a white preview area
 const GALLERY_RENDERERS = {
-  button(variant, _size, tokens) {
+  button(variant, _size, tokens, comp = {}) {
     const br    = getTok(tokens, "borderRadius.md")    || "8px";
-    const p6    = getTok(tokens, "color.primary.600")  || "#2563eb";
+    const p6    = getTok(tokens, "color.semantic.action.primary") || getTok(tokens, "color.primary.600") || "#2563eb";
     const n200  = getTok(tokens, "color.neutral.200")  || "#e5e7eb";
     const n700  = getTok(tokens, "color.neutral.700")  || "#374151";
     const err   = getTok(tokens, "color.error.default")|| "#ef4444";
+    const ok    = getTok(tokens, "color.success.default") || "#16a34a";
+    const warn  = getTok(tokens, "color.warning.default") || "#d97706";
     const base  = `border-radius:${br};font-family:inherit;cursor:pointer;font-weight:500;font-size:14px;padding:9px 18px;`;
-    const styles = {
-      primary:     `background:${p6};color:#fff;border:1px solid ${p6};`,
-      secondary:   `background:${n200};color:${n700};border:1px solid ${n200};`,
-      outline:     `background:transparent;color:${p6};border:1px solid ${p6};`,
-      ghost:       `background:transparent;color:${n700};border:1px solid transparent;`,
-      destructive: `background:${err};color:#fff;border:1px solid ${err};`,
-    };
-    const s     = styles[variant] || styles.primary;
+    const aliases = getVariantAliases(variant);
+    const background = pickComponentToken(comp?.tokens?.background, tokens, aliases);
+    const foreground = pickComponentToken(comp?.tokens?.text, tokens, aliases);
+    const border = pickComponentToken(comp?.tokens?.border, tokens, aliases);
+    const isDanger = aliases.some((name) => ["destructive", "danger", "error"].includes(name));
+    const isOutline = aliases.some((name) => ["outline", "outlined"].includes(name));
+    const isGhost = aliases.includes("ghost");
+    const isSecondary = aliases.includes("secondary");
+    const isSuccess = aliases.includes("success");
+    const isWarning = aliases.includes("warning");
+    const accent = isDanger ? err : isSuccess ? ok : isWarning ? warn : p6;
+    const neutralFill = isSecondary ? n200 : "transparent";
+    const s = `background:${background || (isOutline || isGhost ? "transparent" : neutralFill !== "transparent" ? neutralFill : accent)};` +
+      `color:${foreground || (isOutline ? accent : isGhost || isSecondary ? n700 : "#fff")};` +
+      `border:1px solid ${border || (isOutline ? accent : isGhost ? "transparent" : neutralFill !== "transparent" ? neutralFill : accent)};`;
     const label = variant ? (variant.charAt(0).toUpperCase() + variant.slice(1)) : "Button";
     return `<button style="${s}${base}">${label}</button>`;
   },
 
-  input(variant, _size, tokens) {
+  input(variant, _size, tokens, comp = {}) {
     const br    = getTok(tokens, "borderRadius.md")     || "8px";
     const bd    = getTok(tokens, "color.neutral.300")   || "#d1d5db";
     const err   = getTok(tokens, "color.error.default") || "#ef4444";
+    const ok    = getTok(tokens, "color.success.default") || "#16a34a";
     const n50   = getTok(tokens, "color.neutral.50")    || "#f9fafb";
-    const bdCol = variant === "error" ? err : bd;
-    const bg    = variant === "filled" ? n50 : "#fff";
+    const aliases = getVariantAliases(variant);
+    const bdCol = pickComponentToken(comp?.tokens?.border, tokens, aliases)
+      || (aliases.includes("error") ? err : aliases.includes("success") ? ok : bd);
+    const bg = pickComponentToken(comp?.tokens?.background, tokens, aliases)
+      || (aliases.includes("filled") ? n50 : "#fff");
     const ph    = variant === "error" ? "Invalid input" : "Enter text…";
     const val   = variant === "error" ? "Bad value" : "";
-    const errMsg = variant === "error"
+    const errMsg = aliases.includes("error")
       ? `<span style="font-size:11px;color:${err};margin-top:2px;">This field is required.</span>` : "";
     return `<div style="display:flex;flex-direction:column;gap:4px;min-width:200px;">
       <label style="font-size:12px;font-weight:500;color:#374151;">Label</label>
@@ -259,10 +389,11 @@ function renderGalleryGrid(filter) {
 
   for (const key of keys) {
     const comp    = galleryComponents[key];
-    const variants = comp.variants || [];
-    const activeVar = galleryActiveVariants[key] !== undefined
+    const variants = getComponentVariants(comp);
+    const defaultVariant = getPropDefaultValue(comp, "variant");
+    const activeVar = variants.includes(galleryActiveVariants[key])
       ? galleryActiveVariants[key]
-      : (variants[0] || null);
+      : (defaultVariant && variants.includes(defaultVariant) ? defaultVariant : (variants[0] || null));
 
     const card = document.createElement("div");
     card.className = "gallery-card";
@@ -325,7 +456,7 @@ function renderGalleryGrid(filter) {
 function renderComponentPreview(key, comp, tokens, variant) {
   const renderer = GALLERY_RENDERERS[key];
   if (renderer) {
-    try { return renderer(variant, null, tokens); }
+    try { return renderer(variant, null, tokens, comp); }
     catch (e) {
       console.error("Gallery renderer error:", key, e);
       return `<span style="color:#6b7280;font-size:12px;font-family:sans-serif;">Preview unavailable</span>`;
@@ -343,7 +474,9 @@ function renderComponentPreview(key, comp, tokens, variant) {
 function inferredRenderer(key, comp, tokens, variant) {
   const nameLc  = (comp.name || key).toLowerCase();
   const props   = Object.keys(comp.props || {}).map(p => p.toLowerCase());
-  const vars    = (comp.variants || []).map(v => v.toLowerCase());
+  const variants = getComponentVariants(comp);
+  const sizes = getComponentSizes(comp);
+  const vars    = variants.map(v => v.toLowerCase());
 
   // ── token shortcuts ──────────────────────────────────────────────────
   const p6    = getTok(tokens, "color.primary.600")  || "#2563eb";
@@ -436,8 +569,8 @@ function inferredRenderer(key, comp, tokens, variant) {
 
   // ── Tag / Badge / Chip / Pill ────────────────────────────────────────
   if (/\b(tag|chip|label|pill|status|indicator)\b/.test(nameLc)) {
-    const allVars = comp.variants && comp.variants.length
-      ? comp.variants.slice(0, 5)
+    const allVars = variants.length
+      ? variants.slice(0, 5)
       : [variant || displayName];
     const palettes = [
       { bg: p100,    color: p6,       border: p6 },
@@ -499,8 +632,8 @@ function inferredRenderer(key, comp, tokens, variant) {
 
   // ── Tabs / Segmented control ─────────────────────────────────────────
   if (/\b(tab|tabs|segment|segmented)\b/.test(nameLc)) {
-    const tabs = comp.variants && comp.variants.length
-      ? comp.variants.slice(0, 4)
+    const tabs = variants.length
+      ? variants.slice(0, 4)
       : ["Tab 1", "Tab 2", "Tab 3"];
     const active = variant || tabs[0];
     return `<div style="display:inline-flex;border-bottom:1px solid ${n200};min-width:220px;">` +
@@ -585,8 +718,8 @@ function inferredRenderer(key, comp, tokens, variant) {
   // ── List / Menu / Navigation / Sidebar ───────────────────────────────
   if (/\b(list|menu|nav|navigation|sidebar)\b/.test(nameLc) ||
       props.some(p => /^(items|links|pages)$/.test(p))) {
-    const items = comp.variants && comp.variants.length
-      ? comp.variants.slice(0, 4)
+    const items = variants.length
+      ? variants.slice(0, 4)
       : ["Item one", "Item two", "Item three"];
     return `<ul style="list-style:none;margin:0;padding:0;min-width:180px;border:1px solid ${n200};border-radius:${br};overflow:hidden;background:#fff;">` +
       items.map((item, i) =>
@@ -619,10 +752,11 @@ function inferredRenderer(key, comp, tokens, variant) {
 
   // ── Form / Wizard / Step ─────────────────────────────────────────────
   if (/\b(form|wizard|step)\b/.test(nameLc)) {
+    const fieldSize = sizes[0] || "md";
     return `<form style="display:flex;flex-direction:column;gap:10px;padding:18px;background:#fff;border:1px solid ${n200};border-radius:${br};width:230px;" onsubmit="return false">
       <div style="font-size:14px;font-weight:600;color:#111827;">${escapeHtml(displayName)}</div>
-      <input type="text" placeholder="First field" style="padding:8px 10px;font-size:13px;border:1px solid ${n300};border-radius:${br};font-family:inherit;color:#111827;outline:none;" />
-      <input type="text" placeholder="Second field" style="padding:8px 10px;font-size:13px;border:1px solid ${n300};border-radius:${br};font-family:inherit;color:#111827;outline:none;" />
+      <input type="text" placeholder="First field" data-size="${escapeHtml(fieldSize)}" style="padding:8px 10px;font-size:13px;border:1px solid ${n300};border-radius:${br};font-family:inherit;color:#111827;outline:none;" />
+      <input type="text" placeholder="Second field" data-size="${escapeHtml(fieldSize)}" style="padding:8px 10px;font-size:13px;border:1px solid ${n300};border-radius:${br};font-family:inherit;color:#111827;outline:none;" />
       <button type="submit" style="padding:8px;font-size:13px;background:${p6};color:#fff;border:none;border-radius:${br};cursor:pointer;font-weight:500;font-family:inherit;">Submit</button>
     </form>`;
   }
@@ -637,7 +771,7 @@ function inferredRenderer(key, comp, tokens, variant) {
   }
 
   // ── Default: descriptive card with variant chips ──────────────────────
-  const chips = (comp.variants || []).slice(0, 4)
+  const chips = variants.slice(0, 4)
     .map(v => `<span style="display:inline-block;padding:2px 9px;margin:2px;border-radius:${brFull};background:${p100};color:${p6};font-size:11px;border:1px solid #bfdbfe;">${escapeHtml(v)}</span>`)
     .join("");
   return `<div style="padding:16px 20px;background:#fff;border-radius:${br};border:1px solid ${n200};max-width:280px;">

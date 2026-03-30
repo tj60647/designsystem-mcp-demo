@@ -6,6 +6,48 @@ let explorerData     = {};
 let selectedCompKey  = null;
 let activeDetailPane = "overview";
 
+function uniqStrings(values) {
+  return Array.from(new Set(
+    values.filter((value) => typeof value === "string" && value.trim()).map((value) => value.trim())
+  ));
+}
+
+function getPropEnumValues(prop) {
+  if (!prop || typeof prop !== "object") return [];
+  if (Array.isArray(prop.values)) return uniqStrings(prop.values);
+  if (Array.isArray(prop.enum)) return uniqStrings(prop.enum);
+  if (Array.isArray(prop.options)) {
+    return uniqStrings(prop.options.map((option) => {
+      if (typeof option === "string") return option;
+      if (option && typeof option === "object") return option.value || option.name || option.label;
+      return null;
+    }));
+  }
+  return [];
+}
+
+function getComponentVariants(comp) {
+  return uniqStrings([
+    ...(Array.isArray(comp?.variants) ? comp.variants : []),
+    ...getPropEnumValues(comp?.props?.variant),
+    ...Object.keys(comp?.variantGuidance || {}),
+  ]);
+}
+
+function getComponentSizes(comp) {
+  return uniqStrings([
+    ...(Array.isArray(comp?.sizes) ? comp.sizes : []),
+    ...getPropEnumValues(comp?.props?.size),
+  ]);
+}
+
+function getComponentStates(comp) {
+  return uniqStrings([
+    ...(Array.isArray(comp?.states) ? comp.states : []),
+    ...getPropEnumValues(comp?.props?.state),
+  ]);
+}
+
 export function isExplorerLoaded() { return explorerLoaded; }
 
 export function resetAndReloadExplorer() {
@@ -48,6 +90,8 @@ function renderExplorerGrid(filter) {
 
   for (const key of keys) {
     const comp = explorerData[key];
+    const variants = getComponentVariants(comp);
+    const sizes = getComponentSizes(comp);
     const card = document.createElement("div");
     card.className = "comp-card" + (key === selectedCompKey ? " selected" : "");
     card.dataset.key = key;
@@ -64,13 +108,13 @@ function renderExplorerGrid(filter) {
 
     const chips = document.createElement("div");
     chips.className = "comp-card-chips";
-    for (const v of (comp.variants || []).slice(0, 4)) {
+    for (const v of variants.slice(0, 4)) {
       const chip = document.createElement("span");
       chip.className = "comp-card-chip variant";
       chip.textContent = v;
       chips.appendChild(chip);
     }
-    for (const s of (comp.sizes || []).slice(0, 3)) {
+    for (const s of sizes.slice(0, 3)) {
       const chip = document.createElement("span");
       chip.className = "comp-card-chip size";
       chip.textContent = s;
@@ -109,25 +153,28 @@ function openCompDetail(key) {
 
 function renderDetailPane(comp, pane) {
   const body = document.getElementById("comp-detail-body");
+  const variants = getComponentVariants(comp);
+  const sizes = getComponentSizes(comp);
+  const states = getComponentStates(comp);
 
   if (pane === "overview") {
     let html = "";
     if (comp.description) {
       html += `<div class="detail-section"><div class="detail-section-title">Description</div><div>${escapeHtml(comp.description)}</div></div>`;
     }
-    if (comp.variants?.length) {
+    if (variants.length) {
       html += `<div class="detail-section"><div class="detail-section-title">Variants</div><div class="detail-chip-row">`;
-      html += comp.variants.map(v => `<span class="detail-chip variant">${escapeHtml(v)}</span>`).join("");
+      html += variants.map(v => `<span class="detail-chip variant">${escapeHtml(v)}</span>`).join("");
       html += `</div></div>`;
     }
-    if (comp.sizes?.length) {
+    if (sizes.length) {
       html += `<div class="detail-section"><div class="detail-section-title">Sizes</div><div class="detail-chip-row">`;
-      html += comp.sizes.map(s => `<span class="detail-chip size">${escapeHtml(s)}</span>`).join("");
+      html += sizes.map(s => `<span class="detail-chip size">${escapeHtml(s)}</span>`).join("");
       html += `</div></div>`;
     }
-    if (comp.states?.length) {
+    if (states.length) {
       html += `<div class="detail-section"><div class="detail-section-title">States</div><div class="detail-chip-row">`;
-      html += comp.states.map(s => `<span class="detail-chip state">${escapeHtml(s)}</span>`).join("");
+      html += states.map(s => `<span class="detail-chip state">${escapeHtml(s)}</span>`).join("");
       html += `</div></div>`;
     }
     if (comp.constraints?.length) {

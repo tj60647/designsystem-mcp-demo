@@ -239,6 +239,9 @@ router.post("/data", async (req, res) => {
   if (!result.ok) {
     res.status(400).json({
       error: result.message,
+      // loaded lists any sections that were persisted before the failure so callers
+      // know what state the data store is in after a partial ingest.
+      loaded: result.loaded,
       errors: result.errors,
       warnings: result.warnings,
     });

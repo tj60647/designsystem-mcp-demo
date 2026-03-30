@@ -27,10 +27,11 @@ export function initRightTabs() {
     panelExplorer.classList.toggle("active", isExplorer);
     panelGallery.classList.toggle("active",  isGallery);
 
-    // Show the bottom tools/notes panel for preview; hide it for other tabs
+    // Show the bottom tools/notes panel on all workspace tabs.
+    // (It was previously hidden only on the old About tab; About is now a top-level section.)
     if (toolsSection) {
-      toolsSection.style.display = isPreview ? "" : "none";
-      toolsSection.setAttribute("aria-hidden", String(!isPreview));
+      toolsSection.style.display = "";
+      toolsSection.setAttribute("aria-hidden", "false");
     }
 
     if (isExplorer && !isExplorerLoaded()) loadExplorer();

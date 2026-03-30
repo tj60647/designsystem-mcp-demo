@@ -61,11 +61,9 @@ export function initGenerateFromWebsiteModal() {
       }
 
       closeModal();
+      // chat.js handleGeneratedDesignSystem already calls window.notifyDataReloaded()
+      // (unconditional refresh) so we must not call it again here.
       handleGeneratedDesignSystem(data.generatedDesignSystem);
-      // Notify with loaded sections for scoped Explorer/Gallery refresh (Workstream E)
-      if (typeof window.notifyDataReloaded === "function") {
-        window.notifyDataReloaded({ type: "design-system", loaded: data.loaded ?? [] });
-      }
       // Phase 4: surface readiness and warnings in DS Ops section
       if (typeof window.notifyDsOpsResult === "function") {
         window.notifyDsOpsResult(data);

@@ -121,11 +121,10 @@ function canonicalCheck(section: DataType, data: Record<string, unknown>): Inges
     function checkLeaves(obj: unknown, path: string): void {
       if (!obj || typeof obj !== "object" || Array.isArray(obj)) return;
       const o = obj as Record<string, unknown>;
-      const isLeaf = "value" in o || "type" in o;
+      const isLeaf = "value" in o;
       if (isLeaf) {
-        if (!("value" in o)) errors.push({ code: "TOKEN_MISSING_VALUE", section, message: `Token at "${path}" missing "value".`, severity: "error" });
         if (!("type" in o))  errors.push({ code: "TOKEN_MISSING_TYPE",  section, message: `Token at "${path}" missing "type".`,  severity: "error" });
-        if ("value" in o && typeof o.value !== "string") errors.push({ code: "TOKEN_VALUE_NOT_STRING", section, message: `Token at "${path}".value must be a string.`, severity: "error" });
+        if (typeof o.value !== "string") errors.push({ code: "TOKEN_VALUE_NOT_STRING", section, message: `Token at "${path}".value must be a string.`, severity: "error" });
       } else {
         for (const k of Object.keys(o)) checkLeaves(o[k], `${path}.${k}`);
       }
@@ -149,7 +148,9 @@ function normalize(
   if (section === "tokens" && normalized.tokens && typeof normalized.tokens === "object" && !Array.isArray(normalized.tokens)) {
     const inner = normalized.tokens as Record<string, unknown>;
     const innerKeys = Object.keys(inner);
-    const looksLikeCategories = innerKeys.length > 0 && innerKeys.every(k =>
+    // An empty inner object is treated as a valid (empty) categories container so that
+    // { tokens: {} } is unwrapped to {} and the TOKENS_EMPTY compatibility check fires.
+    const looksLikeCategories = innerKeys.length === 0 || innerKeys.every(k =>
       typeof inner[k] === "object" && inner[k] !== null && !Array.isArray(inner[k]));
     if (looksLikeCategories) {
       warnings.push({ code: "TOKENS_UNWRAPPED", section, message: 'Top-level "tokens" wrapper key unwrapped to canonical flat structure.', severity: "info" });
@@ -411,16 +412,18 @@ export async function ingest(
   for (const { section, sectionData } of sectionsToProcess) {
     log("info", "ingest.section.started", { source, section });
 
-    // Phase 3a: Compatibility validation
-    const compatWarnings = compatibilityCheck(section, sectionData);
-    allWarnings.push(...compatWarnings);
-    if (compatWarnings.length > 0) log("warn", "ingest.section.compat_warnings", { source, section, count: compatWarnings.length });
-
-    // Phase 2: Normalization
+    // Phase 2: Normalization runs first so that compat checks operate on the
+    // canonical shape (e.g. an unwrapped tokens wrapper yields {} which then
+    // correctly triggers the TOKENS_EMPTY warning on the next step).
     const { normalized, warnings: normWarnings, summary } = normalize(section, sectionData);
     allWarnings.push(...normWarnings);
     totalSummary.renamedKeys += summary.renamedKeys;
     totalSummary.droppedUnknownSections += summary.droppedUnknownSections;
+
+    // Phase 3a: Compatibility validation — runs on normalized data
+    const compatWarnings = compatibilityCheck(section, normalized);
+    allWarnings.push(...compatWarnings);
+    if (compatWarnings.length > 0) log("warn", "ingest.section.compat_warnings", { source, section, count: compatWarnings.length });
 
     // Phase 3b: Canonical validation (hard errors block persistence)
     const canonicalErrors = canonicalCheck(section, normalized);

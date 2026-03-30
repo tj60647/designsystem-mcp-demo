@@ -842,6 +842,17 @@
   border-color: var(--border);
 }
 .ds-ops-btn-secondary:hover { color: var(--text); border-color: var(--text-muted); }
+.ds-ops-btn-danger {
+  background: rgba(248,81,73,.10);
+  color: var(--red);
+  border-color: rgba(248,81,73,.30);
+}
+.ds-ops-btn-danger:hover { background: rgba(248,81,73,.20); }
+.ds-ops-card-danger {
+  border-color: rgba(248,81,73,.25);
+}
+.ds-ops-card-danger:hover { border-color: rgba(248,81,73,.50); }
+.ds-ops-card-danger .ds-ops-card-icon { color: var(--red); }
 
 /* ── Agent Sandbox section ──────────────────────────────────────────────── */
 .sandbox-body {

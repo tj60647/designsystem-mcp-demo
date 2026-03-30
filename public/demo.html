@@ -22,7 +22,6 @@
   </div>
   <span class="topbar-title">Design System AI</span>
   <span class="mcp-badge">MCP</span>
-  <button class="topbar-btn topbar-btn-about" id="about-btn" title="Learn what this tool is and how it works">About</button>
   <div class="topbar-spacer"></div>
   <div class="topbar-model-wrap">
     <label class="topbar-model-label" for="model-select">Model</label>
@@ -35,14 +34,26 @@
     </select>
   </div>
   <button class="topbar-btn topbar-btn-download" id="download-ds-btn" title="Download the AI-generated design system as JSON" style="display:none">⬇ Download Design System JSON</button>
-  <button class="topbar-btn topbar-btn-hide-xs" id="gen-from-web-btn" title="Generate a design system by extracting design tokens from a website URL" aria-label="Generate design system from website">Generate from Website</button>
-  <button class="topbar-btn topbar-btn-hide-xs" id="view-schema-btn" title="View and download the JSON schema for any data type">View Schema</button>
-  <button class="topbar-btn topbar-btn-hide-xs" id="view-agents-btn" title="View the chat agent configuration, system prompt, and tool list">View Agents</button>
-  <a class="topbar-btn topbar-btn-eval topbar-btn-hide-xs" href="/eval" title="Open the full-page Eval Lab — test suite, MCP tool explorer, prompt lab, and metrics">Eval Lab ↗</a>
-  <button class="topbar-btn" id="load-json-btn" title="Replace a data file (tokens, components, themes, icons) with custom JSON">Load JSON</button>
-  <button class="topbar-btn" id="reset-btn" title="Reset all data back to bundled defaults">Reset</button>
   <button class="topbar-btn" id="mcp-info-btn" title="How to connect to the MCP server">MCP server</button>
 </header>
+
+<!-- Product navigation -->
+<nav class="product-nav" role="navigation" aria-label="Main navigation">
+  <button class="product-nav-btn active" id="nav-workspace" data-section="section-workspace" aria-selected="true">Workspace</button>
+  <button class="product-nav-btn" id="nav-ds-ops" data-section="section-ds-ops" aria-selected="false">Design System Ops</button>
+  <button class="product-nav-btn" id="nav-agent-sandbox" data-section="section-agent-sandbox" aria-selected="false">Agent Sandbox</button>
+  <button class="product-nav-btn" id="nav-about" data-section="section-about" aria-selected="false">About</button>
+</nav>
+
+<!-- Hidden trigger buttons for modal wiring (not visible in UI) -->
+<!-- Modal JS modules attach click handlers to these IDs; DS Ops section clicks them programmatically -->
+<div aria-hidden="true" style="display:none">
+  <button id="load-json-btn">Load JSON</button>
+  <button id="gen-from-web-btn">Generate from Website</button>
+  <button id="view-schema-btn">View Schema</button>
+  <button id="view-agents-btn">View Agents</button>
+  <button id="reset-btn">Reset</button>
+</div>
 
 <!-- Load JSON modal -->
 <div class="modal-overlay" id="load-json-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -182,6 +193,8 @@
   </div>
 </div>
 
+<!-- Workspace section -->
+<div id="section-workspace" class="app-section active">
 <!-- Main split-panel -->
 <div class="main">
 
@@ -223,14 +236,13 @@
 
     <!-- Tab bar -->
     <div class="right-tabs" role="tablist">
-      <button class="right-tab" id="tab-preview" role="tab" aria-selected="false" aria-controls="panel-preview">Live Preview</button>
+      <button class="right-tab active" id="tab-preview" role="tab" aria-selected="true" aria-controls="panel-preview">Live Preview</button>
       <button class="right-tab" id="tab-explorer" role="tab" aria-selected="false" aria-controls="panel-explorer">Component Explorer</button>
       <button class="right-tab" id="tab-gallery" role="tab" aria-selected="false" aria-controls="panel-gallery">Component Gallery</button>
-      <button class="right-tab active" id="tab-about" role="tab" aria-selected="true" aria-controls="panel-about">About</button>
     </div>
 
     <!-- Live Preview section -->
-    <section class="preview-section" id="panel-preview" role="tabpanel" aria-labelledby="tab-preview" style="display:none" aria-hidden="true">
+    <section class="preview-section" id="panel-preview" role="tabpanel" aria-labelledby="tab-preview">
       <div class="panel-header">
         <h2>Live Preview</h2>
         <div class="panel-header-actions">
@@ -295,82 +307,7 @@
       </div>
     </section>
 
-    <!-- About section -->
-    <section class="about-section active" id="panel-about" role="tabpanel" aria-labelledby="tab-about">
-      <div class="about-body">
 
-        <div class="about-intro">
-          <strong>Design System AI</strong> is a live demo of a <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener noreferrer">Model Context Protocol (MCP)</a> server that connects AI coding tools directly to a design system — so Claude, Cursor, GitHub Copilot, and others look up your real tokens and component rules instead of guessing.
-          <div class="about-intro-cta">→ Type a UI prompt in the chat panel to see it work. The AI will query your design system live.</div>
-        </div>
-
-        <div class="about-section-block">
-          <h3>The problem it solves</h3>
-          <p>When you ask an AI to build UI, it guesses. It invents token names, uses hardcoded hex values, and ignores your component library. You can paste docs into the prompt to help — but those docs go stale the moment your system changes, and big files eat your context window.</p>
-          <p>This demo shows a different approach: expose your design system as a live, queryable server. The AI asks for exactly what it needs, gets the real answer, and generates code that actually matches your system.</p>
-        </div>
-
-        <div class="about-section-block">
-          <h3>How it works</h3>
-          <ol class="about-steps">
-            <li>You type a UI prompt — e.g. <em>"Create a login form with a primary submit button"</em></li>
-            <li>The AI recognizes it needs design system context and calls tools automatically — fetching exact button variants, spacing tokens, and accessibility rules from this server</li>
-            <li>The server returns live, structured data — not a snapshot, not a guess</li>
-            <li>The AI generates a response grounded in your actual token names and component constraints</li>
-            <li>The <strong>Live Preview</strong> tab renders the result; the <strong>MCP Tools</strong> panel below shows exactly which queries were made</li>
-          </ol>
-        </div>
-
-        <div class="about-section-block">
-          <h3>What MCP is</h3>
-          <p>The <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener noreferrer">Model Context Protocol</a> is an open standard for giving AI tools structured access to external data. Think of it like an API designed specifically for AI agents — one server, any compatible client, no custom adapters per platform.</p>
-          <table class="about-table" style="margin-top:10px">
-            <thead><tr><th>Without MCP</th><th>With MCP</th></tr></thead>
-            <tbody>
-              <tr><td>AI reads static docs pasted into a prompt</td><td>AI fetches structured data at query time</td></tr>
-              <tr><td>Token names are guessed or hallucinated</td><td>Token names come from the live source of truth</td></tr>
-              <tr><td>Component constraints exist only as prose</td><td>Constraints are machine-readable and enforceable</td></tr>
-              <tr><td>Validation happens in code review</td><td>Validation happens before code is written</td></tr>
-              <tr><td>Design system changes require re-prompting</td><td>AI always queries the current state of the system</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="about-section-block">
-          <h3>What this demo includes</h3>
-          <div class="about-capabilities">
-            <div class="about-capability">
-              <div class="about-capability-title">Token lookup</div>
-              <div class="about-capability-desc">Ask for any spacing, color, or typography token and get the real value from your live source of truth — not a cached guess.</div>
-            </div>
-            <div class="about-capability">
-              <div class="about-capability-title">Component constraints</div>
-              <div class="about-capability-desc">Fetch approved variants, required props, and usage rules for any component so the AI generates only what your system supports.</div>
-            </div>
-            <div class="about-capability">
-              <div class="about-capability-title">Accessibility guidance</div>
-              <div class="about-capability-desc">Get WCAG notes, aria requirements, and contrast ratios for components at query time — enforced before code is written.</div>
-            </div>
-            <div class="about-capability">
-              <div class="about-capability-title">Color &amp; contrast validation</div>
-              <div class="about-capability-desc">Check whether a color is in the system and meets contrast thresholds against your defined themes.</div>
-            </div>
-            <div class="about-capability">
-              <div class="about-capability-title">Diff &amp; changelog</div>
-              <div class="about-capability-desc">Detect when generated CSS diverges from your design system tokens and surface what changed between versions.</div>
-            </div>
-          </div>
-          <p style="margin-top:10px; font-size:12px; color: var(--text-dim)">28 MCP tools total — covering tokens, components, color, icons, themes, style guide, and more.</p>
-        </div>
-
-        <div class="about-section-block about-cta-block">
-          <h3>Connect your own AI client</h3>
-          <p>Claude Desktop, Cursor, and GitHub Copilot can all connect to this server directly. Click <strong>MCP server</strong> in the top bar for copy-paste setup instructions.</p>
-          <p>You can also click <strong>Load JSON</strong> to replace the sample design system with your own tokens and components.</p>
-        </div>
-
-      </div>
-    </section>
 
     <!-- Preview Details section (MCP Tools + Preview Notes) -->
     <section class="tools-section" aria-label="Preview Details" style="display:none" aria-hidden="true">
@@ -396,7 +333,175 @@
     </section>
 
   </div><!-- /.right-column -->
-</div>
+</div><!-- /.main -->
+</div><!-- /#section-workspace -->
+
+<!-- Design System Ops section -->
+<div id="section-ds-ops" class="app-section">
+  <div class="ds-ops-body">
+
+    <div class="ds-ops-header">
+      <h1 class="ds-ops-title">Design System Ops</h1>
+      <p class="ds-ops-subtitle">Manage your design system data — import, generate, validate, and export JSON. All lifecycle operations happen here.</p>
+    </div>
+
+    <div class="ds-ops-grid">
+
+      <div class="ds-ops-card">
+        <div class="ds-ops-card-icon">⬆</div>
+        <div class="ds-ops-card-content">
+          <h2 class="ds-ops-card-title">Import JSON</h2>
+          <p class="ds-ops-card-desc">Load a custom design system JSON file — replace tokens, components, themes, icons, or all sections at once. MCP tools reflect the new data immediately.</p>
+        </div>
+        <div class="ds-ops-card-actions">
+          <button class="ds-ops-btn ds-ops-btn-primary" id="ds-ops-load-json-btn">Load JSON…</button>
+        </div>
+      </div>
+
+      <div class="ds-ops-card">
+        <div class="ds-ops-card-icon">✶</div>
+        <div class="ds-ops-card-content">
+          <h2 class="ds-ops-card-title">Generate from Website</h2>
+          <p class="ds-ops-card-desc">Enter a public website URL to extract its design tokens and auto-generate a matching design system. The AI infers colors, typography, spacing, and more from the live page.</p>
+        </div>
+        <div class="ds-ops-card-actions">
+          <button class="ds-ops-btn ds-ops-btn-primary" id="ds-ops-gen-from-web-btn">Generate…</button>
+        </div>
+      </div>
+
+      <div class="ds-ops-card">
+        <div class="ds-ops-card-icon">⬡</div>
+        <div class="ds-ops-card-content">
+          <h2 class="ds-ops-card-title">Validate &amp; View Schema</h2>
+          <p class="ds-ops-card-desc">Inspect the JSON schema for any data type and validate your design system JSON before loading it. Errors and recommendations are shown inline.</p>
+        </div>
+        <div class="ds-ops-card-actions">
+          <button class="ds-ops-btn ds-ops-btn-secondary" id="ds-ops-view-schema-btn">View Schema…</button>
+          <button class="ds-ops-btn ds-ops-btn-secondary" id="ds-ops-view-agents-btn">View Agents…</button>
+        </div>
+      </div>
+
+      <div class="ds-ops-card">
+        <div class="ds-ops-card-icon">⬇</div>
+        <div class="ds-ops-card-content">
+          <h2 class="ds-ops-card-title">Export &amp; Reset</h2>
+          <p class="ds-ops-card-desc">Download the currently loaded design system as a JSON file, or reset all data back to the bundled defaults.</p>
+        </div>
+        <div class="ds-ops-card-actions">
+          <button class="ds-ops-btn ds-ops-btn-primary" id="ds-ops-download-btn" style="display:none">⬇ Download JSON</button>
+          <button class="ds-ops-btn ds-ops-btn-secondary" id="ds-ops-reset-btn">Reset to Defaults</button>
+        </div>
+      </div>
+
+    </div><!-- /.ds-ops-grid -->
+  </div><!-- /.ds-ops-body -->
+</div><!-- /#section-ds-ops -->
+
+<!-- Agent Sandbox section -->
+<div id="section-agent-sandbox" class="app-section">
+  <div class="sandbox-body">
+
+    <div class="ds-ops-header">
+      <h1 class="ds-ops-title">Agent Sandbox</h1>
+      <p class="ds-ops-subtitle">Understand how the AI agents behave — inspect tool calls, trace reasoning, and evaluate design system grounding. Built for transparency, not engineering metrics.</p>
+    </div>
+
+    <div class="sandbox-content">
+
+      <div class="about-section-block">
+        <h3>What MCP is</h3>
+        <p>The <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener noreferrer">Model Context Protocol</a> is an open standard for giving AI tools structured access to external data. Think of it like an API designed specifically for AI agents — one server, any compatible client, no custom adapters per platform.</p>
+        <table class="about-table" style="margin-top:10px">
+          <thead><tr><th>Without MCP</th><th>With MCP</th></tr></thead>
+          <tbody>
+            <tr><td>AI reads static docs pasted into a prompt</td><td>AI fetches structured data at query time</td></tr>
+            <tr><td>Token names are guessed or hallucinated</td><td>Token names come from the live source of truth</td></tr>
+            <tr><td>Component constraints exist only as prose</td><td>Constraints are machine-readable and enforceable</td></tr>
+            <tr><td>Validation happens in code review</td><td>Validation happens before code is written</td></tr>
+            <tr><td>Design system changes require re-prompting</td><td>AI always queries the current state of the system</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="sandbox-coming-soon">
+        <div class="sandbox-coming-soon-icon">⬡</div>
+        <h3>Epistemic evaluation coming soon</h3>
+        <p>The Agent Sandbox will let you run scenarios against the live agents and inspect their behavior in user-centered terms — not engineering harness metrics.</p>
+        <ul class="sandbox-feature-list">
+          <li><strong>Meet the Agents</strong> — understand each agent’s role, tools, and decision-making model</li>
+          <li><strong>Scenario execution</strong> — run predefined or custom prompts and see exactly how each agent responds</li>
+          <li><strong>Tool-call trace transparency</strong> — step through every MCP tool call with inputs, outputs, and timing</li>
+          <li><strong>Confidence &amp; uncertainty signals</strong> — see where the agent is certain vs. where it is guessing</li>
+          <li><strong>Model &amp; protocol explanation</strong> — understand grounding, context, and how MCP shapes AI behavior</li>
+        </ul>
+        <p class="sandbox-use-workspace">In the meantime, the <strong>MCP Tools</strong> panel in <button class="sandbox-link-btn" id="sandbox-goto-workspace">Workspace</button> shows live tool calls for every chat message you send.</p>
+      </div>
+
+    </div><!-- /.sandbox-content -->
+  </div><!-- /.sandbox-body -->
+</div><!-- /#section-agent-sandbox -->
+
+<!-- About section -->
+<div id="section-about" class="app-section">
+  <div class="about-body">
+
+    <div class="about-intro">
+      <strong>Design System AI</strong> is a live demo of a <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener noreferrer">Model Context Protocol (MCP)</a> server that connects AI coding tools directly to a design system — so Claude, Cursor, GitHub Copilot, and others look up your real tokens and component rules instead of guessing.
+      <div class="about-intro-cta">→ Open <button class="sandbox-link-btn" id="about-goto-workspace">Workspace</button> to start a chat. The AI will query your design system live.</div>
+    </div>
+
+    <div class="about-section-block">
+      <h3>The problem it solves</h3>
+      <p>When you ask an AI to build UI, it guesses. It invents token names, uses hardcoded hex values, and ignores your component library. You can paste docs into the prompt to help — but those docs go stale the moment your system changes, and big files eat your context window.</p>
+      <p>This demo shows a different approach: expose your design system as a live, queryable server. The AI asks for exactly what it needs, gets the real answer, and generates code that actually matches your system.</p>
+    </div>
+
+    <div class="about-section-block">
+      <h3>How it works</h3>
+      <ol class="about-steps">
+        <li>You type a UI prompt — e.g. <em>"Create a login form with a primary submit button"</em></li>
+        <li>The AI recognizes it needs design system context and calls tools automatically — fetching exact button variants, spacing tokens, and accessibility rules from this server</li>
+        <li>The server returns live, structured data — not a snapshot, not a guess</li>
+        <li>The AI generates a response grounded in your actual token names and component constraints</li>
+        <li>The <strong>Live Preview</strong> tab renders the result; the <strong>MCP Tools</strong> panel below shows exactly which queries were made</li>
+      </ol>
+    </div>
+
+    <div class="about-section-block">
+      <h3>What this demo includes</h3>
+      <div class="about-capabilities">
+        <div class="about-capability">
+          <div class="about-capability-title">Token lookup</div>
+          <div class="about-capability-desc">Ask for any spacing, color, or typography token and get the real value from your live source of truth — not a cached guess.</div>
+        </div>
+        <div class="about-capability">
+          <div class="about-capability-title">Component constraints</div>
+          <div class="about-capability-desc">Fetch approved variants, required props, and usage rules for any component so the AI generates only what your system supports.</div>
+        </div>
+        <div class="about-capability">
+          <div class="about-capability-title">Accessibility guidance</div>
+          <div class="about-capability-desc">Get WCAG notes, aria requirements, and contrast ratios for components at query time — enforced before code is written.</div>
+        </div>
+        <div class="about-capability">
+          <div class="about-capability-title">Color &amp; contrast validation</div>
+          <div class="about-capability-desc">Check whether a color is in the system and meets contrast thresholds against your defined themes.</div>
+        </div>
+        <div class="about-capability">
+          <div class="about-capability-title">Diff &amp; changelog</div>
+          <div class="about-capability-desc">Detect when generated CSS diverges from your design system tokens and surface what changed between versions.</div>
+        </div>
+      </div>
+      <p style="margin-top:10px; font-size:12px; color: var(--text-dim)">28 MCP tools total — covering tokens, components, color, icons, themes, style guide, and more.</p>
+    </div>
+
+    <div class="about-section-block about-cta-block">
+      <h3>Connect your own AI client</h3>
+      <p>Claude Desktop, Cursor, and GitHub Copilot can all connect to this server directly. Click <strong>MCP server</strong> in the top bar for copy-paste setup instructions.</p>
+      <p>Go to <button class="sandbox-link-btn" id="about-goto-ds-ops">Design System Ops</button> to load your own tokens and components, or generate a design system from any website URL.</p>
+    </div>
+
+  </div>
+</div><!-- /#section-about -->
 
 <script type="module" src="/js/main.js?v=2"></script>
 </body>

@@ -471,27 +471,47 @@ Acceptance criteria:
 1. No model/protocol deep explanation in About.
 2. Model/protocol explanation appears in Agent Sandbox where behavior is evaluated.
 
+### Dependency Analysis: IA Refactor vs Import/Export Rollout
+
+The IA refactor workstreams have uneven dependencies on the Import/Export phases. The table below governs the recommended sequence.
+
+| Workstream | Import/Export dependency | Can start before Import/Export? |
+|---|---|---|
+| A — Navigation shell | None | Yes — purely structural UI |
+| B — Design System Ops surface | Requires Phase 3.5 (readiness payload) and Phase 4 (warning surfaces) | No — building the panel before readiness/warnings exist produces a hollow container |
+| C — Agent Sandbox | Requires Workstream A shell; no Import/Export dependency | Yes, once A is done |
+| D — Developer surface separation | None | Yes — routing and visibility decision only |
+| E — Routing and state boundaries | Requires Phase 1 (centralized ingest service) to validate Explorer/Gallery refresh correctness | Partially — shell wiring can start, correctness confirmation requires Phase 1 |
+| F — Content strategy | None | Yes — copy and labeling only |
+
 ### Recommended Sequence
 
-1. Implement Workstream A (navigation shell).
-2. Implement Workstream B (Ops section) with existing modal logic reused.
-3. Implement Workstream C (Agent Sandbox framing and surfaces).
-4. Implement Workstream D (dev/product separation for evaluation internals).
-5. Implement Workstream E (state hardening) and F (content pass).
+1. Implement Workstream A (navigation shell with placeholder sections) — no Import/Export dependency; provides the stable container for all subsequent deliverables.
+2. Run Import/Export Phases 0 and 1 (baseline + shared ingest service) in parallel with or immediately after Workstream A.
+3. Implement Workstreams D and F in parallel with Import/Export Phases 0–3 — both are independent of backend state.
+4. Run Import/Export Phases 2 and 3 (canonicalization + validation layering).
+5. Run Import/Export Phase 3.5 (readiness evaluation) and Phase 4 (UI warning surfaces).
+6. Implement Workstream B (Design System Ops surface) once Phase 3.5 and 4 are complete — readiness status and warning outcomes are now available to fulfill Workstream B acceptance criteria.
+7. Implement Workstream C (Agent Sandbox) once Workstream A is in place.
+8. Implement Workstream E (state hardening) once Phase 1 ingest service and the nav shell both exist.
 
 ### Delivery Milestones
 
-Milestone 1:
-1. New top-level nav present with placeholder sections wired.
+Milestone 1 (IA-first, no Import/Export prerequisite):
+1. New top-level nav present with placeholder sections wired (Workstream A complete).
+2. Dev/product surface separation implemented (Workstream D complete).
+3. Content boundaries finalized across all sections (Workstream F complete).
 
-Milestone 2:
+Milestone 2 (requires Import/Export Phases 0–1):
+1. Shared ingest service wired to all import paths.
+2. Explorer/Gallery refresh correctness confirmed when actions originate from Design System Ops section (Workstream E complete).
+
+Milestone 3 (requires Import/Export Phases 3.5 and 4):
 1. Design System Ops functional parity with existing topbar/modal operations.
+2. Every successful load and generation operation shows readiness status and warning outcomes (Workstream B complete).
 
-Milestone 3:
-1. Agent Sandbox exposes epistemic evaluation workflows and transparency artifacts.
-
-Milestone 4:
-1. Developer-only testing/harness concerns removed from product IA.
+Milestone 4 (requires Workstream A):
+1. Agent Sandbox exposes epistemic evaluation workflows and transparency artifacts (Workstream C complete).
 
 Milestone 5:
-1. Final QA pass for state transitions, data reload correctness, and content boundaries.
+1. Final QA pass for state transitions, data reload correctness, and content boundaries across all sections.

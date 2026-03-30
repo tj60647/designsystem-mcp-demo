@@ -702,3 +702,454 @@
   .right-tab { font-size: 12px; padding: 9px 10px; }
   .about-table td:first-child { white-space: normal; }
 }
+
+/* ── Product navigation ──────────────────────────────────────────────────── */
+.product-nav {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 16px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.product-nav::-webkit-scrollbar { display: none; }
+.product-nav-btn {
+  font-size: 13px; font-weight: 500;
+  padding: 11px 16px;
+  color: var(--text-muted);
+  cursor: pointer;
+  border: none; background: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color .15s, border-color .15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.product-nav-btn:hover { color: var(--text); }
+.product-nav-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+/* ── App sections (top-level pages) ─────────────────────────────────────── */
+.app-section {
+  display: none;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+.app-section.active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Workspace section contains the existing split-panel layout */
+#section-workspace.active { flex-direction: column; }
+#section-workspace .main {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ── Design System Ops section ──────────────────────────────────────────── */
+.ds-ops-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.ds-ops-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ds-ops-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+.ds-ops-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+.ds-ops-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+.ds-ops-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: border-color .15s;
+}
+.ds-ops-card:hover { border-color: var(--text-dim); }
+.ds-ops-card-icon {
+  font-size: 20px;
+  color: var(--accent);
+  line-height: 1;
+}
+.ds-ops-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ds-ops-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+.ds-ops-card-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+.ds-ops-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ds-ops-btn {
+  font-size: 12px; font-weight: 500;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  white-space: nowrap;
+}
+.ds-ops-btn-primary {
+  background: rgba(47,129,247,.12);
+  color: var(--accent);
+  border-color: rgba(47,129,247,.35);
+}
+.ds-ops-btn-primary:hover { background: rgba(47,129,247,.22); }
+.ds-ops-btn-secondary {
+  background: var(--bg-input);
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+.ds-ops-btn-secondary:hover { color: var(--text); border-color: var(--text-muted); }
+
+/* ── Agent Sandbox section ──────────────────────────────────────────────── */
+.sandbox-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.sandbox-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 800px;
+}
+.sandbox-coming-soon {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.sandbox-coming-soon-icon {
+  font-size: 24px;
+  color: var(--purple);
+  line-height: 1;
+}
+.sandbox-coming-soon h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+.sandbox-coming-soon p {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+.sandbox-feature-list {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.8;
+  padding-left: 20px;
+  margin: 4px 0;
+}
+.sandbox-feature-list strong { color: var(--text); }
+.sandbox-use-workspace {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin: 0;
+}
+.sandbox-link-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0;
+  text-decoration: underline;
+  font-family: inherit;
+}
+.sandbox-link-btn:hover { color: #5b9cf0; }
+
+/* ── About section (top-level) ──────────────────────────────────────────── */
+#section-about .about-body {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 32px 40px;
+  overflow-y: auto;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .ds-ops-body,
+  .sandbox-body { padding: 24px 24px; }
+  #section-about .about-body { padding: 24px 24px; }
+  .ds-ops-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+  .product-nav { padding: 0 12px; }
+  .product-nav-btn { font-size: 12px; padding: 10px 10px; }
+  .ds-ops-body,
+  .sandbox-body { padding: 16px; }
+  #section-about .about-body { padding: 16px; }
+}
+
+/* ── DS Ops readiness panel (Phase 4) ───────────────────────────────────── */
+.ds-ops-readiness {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-panel);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ds-ops-readiness-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ds-ops-readiness-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+}
+.ds-ops-readiness-score {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.ds-ops-readiness-dismiss {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  transition: color .15s;
+}
+.ds-ops-readiness-dismiss:hover { color: var(--text-muted); }
+.ds-ops-readiness-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.ds-ops-readiness-badge.ready {
+  color: var(--green);
+  border-color: rgba(63,185,80,.4);
+  background: rgba(63,185,80,.08);
+}
+.ds-ops-readiness-badge.usable-with-warnings {
+  color: var(--orange);
+  border-color: rgba(210,153,34,.4);
+  background: rgba(210,153,34,.08);
+}
+.ds-ops-readiness-badge.insufficient {
+  color: var(--red);
+  border-color: rgba(248,81,73,.4);
+  background: rgba(248,81,73,.08);
+}
+.ds-ops-readiness-findings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ds-ops-readiness-finding {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.5;
+}
+.ds-ops-readiness-finding-icon { flex-shrink: 0; }
+.ds-ops-readiness-finding.critical .ds-ops-readiness-finding-icon { color: var(--red); }
+.ds-ops-readiness-finding.warning .ds-ops-readiness-finding-icon { color: var(--orange); }
+.ds-ops-readiness-finding.info    .ds-ops-readiness-finding-icon { color: var(--accent); }
+.ds-ops-readiness-next-steps {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+.ds-ops-readiness-next-steps strong { color: var(--text-muted); }
+
+/* ── DS Ops warnings panel (Phase 4) ─────────────────────────────────────── */
+.ds-ops-warnings-panel {
+  border: 1px solid rgba(210,153,34,.3);
+  border-radius: var(--radius);
+  background: rgba(210,153,34,.05);
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ds-ops-warnings-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ds-ops-warnings-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--orange);
+  flex: 1;
+}
+.ds-ops-warnings-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ds-ops-warnings-list li {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding-left: 14px;
+  position: relative;
+  line-height: 1.5;
+}
+.ds-ops-warnings-list li::before {
+  content: '•';
+  position: absolute;
+  left: 4px;
+  color: var(--orange);
+}
+.ds-ops-warnings-list li.info::before { color: var(--accent); }
+
+/* ── Agent Sandbox — Meet the Agents cards (Workstream C) ───────────────── */
+.sandbox-agents-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.sandbox-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.sandbox-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  flex: 1;
+}
+.sandbox-section-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+.sandbox-agent-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.sandbox-agent-cards-loading {
+  font-size: 12px;
+  color: var(--text-dim);
+  padding: 12px 0;
+}
+.sandbox-agent-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color .15s;
+}
+.sandbox-agent-card:hover { border-color: var(--text-dim); }
+.sandbox-agent-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sandbox-agent-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.sandbox-agent-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+}
+.sandbox-agent-tool-count {
+  font-size: 10px;
+  color: var(--text-dim);
+  background: var(--bg-input);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+.sandbox-agent-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+.sandbox-agent-tools {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.4;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: default;
+}
+@media (max-width: 700px) {
+  .sandbox-agent-cards { grid-template-columns: 1fr; }
+}

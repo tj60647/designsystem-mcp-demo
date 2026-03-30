@@ -147,6 +147,10 @@ export function initLoadJsonModal() {
       if (typeof window.notifyDataReloaded === "function") {
         window.notifyDataReloaded({ type: dataType, loaded: result.loaded });
       }
+      // Phase 4: surface readiness and warnings in DS Ops section
+      if (typeof window.notifyDsOpsResult === "function") {
+        window.notifyDsOpsResult(result);
+      }
     } catch (err) {
       alert("Network error: " + err.message);
     }

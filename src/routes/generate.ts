@@ -8,22 +8,21 @@
  * Accepts a public website URL, extracts CSS design context from it using
  * the website extractor, then calls the AI generator to produce a complete
  * design system JSON (tokens, components, themes, icons).  The result is
- * auto-loaded into the data store so MCP tools reflect it immediately.
+ * loaded via the shared ingest service so that normalization, validation,
+ * and baseline logging are consistent with manual JSON loads.
  */
 
 import express from "express";
 import { generateDesignSystem } from "../generator.js";
 import { extractWebsiteDesignContext, validateWebsiteUrl } from "../websiteExtractor.js";
-import { setData, type DataType } from "../dataStore.js";
+import { ingest } from "../ingestService.js";
 
 const router = express.Router();
-
-const VALID_TYPES: DataType[] = ["tokens", "components", "themes", "icons"];
 
 // ── POST /api/generate-from-website ──────────────────────────────────────
 // Body: { "url": "https://...", "model": "<optional override>" }
 // Fetches the website, extracts design context, generates a design system,
-// loads it into the data store, and returns the generated JSON.
+// processes it through the shared ingest service, and returns the result.
 // ─────────────────────────────────────────────────────────────────────────
 router.post("/generate-from-website", async (req, res) => {
   const apiKey = process.env.OPENROUTER_API_KEY;
@@ -54,15 +53,20 @@ router.post("/generate-from-website", async (req, res) => {
     const description = await extractWebsiteDesignContext(url.trim());
     const result      = await generateDesignSystem(description, apiKey, model);
 
-    for (const section of VALID_TYPES) {
-      if (result.data[section] !== undefined) {
-        setData(section, result.data[section]);
-      }
-    }
+    // Route through shared ingest service for consistent normalization,
+    // validation, logging, and structured warning output.
+    const ingestResult = await ingest(
+      "generate-from-website",
+      "design-system",
+      result.data as Record<string, unknown>,
+    );
 
     res.json({
       generatedDesignSystem: result.data,
-      warnings: result.warnings,
+      warnings: [...(result.warnings ?? []), ...ingestResult.warnings],
+      loaded: ingestResult.loaded,
+      normalizationSummary: ingestResult.normalizationSummary,
+      readiness: ingestResult.readiness,
     });
   } catch (err) {
     if (!res.headersSent) {

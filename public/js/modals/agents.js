@@ -6,7 +6,6 @@ export function initAgentsModal() {
   const closeBtn  = document.getElementById("agents-modal-close");
   const cancelBtn = document.getElementById("agents-modal-cancel");
   const openBtn   = document.getElementById("view-agents-btn");
-  const lobbyTabs = overlay.querySelectorAll(".agents-lobby-tab");
 
   let allAgents = [];
   let modelMeta = { model: "", modelSource: "" };
@@ -14,69 +13,10 @@ export function initAgentsModal() {
   let settings = null;
   let lobbyFilter = "";
   let lobbyDensity = "detailed";
-  let activeTab = "lobby";
   const LOBBY_DENSITY_KEY = "designsystem-mcp-demo.lobby-density";
 
   // Colour token per agent index — matches diagram node colours
   const ROLE_COLORS = ["purple", "accent", "orange", "green", "red"];
-
-  // ── System Diagram ─────────────────────────────────────────────────────
-  function renderDiagram() {
-    modalBody.innerHTML = `
-    <div class="diagram-wrap">
-      <div class="diagram">
-        <div class="diag-row">
-          <div class="diag-node accent">User Input</div>
-        </div>
-        <div class="diag-arrow-down">↓</div>
-        <div class="diag-label">POST /api/chat  { messages[] }</div>
-        <div class="diag-row">
-          <div class="diag-node accent">Chat API  <small style="opacity:.7;font-weight:400">/api/chat</small></div>
-        </div>
-        <div class="diag-arrow-down">↓</div>
-        <div class="diag-label">last user message</div>
-        <div class="diag-row">
-          <div class="diag-node purple">Orchestrator Agent<br><small style="opacity:.7;font-weight:400">classify intent — 1 LLM call</small></div>
-        </div>
-        <div class="diag-arrow-down">↓</div>
-        <div class="diag-label">delegate_to_agent("reader" | "builder" | "generator")</div>
-        <div class="diag-row" style="gap:10px;align-items:stretch">
-          <div class="diag-node accent" style="font-size:11px;flex:1;text-align:center">
-            Design System<br>Reader<br><small style="opacity:.7;font-weight:400">up to 5 iters</small>
-          </div>
-          <div class="diag-node orange" style="font-size:11px;flex:1;text-align:center">
-            Component<br>Builder<br><small style="opacity:.7;font-weight:400">up to 6 iters</small>
-          </div>
-          <div class="diag-node green" style="font-size:11px;flex:1;text-align:center">
-            System<br>Generator<br><small style="opacity:.7;font-weight:400">up to 8 iters</small>
-          </div>
-        </div>
-        <div class="diag-arrow-down">↓</div>
-        <div class="diag-label">tool calls (per-agent subset)</div>
-        <div class="diag-row" style="gap:32px">
-          <div class="diag-node orange" style="font-size:11px">MCP Tool Calls<br><small style="opacity:.7;font-weight:400">runMcpTool()</small></div>
-          <div class="diag-arrow" style="align-self:center">↺</div>
-          <div class="diag-node" style="font-size:11px">agentic<br>loop</div>
-        </div>
-        <div class="diag-arrow-down">↓</div>
-        <div class="diag-label">JSON { "message":"…", "preview":"…html…" }</div>
-        <div class="diag-row">
-          <div class="diag-node green">✓ parseChatResponse()</div>
-        </div>
-        <div class="diag-arrow-down">↓</div>
-        <div class="diag-split">
-          <div class="diag-branch">
-            <div class="diag-node accent" style="font-size:11px">message<br><small style="opacity:.7;font-weight:400">Chat bubble</small></div>
-          </div>
-          <div class="diag-branch">
-            <div class="diag-node green" style="font-size:11px">preview<br><small style="opacity:.7;font-weight:400">Live Preview iframe</small></div>
-            <div class="diag-arrow-down">↓</div>
-            <div class="diag-node" style="font-size:11px">Show Code ⟷ Show Preview toggle</div>
-          </div>
-        </div>
-      </div>
-    </div>`;
-  }
 
   // ── Agent Lobby ────────────────────────────────────────────────────────
   function buildToolCards(tools) {
@@ -269,15 +209,7 @@ export function initAgentsModal() {
   }
 
   // ── Tab switching ──────────────────────────────────────────────────────
-  function switchTab(tab) {
-    activeTab = tab;
-    lobbyTabs.forEach(t => {
-      t.classList.toggle("active", t.dataset.tab === tab);
-      t.setAttribute("aria-selected", String(t.dataset.tab === tab));
-    });
-    if (tab === "diagram") renderDiagram();
-    else if (allAgents.length > 0) renderLobby();
-  }
+  // (No tabs in the modal; the System Diagram is now a top-level section.)
 
   // ── Open / close ───────────────────────────────────────────────────────
   async function openModal() {
@@ -307,7 +239,7 @@ export function initAgentsModal() {
         model: typeof data.model === "string" ? data.model : "",
         modelSource: typeof data.modelSource === "string" ? data.modelSource : "",
       };
-      switchTab(activeTab);
+      renderLobby();
     } catch (err) {
       modalBody.innerHTML = `<div class="agents-loading">Could not load agent info: ${escapeHtml(err.message)}</div>`;
     }
@@ -315,7 +247,6 @@ export function initAgentsModal() {
 
   function closeModal() { overlay.classList.remove("open"); }
 
-  lobbyTabs.forEach(t => t.addEventListener("click", () => switchTab(t.dataset.tab)));
   openBtn.addEventListener("click", openModal);
   closeBtn.addEventListener("click", closeModal);
   cancelBtn.addEventListener("click", closeModal);

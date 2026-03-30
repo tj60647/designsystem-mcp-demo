@@ -111,10 +111,6 @@ const dsOpsViewSchemaBtn = document.getElementById('ds-ops-view-schema-btn');
 if (dsOpsViewSchemaBtn) {
   dsOpsViewSchemaBtn.addEventListener('click', () => document.getElementById('view-schema-btn')?.click());
 }
-const dsOpsViewAgentsBtn = document.getElementById('ds-ops-view-agents-btn');
-if (dsOpsViewAgentsBtn) {
-  dsOpsViewAgentsBtn.addEventListener('click', () => document.getElementById('view-agents-btn')?.click());
-}
 const dsOpsResetBtn = document.getElementById('ds-ops-reset-btn');
 if (dsOpsResetBtn) {
   dsOpsResetBtn.addEventListener('click', () => document.getElementById('reset-btn')?.click());

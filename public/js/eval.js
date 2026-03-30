@@ -105,10 +105,62 @@ function renderTestDetail(test, st) {
       <span class="tl-check-detail">${escapeHtml(c.detail ?? '')}</span>
     </div>`
   ).join('');
-  const msg = st.result?.message ?? '';
+
+  const result = st.result ?? {};
+  const msg = result.message ?? '';
+  const traceEvents = result.traceEvents ?? [];
+
+  // Build trace steps from intermediate SSE events
+  const eventSteps = traceEvents.map(ev => {
+    if (ev.type === 'agent_routed') {
+      return `<div class="eval-pl-trace-step">
+        <div class="eval-pl-step-type type-agent">ROUTED → ${escapeHtml(ev.agent ?? '')}</div>
+        ${ev.reason ? `<div class="eval-pl-step-content">${escapeHtml(ev.reason)}</div>` : ''}
+      </div>`;
+    }
+    if (ev.type === 'tool_call') {
+      return `<div class="eval-pl-trace-step">
+        <div class="eval-pl-step-type type-tool">TOOL CALL — ${escapeHtml(ev.tool ?? '')}</div>
+        ${ev.args != null ? `<div class="eval-pl-step-content"><pre class="tl-trace-pre">${escapeHtml(JSON.stringify(ev.args, null, 2).slice(0, 1000))}${JSON.stringify(ev.args).length > 1000 ? '\n…' : ''}</pre></div>` : ''}
+      </div>`;
+    }
+    if (ev.type === 'tool_result') {
+      return `<div class="eval-pl-trace-step">
+        <div class="eval-pl-step-type type-result">TOOL RESULT — ${escapeHtml(ev.tool ?? '')}</div>
+        <div class="eval-pl-step-content">${escapeHtml(`${ev.chars ?? '?'} chars`)}${ev.preview ? ` · ${escapeHtml(ev.preview)}` : ''}</div>
+      </div>`;
+    }
+    if (ev.type === 'progress') {
+      return `<div class="eval-pl-trace-step">
+        <div class="eval-pl-step-type type-agent">PROGRESS</div>
+        <div class="eval-pl-step-content">${escapeHtml(ev.message ?? '')}</div>
+      </div>`;
+    }
+    return '';
+  }).join('');
+
+  const traceHtml = `
+    <div class="eval-pl-trace tl-trace">
+      <div class="eval-pl-trace-header">
+        <span>Trace</span>
+        <span class="tl-trace-prompt-label">Prompt sent to /api/chat</span>
+      </div>
+      <div class="eval-pl-trace-body">
+        <div class="eval-pl-trace-step">
+          <div class="eval-pl-step-type type-agent">REQUEST</div>
+          <div class="eval-pl-step-content">${escapeHtml(test.prompt)}</div>
+        </div>
+        ${eventSteps}
+        ${msg ? `<div class="eval-pl-trace-step">
+          <div class="eval-pl-step-type type-result">RESPONSE</div>
+          <div class="eval-pl-step-content tl-trace-response">${escapeHtml(msg)}</div>
+        </div>` : ''}
+      </div>
+    </div>`;
+
   return `<div class="tl-test-detail">
     <div class="tl-check-list">${checks}</div>
-    ${msg ? `<div class="tl-response-snippet">${escapeHtml(msg.slice(0, 200))}${msg.length > 200 ? '…' : ''}</div>` : ''}
+    ${traceHtml}
   </div>`;
 }
 

@@ -196,6 +196,27 @@
   flex: 1; overflow-y: auto;
 }
 
+/* ── Test Suite trace block ───────────────────────────────────────────────── */
+.tl-trace {
+  margin-top: 8px;
+  font-size: 12px;
+}
+.tl-trace .eval-pl-trace-header {
+  display: flex; align-items: center; gap: 8px;
+}
+.tl-trace-prompt-label {
+  font-size: 10px; color: var(--text-dim); font-weight: 400; margin-left: auto;
+  font-style: italic;
+}
+.tl-trace-response {
+  max-height: 140px; overflow-y: auto;
+}
+.tl-trace-pre {
+  margin: 0; font-size: 11px; overflow-x: auto;
+  white-space: pre-wrap; word-break: break-word;
+  max-height: 120px; overflow-y: auto;
+}
+
 /* ── Tool Explorer section ────────────────────────────────────────────────── */
 .eval-tools-layout {
   display: flex; gap: 0; flex: 1; overflow: hidden;

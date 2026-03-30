@@ -374,12 +374,6 @@
 }
 .drop-zone-file-btn:hover { color: var(--text); border-color: var(--text-muted); }
 
-/* ── Test Lab modal ── */
-.testlab-modal { width: 860px; max-height: calc(100vh - 60px); }
-.testlab-modal-body {
-  flex: 1; overflow-y: auto; min-height: 240px; max-height: 65vh;
-}
-
 /* Suite toolbar */
 .tl-suite-toolbar {
   padding: 0; border-bottom: 1px solid var(--border-soft);
@@ -576,7 +570,6 @@
   .modal-header { flex-wrap: wrap; gap: 8px; }
   .agents-lobby-tabs { margin-left: 0; width: 100%; }
   .agents-modal { width: calc(100vw - 32px); }
-  .testlab-modal { width: calc(100vw - 32px); }
   .schema-modal { width: calc(100vw - 32px); }
   .lobby-controls-grid,
   .lobby-controls-grid-agent { grid-template-columns: 1fr; }

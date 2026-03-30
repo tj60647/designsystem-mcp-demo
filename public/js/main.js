@@ -12,6 +12,7 @@ import { initValidationModal } from './modals/validation.js';
 import { initAgentsModal } from './modals/agents.js';
 import { initGenerateFromWebsiteModal } from './modals/generate-from-website.js';
 import { initDsOpsPanel, notifyDsOpsResult } from './dsOps.js';
+import { initSandbox } from './sandbox.js';
 
 // ── Product-level section navigation ─────────────────────────────────────
 // Manages top-level sections: Workspace, Design System Ops, Agent Sandbox, About.
@@ -102,6 +103,7 @@ initGenerateFromWebsiteModal();
 initRightTabs();
 initProductNav();
 initDsOpsPanel();
+initSandbox();
 
 // Wire DS Ops card buttons to hidden trigger buttons (attached by modal modules)
 const dsOpsLoadJsonBtn = document.getElementById('ds-ops-load-json-btn');
@@ -137,7 +139,9 @@ if (topbarDownloadBtn && dsOpsDownloadBtn) {
   const syncDownloadVisibility = () => {
     dsOpsDownloadBtn.style.display = topbarDownloadBtn.style.display;
   };
-  new MutationObserver(syncDownloadVisibility).observe(topbarDownloadBtn, {
+  // Store at module level so the observer isn't garbage collected
+  const _downloadSyncObserver = new MutationObserver(syncDownloadVisibility);
+  _downloadSyncObserver.observe(topbarDownloadBtn, {
     attributes: true,
     attributeFilter: ['style'],
   });

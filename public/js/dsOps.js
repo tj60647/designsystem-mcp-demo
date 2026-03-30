@@ -6,6 +6,8 @@
  * load-json modal and generate-from-website modal via notifyDsOpsResult().
  */
 
+import { escapeHtml } from './utils.js';
+
 const READINESS_LABELS = {
   "ready": "Ready",
   "usable-with-warnings": "Usable — with warnings",
@@ -118,14 +120,6 @@ function renderWarnings(warnings, normSummary) {
     titleEl.textContent = warnCount > 0 ? `${warnCount} warning(s) noted` : "Normalization notes";
   }
   panel.style.display = hasContent ? "" : "none";
-}
-
-function escapeHtml(str) {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }
 
 export function initDsOpsPanel() {

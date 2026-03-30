@@ -1061,3 +1061,95 @@
   color: var(--orange);
 }
 .ds-ops-warnings-list li.info::before { color: var(--accent); }
+
+/* ── Agent Sandbox — Meet the Agents cards (Workstream C) ───────────────── */
+.sandbox-agents-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.sandbox-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.sandbox-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  flex: 1;
+}
+.sandbox-section-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+.sandbox-agent-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.sandbox-agent-cards-loading {
+  font-size: 12px;
+  color: var(--text-dim);
+  padding: 12px 0;
+}
+.sandbox-agent-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color .15s;
+}
+.sandbox-agent-card:hover { border-color: var(--text-dim); }
+.sandbox-agent-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sandbox-agent-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.sandbox-agent-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+}
+.sandbox-agent-tool-count {
+  font-size: 10px;
+  color: var(--text-dim);
+  background: var(--bg-input);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+.sandbox-agent-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+.sandbox-agent-tools {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.4;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: default;
+}
+@media (max-width: 700px) {
+  .sandbox-agent-cards { grid-template-columns: 1fr; }
+}

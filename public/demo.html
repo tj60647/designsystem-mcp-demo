@@ -48,11 +48,11 @@
 <!-- Hidden trigger buttons for modal wiring (not visible in UI) -->
 <!-- Modal JS modules attach click handlers to these IDs; DS Ops section clicks them programmatically -->
 <div aria-hidden="true" style="display:none">
-  <button id="load-json-btn">Load JSON</button>
-  <button id="gen-from-web-btn">Generate from Website</button>
-  <button id="view-schema-btn">View Schema</button>
-  <button id="view-agents-btn">View Agents</button>
-  <button id="reset-btn">Reset</button>
+  <button id="load-json-btn" tabindex="-1">Load JSON</button>
+  <button id="gen-from-web-btn" tabindex="-1">Generate from Website</button>
+  <button id="view-schema-btn" tabindex="-1">View Schema</button>
+  <button id="view-agents-btn" tabindex="-1">View Agents</button>
+  <button id="reset-btn" tabindex="-1">Reset</button>
 </div>
 
 <!-- Load JSON modal -->
@@ -425,14 +425,27 @@
 
     <div class="ds-ops-header">
       <h1 class="ds-ops-title">Agent Sandbox</h1>
-      <p class="ds-ops-subtitle">Understand how the AI agents behave — inspect tool calls, trace reasoning, and evaluate design system grounding. Built for transparency, not engineering metrics.</p>
+      <p class="ds-ops-subtitle">Understand how the AI agents behave — inspect their roles, tool access, and decision-making. Built for transparency, not engineering metrics.</p>
     </div>
 
     <div class="sandbox-content">
 
+      <!-- Meet the Agents (Workstream C) — loaded dynamically by sandbox.js -->
+      <div class="sandbox-agents-section">
+        <div class="sandbox-section-header">
+          <h2 class="sandbox-section-title">Meet the Agents</h2>
+          <button class="ds-ops-btn ds-ops-btn-secondary" id="sandbox-view-full-agents-btn">Full agent config ↗</button>
+        </div>
+        <p class="sandbox-section-desc">This demo uses a multi-agent architecture. Each message is routed by an Orchestrator to the appropriate specialist agent. Agents call MCP tools to look up real design system data before responding.</p>
+        <div id="sandbox-agent-cards" class="sandbox-agent-cards" aria-live="polite">
+          <div class="sandbox-agent-cards-loading">Loading agent information…</div>
+        </div>
+      </div>
+
+      <!-- How MCP grounding works -->
       <div class="about-section-block">
-        <h3>What MCP is</h3>
-        <p>The <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener noreferrer">Model Context Protocol</a> is an open standard for giving AI tools structured access to external data. Think of it like an API designed specifically for AI agents — one server, any compatible client, no custom adapters per platform.</p>
+        <h3>How MCP grounding works</h3>
+        <p>The <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener noreferrer">Model Context Protocol</a> is an open standard for giving AI tools structured access to external data. Agents call MCP tools to fetch exactly what they need — no hallucination, no stale docs, no guessing.</p>
         <table class="about-table" style="margin-top:10px">
           <thead><tr><th>Without MCP</th><th>With MCP</th></tr></thead>
           <tbody>
@@ -445,16 +458,15 @@
         </table>
       </div>
 
+      <!-- Coming soon: scenario execution & trace -->
       <div class="sandbox-coming-soon">
         <div class="sandbox-coming-soon-icon">⬡</div>
-        <h3>Epistemic evaluation coming soon</h3>
-        <p>The Agent Sandbox will let you run scenarios against the live agents and inspect their behavior in user-centered terms — not engineering harness metrics.</p>
+        <h3>Scenario execution &amp; tool-call trace — coming soon</h3>
+        <p>The Agent Sandbox will let you run scenarios and inspect live agent behavior in user-centered terms.</p>
         <ul class="sandbox-feature-list">
-          <li><strong>Meet the Agents</strong> — understand each agent’s role, tools, and decision-making model</li>
           <li><strong>Scenario execution</strong> — run predefined or custom prompts and see exactly how each agent responds</li>
           <li><strong>Tool-call trace transparency</strong> — step through every MCP tool call with inputs, outputs, and timing</li>
           <li><strong>Confidence &amp; uncertainty signals</strong> — see where the agent is certain vs. where it is guessing</li>
-          <li><strong>Model &amp; protocol explanation</strong> — understand grounding, context, and how MCP shapes AI behavior</li>
         </ul>
         <p class="sandbox-use-workspace">In the meantime, the <strong>MCP Tools</strong> panel in <button class="sandbox-link-btn" id="sandbox-goto-workspace">Workspace</button> shows live tool calls for every chat message you send.</p>
       </div>

@@ -331,3 +331,167 @@ Ship-ready checklist:
 4. Add warning object schema and UI rendering for warnings.
 5. Add three initial fixtures: canonical, website sparse, figma-like.
 6. Define and implement readiness rubric with explicit thresholds.
+
+---
+
+## IA Refactor Workplan (Implementation-Ready)
+
+The IA definition is only the destination. This section defines what must change in code and UI to get there safely.
+
+### Target Product Navigation
+
+1. Workspace
+2. Design System Ops
+3. Agent Sandbox
+4. About
+
+### Current State to Refactor
+
+Current UI behavior places operational actions in topbar buttons and sends advanced agent evaluation to a separate Eval Lab page.
+
+Key touchpoints:
+1. Topbar and tab shell: public/demo.html
+2. Right-panel tab behavior: public/js/tabs.js
+3. App boot wiring and reload hooks: public/js/main.js
+4. Current eval-oriented surface: public/eval.html and public/js/eval.js
+
+### Workstream A - Navigation and Layout Separation
+
+Objective:
+1. Move from control/button-centric navigation to section-centric navigation.
+
+Implementation:
+1. Add explicit product-level nav for Workspace, Design System Ops, Agent Sandbox, About.
+2. Keep existing Workspace internals (Chat, Preview, Explorer, Gallery) grouped under Workspace.
+3. Move operational controls (Load JSON, Generate from Website, View Schema, Reset, Export) into the Design System Ops section.
+4. Keep About focused on product purpose and onboarding only.
+
+Reasoning:
+1. Reduces cognitive load and prevents operational tasks from competing with core build flows.
+
+Acceptance criteria:
+1. Users can identify and enter each major section in one click.
+2. Topbar is no longer overloaded with data lifecycle actions.
+
+### Workstream B - Design System Ops Surface
+
+Objective:
+1. Create one cohesive UI surface for JSON lifecycle management.
+
+Implementation:
+1. Build a Design System Ops panel/page with grouped subsections:
+	1. Import
+	2. Generate
+	3. Validate and readiness
+	4. Normalize summary
+	5. Export and reset
+2. Reuse existing modal logic initially, then progressively inline into panel workflows.
+3. Display readiness status and key findings after every load/generation success.
+4. Preserve backend endpoint usage while migrating UI presentation.
+
+Reasoning:
+1. Data trust, consistency, and lifecycle state must be visible where data operations happen.
+
+Acceptance criteria:
+1. All JSON lifecycle actions are discoverable in Design System Ops without relying on topbar buttons.
+2. Every successful operation shows readiness and warning outcomes.
+
+### Workstream C - Agent Sandbox (Epistemic, User-Facing)
+
+Objective:
+1. Make agent behavior understandable in user-centered terms.
+
+Implementation:
+1. Position Agent Sandbox as product-facing evaluation, not engineering QA.
+2. Include:
+	1. Meet the Agents
+	2. Scenario execution
+	3. Tool-call trace transparency
+	4. Confidence and uncertainty signals
+	5. Model and protocol explanation in the sandbox context
+3. Keep framing grounded in behavioral outcomes and user goals.
+
+Reasoning:
+1. Trust and transparency come from behavior evidence, not internal harness metrics.
+
+Acceptance criteria:
+1. Users can answer what each agent is doing and why.
+2. Users can inspect behavior evidence without seeing engineering-only controls.
+
+### Workstream D - Developer Surface Separation
+
+Objective:
+1. Keep engineering test concerns out of product IA.
+
+Implementation:
+1. Treat app test automation (Jest/Playwright) as developer workflow only.
+2. Treat mechanistic harness metrics and feasibility testing as engineering/CI artifacts.
+3. Keep Eval Lab internals either:
+	1. internal/dev-only, or
+	2. split so only epistemic sections are product-facing.
+
+Reasoning:
+1. Mixed audiences in one surface weaken both usability and engineering rigor.
+
+Acceptance criteria:
+1. Product UI contains epistemic evaluation only.
+2. Engineering regression and feasibility tooling remains dev-facing.
+
+### Workstream E - Routing and State Boundaries
+
+Objective:
+1. Ensure section transitions do not create hidden state coupling.
+
+Implementation:
+1. Introduce explicit section state model in front-end shell.
+2. Keep data reload hooks centralized and section-aware.
+3. Confirm Explorer/Gallery refresh logic remains correct when actions are initiated from Design System Ops.
+
+Reasoning:
+1. IA refactors fail when navigation changes but state boundaries remain implicit.
+
+Acceptance criteria:
+1. Switching sections does not lose or corrupt active session data.
+2. Data updates propagate to dependent panels deterministically.
+
+### Workstream F - Content Strategy
+
+Objective:
+1. Align section language to user intent.
+
+Implementation:
+1. About content: app purpose and workflows only.
+2. Agent Sandbox content: how agents behave and how grounding works.
+3. Design System Ops content: lifecycle and data quality guidance.
+
+Reasoning:
+1. Clear content boundaries reduce user confusion and improve trust.
+
+Acceptance criteria:
+1. No model/protocol deep explanation in About.
+2. Model/protocol explanation appears in Agent Sandbox where behavior is evaluated.
+
+### Recommended Sequence
+
+1. Implement Workstream A (navigation shell).
+2. Implement Workstream B (Ops section) with existing modal logic reused.
+3. Implement Workstream C (Agent Sandbox framing and surfaces).
+4. Implement Workstream D (dev/product separation for evaluation internals).
+5. Implement Workstream E (state hardening) and F (content pass).
+
+### Delivery Milestones
+
+Milestone 1:
+1. New top-level nav present with placeholder sections wired.
+
+Milestone 2:
+1. Design System Ops functional parity with existing topbar/modal operations.
+
+Milestone 3:
+1. Agent Sandbox exposes epistemic evaluation workflows and transparency artifacts.
+
+Milestone 4:
+1. Developer-only testing/harness concerns removed from product IA.
+
+Milestone 5:
+1. Final QA pass for state transitions, data reload correctness, and content boundaries.

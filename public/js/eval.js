@@ -52,6 +52,7 @@ let suiteTypeFilter  = 'all';
 let suiteRunning     = false;
 let suiteStopFlag    = false;
 let suiteInited      = false;
+let suiteConcurrency = 4;
 
 const AGENT_COLORS = {
   orchestrator:  'purple', reader: 'accent', builder: 'orange',
@@ -229,10 +230,19 @@ async function runAll() {
   suiteRunning = true;
   suiteStopFlag = false;
   renderSuiteToolbar();
-  for (const test of tests) {
-    if (suiteStopFlag) break;
-    await runSingleTest(test.id);
+  const workerCount = Math.max(1, Math.min(suiteConcurrency, tests.length || 1));
+  let cursor = 0;
+
+  async function worker() {
+    while (!suiteStopFlag) {
+      const idx = cursor;
+      cursor += 1;
+      if (idx >= tests.length) break;
+      await runSingleTest(tests[idx].id);
+    }
   }
+
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
   suiteRunning = false;
   renderSuiteToolbar();
 }
@@ -261,11 +271,26 @@ function renderSuiteToolbar() {
   const wrap = document.getElementById('eval-section-suite');
   const actionsEl = wrap?.querySelector('.eval-suite-actions');
   if (!actionsEl) return;
+
+  const concurrencyOptions = [1, 2, 3, 4, 6, 8]
+    .map(n => `<option value="${n}"${suiteConcurrency === n ? ' selected' : ''}>${n}</option>`)
+    .join('');
+
+  const concurrencyControl = `<label class="tl-concurrency-label" title="How many tests to run in parallel">
+    Parallel
+    <select id="eval-suite-concurrency" class="tl-concurrency-select" ${suiteRunning ? 'disabled' : ''}>${concurrencyOptions}</select>
+  </label>`;
+
   actionsEl.innerHTML = suiteRunning
-    ? `<button class="eval-btn" id="eval-stop-all">⏹ Stop</button>`
-    : `<button class="eval-btn eval-btn-green" id="eval-run-all">▶ Run (${filteredTests().length})</button>`;
+    ? `${concurrencyControl}<button class="eval-btn" id="eval-stop-all">⏹ Stop</button>`
+    : `${concurrencyControl}<button class="eval-btn eval-btn-green" id="eval-run-all">▶ Run (${filteredTests().length})</button>`;
   actionsEl.innerHTML += `<button class="eval-btn" id="eval-clear-results">Clear</button>
     <button class="eval-btn" id="eval-export-results">⬇ Export JSON</button>`;
+
+  wrap.querySelector('#eval-suite-concurrency')?.addEventListener('change', (e) => {
+    const next = Number(e.target.value);
+    if (Number.isFinite(next) && next >= 1) suiteConcurrency = next;
+  });
   wrap.querySelector('#eval-run-all')?.addEventListener('click', runAll);
   wrap.querySelector('#eval-stop-all')?.addEventListener('click', () => { suiteStopFlag = true; });
   wrap.querySelector('#eval-clear-results')?.addEventListener('click', () => {
@@ -349,13 +374,7 @@ function initSuiteSection() {
       <div class="eval-suite-filter-group">${agentBtns}</div>
       <div class="eval-suite-divider"></div>
       <div class="eval-suite-filter-group">${typeBtns}</div>
-      <div class="eval-suite-actions">
-        ${suiteRunning
-          ? `<button class="eval-btn" id="eval-stop-all">⏹ Stop</button>`
-          : `<button class="eval-btn eval-btn-green" id="eval-run-all">▶ Run (${tests.length})</button>`}
-        <button class="eval-btn" id="eval-clear-results">Clear</button>
-        <button class="eval-btn" id="eval-export-results">⬇ Export JSON</button>
-      </div>
+      <div class="eval-suite-actions"></div>
     </div>
     <div class="eval-test-list-wrap">
       <div class="tl-test-list">${rows}</div>
@@ -369,18 +388,12 @@ function initSuiteSection() {
   wrap.querySelectorAll('.tl-filter-tab[data-type]').forEach(btn => {
     btn.addEventListener('click', () => { suiteTypeFilter = btn.dataset.type; initSuiteSection(); });
   });
-  // Wire run/stop/clear/export
-  wrap.querySelector('#eval-run-all')?.addEventListener('click', runAll);
-  wrap.querySelector('#eval-stop-all')?.addEventListener('click', () => { suiteStopFlag = true; });
-  wrap.querySelector('#eval-clear-results')?.addEventListener('click', () => {
-    Object.keys(suiteState).forEach(k => delete suiteState[k]);
-    initSuiteSection();
-  });
-  wrap.querySelector('#eval-export-results')?.addEventListener('click', exportResults);
   // Wire per-test run buttons
   wrap.querySelectorAll('.tl-run-btn[data-run]').forEach(btn => {
     btn.addEventListener('click', () => runSingleTest(Number(btn.dataset.run)));
   });
+
+  renderSuiteToolbar();
 
   suiteInited = true;
 }

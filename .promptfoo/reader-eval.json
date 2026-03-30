@@ -1,0 +1,792 @@
+{
+  "evalId": "eval-xoU-2026-03-30T04:10:13",
+  "results": {
+    "version": 3,
+    "timestamp": "2026-03-30T04:10:13.061Z",
+    "prompts": [
+      {
+        "id": "21e536caf6f2870857967c9a82beb9093b792433e6d1deef3661148f3e61785b",
+        "raw": "{{message}}",
+        "label": "{{message}}",
+        "provider": "designsystem-chat",
+        "metrics": {
+          "score": 3.5,
+          "testPassCount": 3,
+          "testFailCount": 1,
+          "testErrorCount": 0,
+          "assertPassCount": 7,
+          "assertFailCount": 1,
+          "totalLatencyMs": 127,
+          "tokenUsage": {
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "total": 0,
+            "numRequests": 4,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0
+              }
+            }
+          },
+          "namedScores": {},
+          "namedScoresCount": {},
+          "cost": 0
+        }
+      }
+    ],
+    "results": [
+      {
+        "cost": 0,
+        "error": "Custom function threw error: Custom function must return a boolean, number, or GradingResult object. Got type undefined: undefined\nStack Trace: Error: Custom function must return a boolean, number, or GradingResult object. Got type undefined: undefined\n    at validateResult (file:///C:/Users/tj/AppData/Local/npm-cache/_npx/1ddbeaccabfe00a4/node_modules/promptfoo/dist/src/evaluator-BcvOGaam.js:1311:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async handleJavascript (file:///C:/Users/tj/AppData/Local/npm-cache/_npx/1ddbeaccabfe00a4/node_modules/promptfoo/dist/src/evaluator-BcvOGaam.js:1343:13)\n    at async runAssertion (file:///C:/Users/tj/AppData/Local/npm-cache/_npx/1ddbeaccabfe00a4/node_modules/promptfoo/dist/src/evaluator-BcvOGaam.js:3557:18)\n    at async file:///C:/Users/tj/AppData/Local/npm-cache/_npx/1ddbeaccabfe00a4/node_modules/promptfoo/dist/src/evaluator-BcvOGaam.js:3608:18\n['get_token', 'get_tokens', 'list_token_categories']\n  .some(t => output.toolCallsUsed.includes(t))",
+        "gradingResult": {
+          "pass": false,
+          "score": 0.5,
+          "reason": "Custom function threw error: Custom function must return a boolean, number, or GradingResult object. Got type undefined: undefined\nStack Trace: Error: Custom function must return a boolean, number, or GradingResult object. Got type undefined: undefined\n    at validateResult (file:///C:/Users/tj/AppData/Local/npm-cache/_npx/1ddbeaccabfe00a4/node_modules/promptfoo/dist/src/evaluator-BcvOGaam.js:1311:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async handleJavascript (file:///C:/Users/tj/AppData/Local/npm-cache/_npx/1ddbeaccabfe00a4/node_modules/promptfoo/dist/src/evaluator-BcvOGaam.js:1343:13)\n    at async runAssertion (file:///C:/Users/tj/AppData/Local/npm-cache/_npx/1ddbeaccabfe00a4/node_modules/promptfoo/dist/src/evaluator-BcvOGaam.js:3557:18)\n    at async file:///C:/Users/tj/AppData/Local/npm-cache/_npx/1ddbeaccabfe00a4/node_modules/promptfoo/dist/src/evaluator-BcvOGaam.js:3608:18\n['get_token', 'get_tokens', 'list_token_categories']\n  .some(t => output.toolCallsUsed.includes(t))",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "output.routedAgent === 'reader'"
+              }
+            },
+            {
+              "pass": false,
+              "score": 0,
+              "reason": "Custom function threw error: Custom function must return a boolean, number, or GradingResult object. Got type undefined: undefined\nStack Trace: Error: Custom function must return a boolean, number, or GradingResult object. Got type undefined: undefined\n    at validateResult (file:///C:/Users/tj/AppData/Local/npm-cache/_npx/1ddbeaccabfe00a4/node_modules/promptfoo/dist/src/evaluator-BcvOGaam.js:1311:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async handleJavascript (file:///C:/Users/tj/AppData/Local/npm-cache/_npx/1ddbeaccabfe00a4/node_modules/promptfoo/dist/src/evaluator-BcvOGaam.js:1343:13)\n    at async runAssertion (file:///C:/Users/tj/AppData/Local/npm-cache/_npx/1ddbeaccabfe00a4/node_modules/promptfoo/dist/src/evaluator-BcvOGaam.js:3557:18)\n    at async file:///C:/Users/tj/AppData/Local/npm-cache/_npx/1ddbeaccabfe00a4/node_modules/promptfoo/dist/src/evaluator-BcvOGaam.js:3608:18\n['get_token', 'get_tokens', 'list_token_categories']\n  .some(t => output.toolCallsUsed.includes(t))",
+              "assertion": {
+                "type": "javascript",
+                "value": "['get_token', 'get_tokens', 'list_token_categories']\n  .some(t => output.toolCallsUsed.includes(t))\n"
+              }
+            }
+          ]
+        },
+        "id": "d30ad3ae-08ef-4300-b406-93f5ca883073",
+        "latencyMs": 21,
+        "namedScores": {},
+        "prompt": {
+          "raw": "What is the value of the color.primary.600 token?",
+          "label": "{{message}}",
+          "config": {
+            "timeout": 120000
+          }
+        },
+        "promptId": "21e536caf6f2870857967c9a82beb9093b792433e6d1deef3661148f3e61785b",
+        "promptIdx": 0,
+        "provider": {
+          "id": "designsystem-chat",
+          "label": ""
+        },
+        "response": {
+          "output": {
+            "type": "done",
+            "message": "The value of the color.primary.600 token is #2563eb.",
+            "preview": null,
+            "metadata": {
+              "agent": "reader"
+            },
+            "schemaVersion": "1.0",
+            "model": "openai/gpt-oss-20b",
+            "routedAgent": "reader",
+            "toolCallsUsed": [
+              "get_token"
+            ],
+            "thinkingSteps": [
+              {
+                "type": "tool_call",
+                "tool": "get_token",
+                "args": "{\"tokenPath\":\"color.primary.600\"}"
+              }
+            ],
+            "usage": {
+              "promptTokens": 4625,
+              "completionTokens": 252,
+              "totalTokens": 4877,
+              "cost": 0.00017402999999999999,
+              "cachedTokens": 0,
+              "cacheWriteTokens": 0,
+              "reasoningTokens": 157
+            },
+            "fromCache": true
+          }
+        },
+        "score": 0.5,
+        "success": false,
+        "testCase": {
+          "description": "Reader calls a token tool for a color query",
+          "vars": {
+            "message": "What is the value of the color.primary.600 token?"
+          },
+          "assert": [
+            {
+              "type": "javascript",
+              "value": "output.routedAgent === 'reader'"
+            },
+            {
+              "type": "javascript",
+              "value": "['get_token', 'get_tokens', 'list_token_categories']\n  .some(t => output.toolCallsUsed.includes(t))\n"
+            }
+          ],
+          "options": {
+            "timeout": 120000
+          },
+          "metadata": {}
+        },
+        "testIdx": 0,
+        "vars": {
+          "message": "What is the value of the color.primary.600 token?"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 1
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "output.routedAgent === 'reader'"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "output.message.toLowerCase().includes('#2563eb')"
+              }
+            }
+          ]
+        },
+        "id": "c5300767-8ae6-479a-b318-5d501feb0303",
+        "latencyMs": 30,
+        "namedScores": {},
+        "prompt": {
+          "raw": "What is the exact hex value of the color.primary.600 token?",
+          "label": "{{message}}",
+          "config": {
+            "timeout": 120000
+          }
+        },
+        "promptId": "21e536caf6f2870857967c9a82beb9093b792433e6d1deef3661148f3e61785b",
+        "promptIdx": 0,
+        "provider": {
+          "id": "designsystem-chat",
+          "label": ""
+        },
+        "response": {
+          "output": {
+            "type": "done",
+            "message": "The exact hex value of the color.primary.600 token is #2563eb.",
+            "preview": null,
+            "metadata": {
+              "agent": "reader"
+            },
+            "schemaVersion": "1.0",
+            "model": "openai/gpt-oss-20b",
+            "routedAgent": "reader",
+            "toolCallsUsed": [
+              "get_token"
+            ],
+            "thinkingSteps": [
+              {
+                "type": "tool_call",
+                "tool": "get_token",
+                "args": "{\"tokenPath\":\"color.primary.600\"}"
+              }
+            ],
+            "usage": {
+              "promptTokens": 4631,
+              "completionTokens": 236,
+              "totalTokens": 4867,
+              "cost": 0.00017197000000000002,
+              "cachedTokens": 0,
+              "cacheWriteTokens": 0,
+              "reasoningTokens": 131
+            },
+            "fromCache": true
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Reader grounds response in MCP data — exact hex value for color.primary.600",
+          "vars": {
+            "message": "What is the exact hex value of the color.primary.600 token?"
+          },
+          "assert": [
+            {
+              "type": "javascript",
+              "value": "output.routedAgent === 'reader'"
+            },
+            {
+              "type": "javascript",
+              "value": "output.message.toLowerCase().includes('#2563eb')"
+            }
+          ],
+          "options": {
+            "timeout": 120000
+          },
+          "metadata": {}
+        },
+        "testIdx": 1,
+        "vars": {
+          "message": "What is the exact hex value of the color.primary.600 token?"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "output.routedAgent === 'reader'"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "output.toolCallsUsed.includes('list_components')"
+              }
+            }
+          ]
+        },
+        "id": "d2ea6af8-dba9-4628-9b9d-7709a4db6d01",
+        "latencyMs": 35,
+        "namedScores": {},
+        "prompt": {
+          "raw": "List all the components available in the design system.",
+          "label": "{{message}}",
+          "config": {
+            "timeout": 120000
+          }
+        },
+        "promptId": "21e536caf6f2870857967c9a82beb9093b792433e6d1deef3661148f3e61785b",
+        "promptIdx": 0,
+        "provider": {
+          "id": "designsystem-chat",
+          "label": ""
+        },
+        "response": {
+          "output": {
+            "type": "done",
+            "message": "The design system includes the following components:\n\n• Button – primary interactive element with variants primary, secondary, ghost, destructive and sizes sm, md, lg.\n• Input – single‑line text field with variants default, error, success and sizes sm, md, lg.\n• Card – content container with variants default, outlined, elevated.\n• Badge – informational label with variants primary, success, warning, error, neutral and sizes sm, md.\n• Modal – dialog overlay with variants default, alert, fullscreen and sizes sm, md, lg, xl.\n• Select – dropdown input with variants default, error, success and sizes sm, md, lg.\n• Checkbox – binary/tri‑state input with variants default, error.\n• Toast – transient notification with variants info, success, warning, error.\n• Navigation – top navigation bar with variants default, transparent.\n• Table – data table with variants default, striped, bordered.\n• Form – layout wrapper for form controls with variants vertical, horizontal.",
+            "preview": null,
+            "metadata": null,
+            "schemaVersion": "1.0",
+            "model": "openai/gpt-oss-20b",
+            "routedAgent": "reader",
+            "toolCallsUsed": [
+              "list_components"
+            ],
+            "thinkingSteps": [
+              {
+                "type": "tool_call",
+                "tool": "list_components",
+                "args": "{\"\":\"\"}"
+              }
+            ],
+            "usage": {
+              "promptTokens": 5390,
+              "completionTokens": 456,
+              "totalTokens": 5846,
+              "cost": 0.00022553999999999999,
+              "cachedTokens": 0,
+              "cacheWriteTokens": 0,
+              "reasoningTokens": 191
+            },
+            "fromCache": true
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Reader calls list_components when asked to enumerate components",
+          "vars": {
+            "message": "List all the components available in the design system."
+          },
+          "assert": [
+            {
+              "type": "javascript",
+              "value": "output.routedAgent === 'reader'"
+            },
+            {
+              "type": "javascript",
+              "value": "output.toolCallsUsed.includes('list_components')"
+            }
+          ],
+          "options": {
+            "timeout": 120000
+          },
+          "metadata": {}
+        },
+        "testIdx": 2,
+        "vars": {
+          "message": "List all the components available in the design system."
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "output.routedAgent === 'reader'"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "output.message.toLowerCase().includes('button')"
+              }
+            }
+          ]
+        },
+        "id": "29ae344b-297d-4d06-bdc7-3537eda68c48",
+        "latencyMs": 41,
+        "namedScores": {},
+        "prompt": {
+          "raw": "What components are available?",
+          "label": "{{message}}",
+          "config": {
+            "timeout": 120000
+          }
+        },
+        "promptId": "21e536caf6f2870857967c9a82beb9093b792433e6d1deef3661148f3e61785b",
+        "promptIdx": 0,
+        "provider": {
+          "id": "designsystem-chat",
+          "label": ""
+        },
+        "response": {
+          "output": {
+            "type": "done",
+            "message": "The design system includes the following components:\n- Button (variants: primary, secondary, ghost, destructive; sizes: sm, md, lg)\n- Input (variants: default, error, success; sizes: sm, md, lg)\n- Card (variants: default, outlined, elevated)\n- Badge (variants: primary, success, warning, error, neutral; sizes: sm, md)\n- Modal (variants: default, alert, fullscreen; sizes: sm, md, lg, xl)\n- Select (variants: default, error, success; sizes: sm, md, lg)\n- Checkbox (variants: default, error)\n- Toast (variants: info, success, warning, error)\n- Navigation (variants: default, transparent)\n- Table (variants: default, striped, bordered)\n- Form (variants: vertical, horizontal)",
+            "preview": null,
+            "metadata": null,
+            "schemaVersion": "1.0",
+            "model": "openai/gpt-oss-20b",
+            "routedAgent": "reader",
+            "toolCallsUsed": [
+              "list_components"
+            ],
+            "thinkingSteps": [
+              {
+                "type": "tool_call",
+                "tool": "list_components",
+                "args": "{\"\":\"\"}"
+              }
+            ],
+            "usage": {
+              "promptTokens": 5375,
+              "completionTokens": 420,
+              "totalTokens": 5795,
+              "cost": 0.00022004999999999998,
+              "cachedTokens": 0,
+              "cacheWriteTokens": 0,
+              "reasoningTokens": 190
+            },
+            "fromCache": true
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Reader mentions 'button' when listing components",
+          "vars": {
+            "message": "What components are available?"
+          },
+          "assert": [
+            {
+              "type": "javascript",
+              "value": "output.routedAgent === 'reader'"
+            },
+            {
+              "type": "javascript",
+              "value": "output.message.toLowerCase().includes('button')"
+            }
+          ],
+          "options": {
+            "timeout": 120000
+          },
+          "metadata": {}
+        },
+        "testIdx": 3,
+        "vars": {
+          "message": "What components are available?"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      }
+    ],
+    "stats": {
+      "successes": 3,
+      "failures": 1,
+      "errors": 0,
+      "tokenUsage": {
+        "prompt": 0,
+        "completion": 0,
+        "cached": 0,
+        "total": 0,
+        "numRequests": 4,
+        "completionDetails": {
+          "reasoning": 0,
+          "acceptedPrediction": 0,
+          "rejectedPrediction": 0
+        },
+        "assertions": {
+          "total": 0,
+          "prompt": 0,
+          "completion": 0,
+          "cached": 0,
+          "numRequests": 0,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0
+          }
+        }
+      },
+      "durationMs": 67,
+      "evaluationDurationMs": 67
+    }
+  },
+  "config": {
+    "tags": {},
+    "description": "Design System Agent Evals",
+    "prompts": [
+      {
+        "id": "user-message",
+        "raw": "{{message}}"
+      }
+    ],
+    "providers": [
+      {
+        "id": "file://providers/chat.js"
+      }
+    ],
+    "tests": [
+      {
+        "description": "Design token question routes to reader",
+        "vars": {
+          "message": "What are the primary color tokens in the design system?"
+        },
+        "assert": [
+          {
+            "type": "javascript",
+            "value": "output.routedAgent === 'reader'"
+          }
+        ]
+      },
+      {
+        "description": "Component build request routes to builder",
+        "vars": {
+          "message": "Generate the HTML and CSS for a primary button component."
+        },
+        "assert": [
+          {
+            "type": "javascript",
+            "value": "output.routedAgent === 'builder'"
+          }
+        ]
+      },
+      {
+        "description": "Style guide question routes to style-guide",
+        "vars": {
+          "message": "Explain the design principles in the style guide."
+        },
+        "assert": [
+          {
+            "type": "javascript",
+            "value": "output.routedAgent === 'style-guide'"
+          }
+        ]
+      },
+      {
+        "description": "Reader calls a token tool for a color query",
+        "vars": {
+          "message": "What is the value of the color.primary.600 token?"
+        },
+        "assert": [
+          {
+            "type": "javascript",
+            "value": "output.routedAgent === 'reader'"
+          },
+          {
+            "type": "javascript",
+            "value": "['get_token', 'get_tokens', 'list_token_categories']\n  .some(t => output.toolCallsUsed.includes(t))\n"
+          }
+        ]
+      },
+      {
+        "description": "Reader grounds response in MCP data — exact hex value for color.primary.600",
+        "vars": {
+          "message": "What is the exact hex value of the color.primary.600 token?"
+        },
+        "assert": [
+          {
+            "type": "javascript",
+            "value": "output.routedAgent === 'reader'"
+          },
+          {
+            "type": "javascript",
+            "value": "output.message.toLowerCase().includes('#2563eb')"
+          }
+        ]
+      },
+      {
+        "description": "Reader calls list_components when asked to enumerate components",
+        "vars": {
+          "message": "List all the components available in the design system."
+        },
+        "assert": [
+          {
+            "type": "javascript",
+            "value": "output.routedAgent === 'reader'"
+          },
+          {
+            "type": "javascript",
+            "value": "output.toolCallsUsed.includes('list_components')"
+          }
+        ]
+      },
+      {
+        "description": "Reader mentions 'button' when listing components",
+        "vars": {
+          "message": "What components are available?"
+        },
+        "assert": [
+          {
+            "type": "javascript",
+            "value": "output.routedAgent === 'reader'"
+          },
+          {
+            "type": "javascript",
+            "value": "output.message.toLowerCase().includes('button')"
+          }
+        ]
+      },
+      {
+        "description": "Response carries schemaVersion 1.0",
+        "vars": {
+          "message": "What spacing tokens are available?"
+        },
+        "assert": [
+          {
+            "type": "javascript",
+            "value": "output.schemaVersion === '1.0'"
+          }
+        ]
+      },
+      {
+        "description": "Builder calls get_component when generating a button",
+        "vars": {
+          "message": "Build a primary button component using the design system tokens."
+        },
+        "assert": [
+          {
+            "type": "javascript",
+            "value": "output.routedAgent === 'builder'"
+          },
+          {
+            "type": "javascript",
+            "value": "output.toolCallsUsed.includes('get_component')"
+          }
+        ]
+      },
+      {
+        "description": "Builder calls get_component_tokens for a token-grounded build",
+        "vars": {
+          "message": "Generate HTML for a primary button, using exact token values."
+        },
+        "assert": [
+          {
+            "type": "javascript",
+            "value": "output.routedAgent === 'builder'"
+          },
+          {
+            "type": "javascript",
+            "value": "output.toolCallsUsed.includes('get_component_tokens')"
+          }
+        ]
+      },
+      {
+        "description": "Builder returns an HTML preview containing a <button> element",
+        "vars": {
+          "message": "Generate the HTML markup for a primary button."
+        },
+        "assert": [
+          {
+            "type": "javascript",
+            "value": "output.routedAgent === 'builder'"
+          },
+          {
+            "type": "javascript",
+            "value": "output.preview !== null && output.preview.toLowerCase().includes('<button')"
+          }
+        ]
+      },
+      {
+        "description": "Style Guide calls get_style_guide for a principles question",
+        "vars": {
+          "message": "What are the core design principles in the style guide?"
+        },
+        "assert": [
+          {
+            "type": "javascript",
+            "value": "output.routedAgent === 'style-guide'"
+          },
+          {
+            "type": "javascript",
+            "value": "output.toolCallsUsed.includes('get_style_guide')"
+          }
+        ]
+      },
+      {
+        "description": "Style Guide grounds response in style guide content",
+        "vars": {
+          "message": "Explain the color usage rules from the style guide."
+        },
+        "assert": [
+          {
+            "type": "javascript",
+            "value": "output.routedAgent === 'style-guide'"
+          },
+          {
+            "type": "javascript",
+            "value": "output.message.trim().length > 0"
+          }
+        ]
+      },
+      {
+        "description": "Follow-up with previousAgent=reader stays with reader and uses token tools",
+        "vars": {
+          "message": "And what is the value of the spacing.4 token?",
+          "previousAgent": "reader"
+        },
+        "assert": [
+          {
+            "type": "javascript",
+            "value": "output.routedAgent === 'reader'"
+          },
+          {
+            "type": "javascript",
+            "value": "['get_token', 'get_tokens', 'get_spacing_scale']\n  .some(t => output.toolCallsUsed.includes(t))\n"
+          }
+        ]
+      }
+    ],
+    "scenarios": [],
+    "env": {},
+    "defaultTest": {
+      "options": {
+        "timeout": 120000
+      },
+      "vars": {},
+      "assert": [],
+      "metadata": {}
+    },
+    "outputPath": [
+      ".promptfoo/reader-eval.json"
+    ],
+    "extensions": [],
+    "metadata": {},
+    "evaluateOptions": {}
+  },
+  "shareableUrl": null,
+  "metadata": {
+    "promptfooVersion": "0.121.3",
+    "nodeVersion": "v24.12.0",
+    "platform": "win32",
+    "arch": "x64",
+    "exportedAt": "2026-03-30T04:10:13.196Z",
+    "evaluationCreatedAt": "2026-03-30T04:10:13.061Z"
+  }
+}

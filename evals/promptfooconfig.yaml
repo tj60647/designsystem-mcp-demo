@@ -56,9 +56,7 @@ tests:
       - type: javascript
         value: output.routedAgent === 'reader'
       - type: javascript
-        value: >
-          ['get_token', 'get_tokens', 'list_token_categories']
-            .some(t => output.toolCallsUsed.includes(t))
+        value: "['get_token', 'get_tokens', 'list_token_categories'].some(t => output.toolCallsUsed.includes(t))"
 
   - description: "Reader grounds response in MCP data — exact hex value for color.primary.600"
     vars:
@@ -153,6 +151,4 @@ tests:
       - type: javascript
         value: output.routedAgent === 'reader'
       - type: javascript
-        value: >
-          ['get_token', 'get_tokens', 'get_spacing_scale']
-            .some(t => output.toolCallsUsed.includes(t))
+        value: "['get_token', 'get_tokens', 'get_spacing_scale'].some(t => output.toolCallsUsed.includes(t))"

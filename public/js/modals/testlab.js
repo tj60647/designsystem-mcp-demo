@@ -998,6 +998,7 @@ async function parseSSEStream(res) {
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
+  const traceEvents = [];
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -1014,10 +1015,15 @@ async function parseSSEStream(res) {
           preview: event.preview ?? null,
           routedAgent: event.routedAgent ?? null,
           toolCallsUsed: event.toolCallsUsed ?? [],
+          traceEvents,
         };
       }
       if (event.type === "error") {
         throw new Error(event.error || "Unknown error");
+      }
+      // Collect intermediate events for trace display (cap at 50 to avoid memory bloat)
+      if (["progress", "agent_routed", "tool_call", "tool_result"].includes(event.type)) {
+        if (traceEvents.length < 50) traceEvents.push(event);
       }
     }
   }

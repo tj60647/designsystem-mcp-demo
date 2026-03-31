@@ -170,7 +170,7 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .lobby-controls-grid-agent {
-  grid-template-columns: 1fr 150px auto;
+  grid-template-columns: 1fr 150px;
   align-items: end;
 }
 .lobby-control {
@@ -209,34 +209,6 @@
 .lobby-filter {
   min-width: 220px; margin-left: auto;
 }
-.lobby-density-switch {
-  display: inline-flex; gap: 2px; padding: 2px;
-  background: var(--bg); border: 1px solid var(--border-soft);
-  border-radius: var(--radius-sm);
-}
-.lobby-density-btn {
-  border: none; background: none; color: var(--text-muted);
-  font-size: 10.5px; padding: 5px 10px; border-radius: calc(var(--radius-sm) - 1px);
-  cursor: pointer;
-}
-.lobby-density-btn:hover { color: var(--text); }
-.lobby-density-btn.active { background: var(--bg-panel); color: var(--text); }
-.lobby-list-compact .lobby-card { padding: 12px 12px 10px; gap: 8px; }
-.lobby-list-compact .lobby-controls-grid-agent { grid-template-columns: 1fr 120px auto; }
-.lobby-list-compact .lobby-card-model { font-size: 10px; }
-.lobby-list-compact .lobby-params,
-.lobby-list-compact .lobby-io,
-.lobby-list-compact .agents-prompt-pre,
-.lobby-list-compact .agents-tool-desc,
-.lobby-list-compact .agents-tool-params {
-  display: none;
-}
-.lobby-list-compact .lobby-section-label {
-  font-size: 9px;
-}
-.lobby-list-compact .agents-tools-list {
-  gap: 4px;
-}
 .lobby-legend-item {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 11px; color: var(--text-muted);
@@ -250,17 +222,26 @@
 .lobby-legend-dot[data-color="orange"] { background: var(--orange); }
 .lobby-legend-dot[data-color="green"] { background: var(--green); }
 .lobby-legend-dot[data-color="red"] { background: var(--red); }
+
+/* ── Collapsible agent cards ── */
 .lobby-card {
   background: var(--bg); border: 1px solid var(--border-soft);
-  border-radius: var(--radius); padding: 16px 16px 12px;
-  display: flex; flex-direction: column; gap: 10px;
+  border-radius: var(--radius);
   border-left: 3px solid var(--card-color, var(--accent));
+  overflow: hidden;
 }
 .lobby-card[data-color="purple"] { --card-color: var(--purple); }
 .lobby-card[data-color="accent"]  { --card-color: var(--accent);  }
 .lobby-card[data-color="orange"]  { --card-color: var(--orange);  }
 .lobby-card[data-color="green"]   { --card-color: var(--green);   }
 .lobby-card[data-color="red"]     { --card-color: var(--red);     }
+.lobby-card-summary {
+  cursor: pointer; list-style: none; padding: 14px 16px 12px;
+  display: flex; flex-direction: column; gap: 4px;
+  user-select: none;
+}
+.lobby-card-summary::-webkit-details-marker { display: none; }
+.lobby-card-summary:hover { background: rgba(255,255,255,.03); }
 .lobby-card-header { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .lobby-card-name {
   font-size: 14px; font-weight: 700; color: var(--card-color, var(--text));
@@ -270,16 +251,35 @@
   font-family: "SFMono-Regular", Consolas, monospace;
   margin-left: auto;
 }
-.lobby-tools-toggle {
-  background: var(--bg-input); color: var(--text-muted);
-  border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
-  padding: 6px 10px; font-size: 11px; cursor: pointer;
+.lobby-card-desc {
+  font-size: 11.5px; color: var(--text-muted); line-height: 1.5;
 }
-.lobby-tools-toggle:hover { color: var(--text); border-color: var(--border); }
+.lobby-card-body {
+  padding: 12px 16px 14px; display: flex; flex-direction: column; gap: 8px;
+  border-top: 1px solid var(--border-soft);
+}
+/* ── Collapsible sections inside a card ── */
+.lobby-section-details {
+  border: none; margin: 0;
+}
 .lobby-section-label {
   font-size: 10px; font-weight: 600; text-transform: uppercase;
   letter-spacing: .5px; color: var(--text-dim);
+  cursor: pointer; list-style: none; display: flex;
+  align-items: center; justify-content: space-between; gap: 8px;
+  padding: 6px 0 4px; user-select: none;
 }
+.lobby-section-label::-webkit-details-marker { display: none; }
+.lobby-section-label::after { content: "▸"; font-size: 9px; margin-left: auto; }
+.lobby-section-details[open] > .lobby-section-label::after { content: "▾"; }
+.lobby-section-tools-label { display: flex; align-items: center; gap: 8px; }
+.lobby-section-tools-label::after { display: none; }
+.lobby-tools-toggle {
+  background: var(--bg-input); color: var(--text-muted);
+  border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+  padding: 3px 8px; font-size: 10px; cursor: pointer; margin-left: auto;
+}
+.lobby-tools-toggle:hover { color: var(--text); border-color: var(--border); }
 .lobby-params {
   display: flex; flex-direction: column; gap: 2px;
   background: var(--bg-input); border: 1px solid var(--border-soft);
@@ -323,12 +323,16 @@
 }
 .agents-tool-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
 .agents-tool-params { margin-top: 4px; font-size: 10.5px; color: var(--text-dim); }
+.agents-param-chips { display: flex; flex-wrap: wrap; gap: 2px; }
 .agents-param-chip {
   display: inline-block; margin: 2px 3px 0 0; padding: 1px 7px;
   background: var(--bg); border: 1px solid var(--border-soft);
   border-radius: 20px; font-size: 10px; font-family: "SFMono-Regular", Consolas, monospace;
   color: var(--orange);
 }
+.agents-param-chip[data-required="true"] { border-color: var(--red); color: var(--red); }
+.agents-param-chip sup { color: var(--red); font-size: 8px; }
+.agents-param-legend { font-size: 9.5px; color: var(--text-dim); margin-top: 4px; font-style: italic; }
 .agents-prompt-pre {
   background: var(--bg); border: 1px solid var(--border-soft);
   border-radius: var(--radius-sm); padding: 12px 14px;
@@ -336,6 +340,29 @@
   color: var(--text-muted); white-space: pre-wrap;
   word-break: break-word; max-height: 44vh; overflow-y: auto; line-height: 1.6;
 }
+
+/* ── MCP tools table ── */
+.mcp-tool-group {
+  margin-bottom: 18px;
+}
+.mcp-tool-group-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+  color: var(--accent); margin-bottom: 6px; padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.mcp-tool-table { display: flex; flex-direction: column; gap: 4px; }
+.mcp-tool-row {
+  display: flex; align-items: baseline; gap: 12px; font-size: 12px;
+  padding: 5px 8px; border-radius: var(--radius-sm);
+  background: var(--bg-input);
+}
+.mcp-tool-row:hover { background: var(--bg-panel); }
+.mcp-tool-name {
+  font-family: "SFMono-Regular", Consolas, monospace; color: var(--purple);
+  font-size: 11px; font-weight: 600; flex-shrink: 0; min-width: 200px;
+}
+.mcp-tool-desc { color: var(--text-muted); font-size: 11.5px; line-height: 1.5; }
+.mcp-tool-desc code { font-family: "SFMono-Regular", Consolas, monospace; color: var(--orange); font-size: 10.5px; }
 
 
 /* ── System diagram ── */
@@ -581,8 +608,8 @@
   .lobby-controls-grid,
   .lobby-controls-grid-agent { grid-template-columns: 1fr; }
   .lobby-toolbar { flex-direction: column; align-items: stretch; }
-  .lobby-density-switch { width: 100%; justify-content: stretch; }
-  .lobby-density-btn { flex: 1; }
   .lobby-filter { min-width: 100%; margin-left: 0; }
   .modal textarea { min-height: 120px; }
+  .mcp-tool-row { flex-direction: column; gap: 4px; }
+  .mcp-tool-name { min-width: 0; }
 }

@@ -30,8 +30,6 @@ export function initAgentsPanel() {
   let modelMeta   = { model: "", modelSource: "" };
   let settings    = null;
   let lobbyFilter = "";
-  let lobbyDensity = "detailed";
-  const LOBBY_DENSITY_KEY = "designsystem-mcp-demo.lobby-density";
 
   // Colour token per agent index — matches diagram node colours
   const ROLE_COLORS = ["purple", "accent", "orange", "green", "red"];
@@ -41,8 +39,12 @@ export function initAgentsPanel() {
     return tools.map(t => {
       const params   = t.parameters && t.parameters.properties ? Object.keys(t.parameters.properties) : [];
       const required = (t.parameters && t.parameters.required) || [];
-      const paramHtml = params.length
-        ? params.map(p => `<span class="agents-param-chip">${escapeHtml(p)}${required.includes(p) ? "<sup style='color:var(--red)'>*</sup>" : ""}</span>`).join("")
+      const hasParams = params.length > 0;
+      const paramChips = hasParams
+        ? params.map(p => `<span class="agents-param-chip"${required.includes(p) ? ' data-required="true"' : ""}>${escapeHtml(p)}${required.includes(p) ? "<sup>*</sup>" : ""}</span>`).join("")
+        : "";
+      const paramHtml = hasParams
+        ? `<div class="agents-param-chips">${paramChips}</div><div class="agents-param-legend">* required parameter</div>`
         : "<span style='font-size:10.5px;color:var(--text-dim);font-style:italic'>no parameters</span>";
       return `<details class="agents-tool-card">
         <summary class="agents-tool-summary">
@@ -67,17 +69,6 @@ export function initAgentsPanel() {
   }
 
   function bindLobbyControls() {
-    const densityButtons = container.querySelectorAll('[data-role="density-toggle"]');
-    densityButtons.forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const next = String(e.currentTarget.getAttribute("data-density") || "detailed");
-        if (next !== "compact" && next !== "detailed") return;
-        lobbyDensity = next;
-        try { localStorage.setItem(LOBBY_DENSITY_KEY, lobbyDensity); } catch { /* ignore */ }
-        renderLobby();
-      });
-    });
-
     const filterInput = container.querySelector('[data-role="agent-filter"]');
     if (filterInput) {
       filterInput.addEventListener("input", (e) => {
@@ -102,7 +93,12 @@ export function initAgentsPanel() {
         const v = String(e.target.value || "").trim();
         if (!v) return;
         settings.global.model = v;
+        // Mirror to all individual agents so they stay in sync
+        for (const key of Object.keys(settings.agents)) {
+          settings.agents[key].model = v;
+        }
         saveAgentSettings(settings);
+        renderLobby();
       });
     });
 
@@ -123,6 +119,7 @@ export function initAgentsPanel() {
         if (!key || !v || !settings.agents[key]) return;
         settings.agents[key].model = v;
         saveAgentSettings(settings);
+        renderLobby();
       });
     });
 
@@ -139,7 +136,7 @@ export function initAgentsPanel() {
 
     container.querySelectorAll('[data-action="toggle-tools"]').forEach((btn) => {
       btn.addEventListener("click", (e) => {
-        const card = e.target.closest(".lobby-card");
+        const card = e.target.closest(".lobby-card-body");
         if (!card) return;
         const details = card.querySelectorAll(".agents-tool-card");
         const anyClosed = Array.from(details).some((d) => !d.open);
@@ -178,7 +175,7 @@ export function initAgentsPanel() {
       ${modelMeta.model ? `<div class="lobby-global-row"><span class="lobby-global-key">server default</span><span class="lobby-global-val">${escapeHtml(modelMeta.model)}</span></div>` : ""}
     </div>`;
 
-    const legend = `<div class="lobby-legend"><div class="lobby-global-title">Agent Legend</div><div class="lobby-legend-row">${legendItems}</div><div class="lobby-toolbar"><label class="lobby-control lobby-filter">Filter<input data-role="agent-filter" class="lobby-input" value="${escapeHtml(lobbyFilter)}" placeholder="Search agents or tools" /></label><div class="lobby-density-switch" role="group" aria-label="Lobby density"><button type="button" class="lobby-density-btn ${lobbyDensity === "compact" ? "active" : ""}" data-role="density-toggle" data-density="compact">Compact</button><button type="button" class="lobby-density-btn ${lobbyDensity === "detailed" ? "active" : ""}" data-role="density-toggle" data-density="detailed">Detailed</button></div></div></div>`;
+    const legend = `<div class="lobby-legend"><div class="lobby-global-title">Agent Legend</div><div class="lobby-legend-row">${legendItems}</div><div class="lobby-toolbar"><label class="lobby-control lobby-filter">Filter<input data-role="agent-filter" class="lobby-input" value="${escapeHtml(lobbyFilter)}" placeholder="Search agents or tools" /></label></div></div>`;
 
     const cards = filteredAgents.map((agent, i) => {
       const color = ROLE_COLORS[i] ?? "accent";
@@ -193,37 +190,54 @@ export function initAgentsPanel() {
       const expectedOutput = typeof agent.expectedOutput === "string" && agent.expectedOutput.trim().length > 0
         ? agent.expectedOutput
         : "Final assistant response text (often JSON-parsed by runtime).";
+      const effectiveModel = settings.useGlobalModel ? settings.global.model : cfg.model;
       return `
-      <div class="lobby-card" data-color="${color}">
-        <div class="lobby-card-header">
-          <div class="lobby-card-name">${escapeHtml(agent.name)}</div>
-          <div class="lobby-card-model">${escapeHtml(agent.model)}</div>
+      <details class="lobby-card" data-color="${color}">
+        <summary class="lobby-card-summary">
+          <div class="lobby-card-header">
+            <div class="lobby-card-name">${escapeHtml(agent.name)}</div>
+            <div class="lobby-card-model">${escapeHtml(effectiveModel)}</div>
+          </div>
+          <div class="lobby-card-desc">${escapeHtml(agent.description)}</div>
+        </summary>
+        <div class="lobby-card-body">
+          <div class="lobby-controls-grid lobby-controls-grid-agent">
+            <label class="lobby-control">Model${modelSelectHtml(`data-agent-model="${escapeHtml(agentKey)}"`, cfg.model, settings.useGlobalModel)}</label>
+            <label class="lobby-control">Temperature<input data-agent-temp="${escapeHtml(agentKey)}" class="lobby-input" type="number" step="0.1" min="0" max="2" value="${escapeHtml(String(cfg.temperature))}" ${settings.useGlobalModel ? "disabled" : ""} /></label>
+          </div>
+
+          <details class="lobby-section-details">
+            <summary class="lobby-section-label">Expected Input</summary>
+            <div class="lobby-io">${escapeHtml(expectedInput)}</div>
+          </details>
+
+          <details class="lobby-section-details">
+            <summary class="lobby-section-label">Expected Output</summary>
+            <div class="lobby-io">${escapeHtml(expectedOutput)}</div>
+          </details>
+
+          <details class="lobby-section-details">
+            <summary class="lobby-section-label">Parameters</summary>
+            <div class="lobby-params">${paramsHtml}</div>
+          </details>
+
+          <details class="lobby-section-details">
+            <summary class="lobby-section-label">System Instructions</summary>
+            <pre class="agents-prompt-pre lobby-prompt-pre">${escapeHtml(agent.systemPrompt)}</pre>
+          </details>
+
+          <details class="lobby-section-details">
+            <summary class="lobby-section-label lobby-section-tools-label">
+              ${agent.tools.length} Tool${agent.tools.length !== 1 ? "s" : ""}
+              <button class="lobby-tools-toggle" data-action="toggle-tools" type="button">Expand All</button>
+            </summary>
+            <div class="agents-tools-list">${buildToolCards(agent.tools)}</div>
+          </details>
         </div>
-
-        <div class="lobby-controls-grid lobby-controls-grid-agent">
-          <label class="lobby-control">Model${modelSelectHtml(`data-agent-model="${escapeHtml(agentKey)}"`, cfg.model, settings.useGlobalModel)}</label>
-          <label class="lobby-control">Temperature<input data-agent-temp="${escapeHtml(agentKey)}" class="lobby-input" type="number" step="0.1" min="0" max="2" value="${escapeHtml(String(cfg.temperature))}" ${settings.useGlobalModel ? "disabled" : ""} /></label>
-          <button class="lobby-tools-toggle" data-action="toggle-tools" type="button">Toggle Tools</button>
-        </div>
-
-        <div class="lobby-section-label">Expected Input</div>
-        <div class="lobby-io">${escapeHtml(expectedInput)}</div>
-
-        <div class="lobby-section-label">Expected Output</div>
-        <div class="lobby-io">${escapeHtml(expectedOutput)}</div>
-
-        <div class="lobby-section-label">Parameters</div>
-        <div class="lobby-params">${paramsHtml}</div>
-
-        <div class="lobby-section-label">System Instructions</div>
-        <pre class="agents-prompt-pre lobby-prompt-pre">${escapeHtml(agent.systemPrompt)}</pre>
-
-        <div class="lobby-section-label">${agent.tools.length} Tool${agent.tools.length !== 1 ? "s" : ""}</div>
-        <div class="agents-tools-list">${buildToolCards(agent.tools)}</div>
-      </div>`;
+      </details>`;
     }).join("");
 
-    container.innerHTML = `<div class="lobby-list ${lobbyDensity === "compact" ? "lobby-list-compact" : ""}">${legend}${globalSettings}${cards || '<div class="agents-loading">No agents match this filter.</div>'}</div>`;
+    container.innerHTML = `<div class="lobby-list">${legend}${globalSettings}${cards || '<div class="agents-loading">No agents match this filter.</div>'}</div>`;
     bindLobbyControls();
   }
 
@@ -235,13 +249,6 @@ export function initAgentsPanel() {
     }
     container.innerHTML = '<div class="agents-loading">Loading agent info…</div>';
     try {
-      try {
-        const storedDensity = localStorage.getItem(LOBBY_DENSITY_KEY);
-        if (storedDensity === "compact" || storedDensity === "detailed") {
-          lobbyDensity = storedDensity;
-        }
-      } catch { /* ignore */ }
-
       settings = loadAgentSettings();
       const res = await fetch("/api/agent-info");
       if (!res.ok) throw new Error("HTTP " + res.status);

@@ -63,6 +63,28 @@ function initProductNav() {
   if (aboutGotoDsOps) aboutGotoDsOps.addEventListener('click', () => switchSection('section-ds-ops'));
 }
 
+// ── Agent section sub-tabs (Agent Lobby | Scenario Runner) ────────────────
+function initAgentSubTabs() {
+  const tabLobby     = document.getElementById('agent-subtab-lobby');
+  const tabScenarios = document.getElementById('agent-subtab-scenarios');
+  const panelLobby     = document.getElementById('agent-subpanel-lobby');
+  const panelScenarios = document.getElementById('agent-subpanel-scenarios');
+  if (!tabLobby || !tabScenarios) return;
+
+  function activateSubTab(which) {
+    const isLobby = which === 'lobby';
+    tabLobby.classList.toggle('active', isLobby);
+    tabLobby.setAttribute('aria-selected', String(isLobby));
+    tabScenarios.classList.toggle('active', !isLobby);
+    tabScenarios.setAttribute('aria-selected', String(!isLobby));
+    if (panelLobby)     panelLobby.style.display     = isLobby ? '' : 'none';
+    if (panelScenarios) panelScenarios.style.display  = isLobby ? 'none' : '';
+  }
+
+  tabLobby.addEventListener('click',     () => activateSubTab('lobby'));
+  tabScenarios.addEventListener('click', () => activateSubTab('scenarios'));
+}
+
 // ── Wire up the global data-reload hook used by load-json and generate-from-website.
 // The payload is optional and lets callers scope refreshes to affected UI panels.
 window.notifyDataReloaded = (payload = {}) => {
@@ -71,17 +93,19 @@ window.notifyDataReloaded = (payload = {}) => {
 
   const includesLoaded = (section) => loaded.includes(section);
 
-  // Explorer depends on components only.
+  // Explorer depends on components.  Always refresh on full design-system
+  // imports so any loaded components are visible without a manual refresh.
   const shouldRefreshExplorer =
     type === "components" ||
-    (type === "design-system" && includesLoaded("components")) ||
+    type === "design-system" ||
     !type;
 
   // Gallery depends on components (cards) and tokens (preview styling).
+  // Always refresh on full design-system imports for the same reason.
   const shouldRefreshGallery =
     type === "components" ||
     type === "tokens" ||
-    (type === "design-system" && (includesLoaded("components") || includesLoaded("tokens"))) ||
+    type === "design-system" ||
     !type;
 
   if (shouldRefreshExplorer && isExplorerLoaded()) resetAndReloadExplorer();
@@ -102,6 +126,7 @@ initRightTabs();
 initProductNav();
 initDsOpsPanel();
 initSandbox();
+initAgentSubTabs();
 
 // Wire DS Ops card buttons to hidden trigger buttons (attached by modal modules)
 const dsOpsLoadJsonBtn = document.getElementById('ds-ops-load-json-btn');

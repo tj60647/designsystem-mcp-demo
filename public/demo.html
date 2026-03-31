@@ -405,12 +405,21 @@
   <div class="sandbox-body">
     <div class="ds-ops-header">
       <h1 class="ds-ops-title">Agents</h1>
-      <p class="ds-ops-subtitle">Inspect each agent's role, MCP tools, model settings, and system instructions.</p>
+      <p class="ds-ops-subtitle">Inspect each agent's role, MCP tools, model settings, and system instructions — or run a live scenario to watch them work.</p>
     </div>
-    <div id="agents-panel-body" class="agents-panel-body">
-      <div class="agents-loading">Loading agent info…</div>
+    <!-- Sub-tabs: Agent Lobby | Scenario Runner -->
+    <div class="agent-subtabs" role="tablist">
+      <button class="agent-subtab active" id="agent-subtab-lobby" role="tab" aria-selected="true" aria-controls="agent-subpanel-lobby">Agent Lobby</button>
+      <button class="agent-subtab" id="agent-subtab-scenarios" role="tab" aria-selected="false" aria-controls="agent-subpanel-scenarios">Scenario Runner</button>
     </div>
-    <div id="scenario-runner-body"></div>
+    <div id="agent-subpanel-lobby" role="tabpanel" aria-labelledby="agent-subtab-lobby">
+      <div id="agents-panel-body" class="agents-panel-body">
+        <div class="agents-loading">Loading agent info…</div>
+      </div>
+    </div>
+    <div id="agent-subpanel-scenarios" role="tabpanel" aria-labelledby="agent-subtab-scenarios" style="display:none">
+      <div id="scenario-runner-body"></div>
+    </div>
   </div>
 </div><!-- /#section-agent-sandbox -->
 
@@ -419,13 +428,14 @@
   <div class="about-body">
 
     <div class="ds-ops-header">
-      <h1 class="ds-ops-title">MCP</h1>
-      <p class="ds-ops-subtitle">How the Model Context Protocol powers this demo — grounding AI responses in live design system data.</p>
+      <h1 class="ds-ops-title">MCP — Model Context Protocol</h1>
+      <p class="ds-ops-subtitle">A live, queryable contract between your design system and the AI tools your team uses every day.</p>
     </div>
 
     <div class="about-section-block">
-      <h3>How MCP grounding works</h3>
-      <p>The <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener noreferrer">Model Context Protocol</a> is an open standard for giving AI tools structured access to external data. Agents call MCP tools to fetch exactly what they need — no hallucination, no stale docs, no guessing.</p>
+      <h3>Why MCP?</h3>
+      <p>When you ask an AI to build UI, it guesses. It invents token names, uses hardcoded hex values, and ignores your component library. You can paste docs into the prompt — but those docs go stale the moment your system changes, and large files eat your context window.</p>
+      <p>The <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener noreferrer">Model Context Protocol</a> is an open standard that lets AI tools call external <strong>tools</strong> — structured functions that return real data on demand. Instead of guessing, the AI asks for exactly what it needs and gets the live answer. Every chat message in this demo routes through the MCP server; the <strong>MCP Tools</strong> panel in <button class="sandbox-link-btn" id="mcp-goto-workspace">Workspace</button> shows which tools were called.</p>
       <table class="about-table" style="margin-top:10px">
         <thead><tr><th>Without MCP</th><th>With MCP</th></tr></thead>
         <tbody>
@@ -439,13 +449,71 @@
     </div>
 
     <div class="about-section-block">
-      <h3>Connect your own AI client</h3>
-      <p>Claude Desktop, Cursor, and GitHub Copilot can all connect to this server directly. Click <strong>MCP server</strong> in the top bar for copy-paste setup instructions.</p>
+      <h3>The 28 MCP tools — and when to use them</h3>
+      <p style="font-size:12px;color:var(--text-dim);margin-bottom:12px">AI clients call these tools via <code style="font-family:monospace">POST /mcp</code> using JSON-RPC. Each tool returns structured, live data — never a cached snapshot.</p>
+
+      <div class="mcp-tool-group">
+        <div class="mcp-tool-group-title">Token tools</div>
+        <div class="mcp-tool-table">
+          <div class="mcp-tool-row"><span class="mcp-tool-name">list_token_categories</span><span class="mcp-tool-desc">Get a top-level map of the design system — useful as a first call to orient the AI</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">get_tokens</span><span class="mcp-tool-desc">Fetch all tokens in a category (e.g. <code>color</code>, <code>spacing</code>, <code>typography</code>)</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">get_token</span><span class="mcp-tool-desc">Look up one specific token by path (e.g. <code>color.primary.600</code>)</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">suggest_token</span><span class="mcp-tool-desc">Describe an intent in plain language (e.g. "error text color") and get the best matching token</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">validate_color</span><span class="mcp-tool-desc">Check whether a hex or RGB value matches a named token</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">diff_against_system</span><span class="mcp-tool-desc">Compare CSS property values against the token set — flags non-token values</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">get_spacing_scale</span><span class="mcp-tool-desc">Get the structured spacing scale with semantic usage hints for each step</span></div>
+        </div>
+      </div>
+
+      <div class="mcp-tool-group">
+        <div class="mcp-tool-group-title">Component tools</div>
+        <div class="mcp-tool-table">
+          <div class="mcp-tool-row"><span class="mcp-tool-name">list_components</span><span class="mcp-tool-desc">Get names, descriptions, variants, and sizes for every component</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">get_component</span><span class="mcp-tool-desc">Full spec for one component — props, tokens, constraints, and accessibility</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">get_component_tokens</span><span class="mcp-tool-desc">Every token a component depends on</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">get_component_constraints</span><span class="mcp-tool-desc">Usage rules, do's and don'ts, required props</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">validate_component_usage</span><span class="mcp-tool-desc">Check whether a variant/size/props combo is valid before generating code</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">get_component_variants</span><span class="mcp-tool-desc">Variant list with when-to-use guidance for each</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">get_component_anatomy</span><span class="mcp-tool-desc">Internal slots, valid children, and composition patterns</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">get_component_relationships</span><span class="mcp-tool-desc">Parent, sibling, and related components</span></div>
+        </div>
+      </div>
+
+      <div class="mcp-tool-group">
+        <div class="mcp-tool-group-title">Theme &amp; icon tools</div>
+        <div class="mcp-tool-table">
+          <div class="mcp-tool-row"><span class="mcp-tool-name">list_themes</span><span class="mcp-tool-desc">List all available themes (e.g. light, dark)</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">get_theme</span><span class="mcp-tool-desc">Full theme definition with semantic token overrides</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">list_icons</span><span class="mcp-tool-desc">List icons, optionally filtered by category or tag</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">get_icon</span><span class="mcp-tool-desc">Single icon by name with metadata, sizes, and usage guidance</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">search_icons</span><span class="mcp-tool-desc">Semantic search across the icon set (e.g. "warning" returns alert-triangle)</span></div>
+        </div>
+      </div>
+
+      <div class="mcp-tool-group">
+        <div class="mcp-tool-group-title">Accessibility &amp; layout tools</div>
+        <div class="mcp-tool-table">
+          <div class="mcp-tool-row"><span class="mcp-tool-name">check_contrast</span><span class="mcp-tool-desc">WCAG 2.1 AA/AAA contrast ratio checker between two hex colors</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">get_accessibility_guidance</span><span class="mcp-tool-desc">Per-component ARIA roles, keyboard interaction, and focus-order spec</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">get_layout_guidance</span><span class="mcp-tool-desc">Page gutters, max-widths, breakpoints, grid columns, and region spacing</span></div>
+        </div>
+      </div>
+
+      <div class="mcp-tool-group">
+        <div class="mcp-tool-group-title">History &amp; search tools</div>
+        <div class="mcp-tool-table">
+          <div class="mcp-tool-row"><span class="mcp-tool-name">get_changelog</span><span class="mcp-tool-desc">Version history filterable by version range</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">get_deprecations</span><span class="mcp-tool-desc">Deprecated tokens and components with migration paths and removal timelines</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">get_style_guide</span><span class="mcp-tool-desc">Design principles, color usage rules, typography guidance, and composition patterns</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">search</span><span class="mcp-tool-desc">Full-text search across all tokens, components, and icons at once</span></div>
+          <div class="mcp-tool-row"><span class="mcp-tool-name">get_schema</span><span class="mcp-tool-desc">JSON Schema for a data file — use before loading custom JSON to validate shape</span></div>
+        </div>
+      </div>
     </div>
 
     <div class="about-section-block">
-      <h3>MCP tools in this demo</h3>
-      <p style="font-size:12px; color: var(--text-dim)">28 MCP tools total — covering tokens, components, color, icons, themes, style guide, and more. Every chat message runs through the live MCP server; the <strong>MCP Tools</strong> panel in <button class="sandbox-link-btn" id="mcp-goto-workspace">Workspace</button> shows exactly which tools were called.</p>
+      <h3>Connect your own AI client</h3>
+      <p>Claude Desktop, Cursor, and GitHub Copilot can all connect to this server directly. Click <strong>MCP server</strong> in the top bar for copy-paste setup instructions.</p>
     </div>
 
   </div>

@@ -37,9 +37,9 @@ const NODES = [
     description: 'A lightweight AI "traffic director" that reads your message and decides which specialist should handle it — in exactly one AI call. It only has one tool: delegate_to_agent(), which routes to Reader, Builder, Style Guide, or Generator. It never answers questions itself and has no access to design system data.',
   },
   {
-    id: 'reader', label: 'DS Reader', sublabel: 'READER · up to 5 tool calls',
+    id: 'reader', label: 'Design System Reader', sublabel: 'READER · up to 5 tool calls',
     type: 'reader', cx: 680, cy: 100, w: 158, h: 44,
-    description: '"DS" = Design System. The Design System Reader answers questions about tokens, components, themes, icons, layout, and accessibility. It has access to 25 read-only MCP tools and can call up to 5 of them per turn before writing its final answer.',
+    description: 'Answers questions about tokens, components, themes, icons, layout, and accessibility. It has access to 25 read-only MCP tools and can call up to 5 of them per turn before writing its final answer.',
   },
   {
     id: 'builder', label: 'Component Builder', sublabel: 'BUILDER · up to 6 tool calls',
@@ -57,9 +57,24 @@ const NODES = [
     description: 'Gathers brand requirements through a short conversation, then calls the generate_design_system MCP tool to produce a complete design system (tokens, components, themes, icons). It has access to 1 MCP tool and may use up to 8 tool calls to gather inputs, generate, and confirm the result — the highest budget of any specialist.',
   },
   {
-    id: 'mcpTools', label: 'MCP Tool Calls', sublabel: '28 tools · per-specialist subset',
-    type: 'mcp', cx: 905, cy: 228, w: 158, h: 44, background: true,
-    description: 'The live MCP (Model Context Protocol) server — a standardised way for AI models to call external tools. Only the active specialist can call it, and each specialist has a different curated subset of the 28 available tools (Reader: 25 read-only tools; Builder: 14 build/validate tools; Style Guide: 4 tools; Generator: 1 tool). The specialist calls a tool, gets real design system data back, then decides whether to call more tools or write its final answer. This ↺ agentic loop is what grounds responses in real data rather than guesses.',
+    id: 'readerMcp', label: 'Reader MCP', sublabel: '25 read-only tools',
+    type: 'mcp', cx: 905, cy: 100, w: 158, h: 44,
+    description: 'The Design System Reader\'s MCP toolkit — 25 read-only tools covering token lookup, component specs, theme data, icon catalog, layout rules, and accessibility guidelines. The agent calls these tools iteratively (↺ agentic loop), receiving real design system data each time, before composing its final answer.',
+  },
+  {
+    id: 'builderMcp', label: 'Builder MCP', sublabel: '14 tools · build + validate',
+    type: 'mcp', cx: 905, cy: 185, w: 158, h: 44,
+    description: 'The Component Builder\'s MCP toolkit — 14 tools for component specs, token values, validation, and accessibility checks. Each call returns real design system data the agent uses to ground its generated HTML/CSS before writing the final code.',
+  },
+  {
+    id: 'styleGuideMcp', label: 'Style Guide MCP', sublabel: '4 tools',
+    type: 'mcp', cx: 905, cy: 270, w: 158, h: 44,
+    description: 'The Style Guide\'s MCP toolkit — 4 focused tools: style guide content retrieval, token lookup, contrast checking, and color palette queries. The tight set keeps the specialist on-topic and avoids over-fetching.',
+  },
+  {
+    id: 'generatorMcp', label: 'Generator MCP', sublabel: '1 tool · generate_design_system',
+    type: 'mcp', cx: 905, cy: 355, w: 158, h: 44,
+    description: 'The System Generator\'s MCP toolkit — a single powerful tool: generate_design_system(). The agent may invoke it up to 8 times across the conversation to gather brand requirements, trigger generation, and confirm the result. Highest call budget of any specialist.',
   },
   {
     id: 'response', label: 'Response', sublabel: 'message + preview + metadata',
@@ -100,54 +115,54 @@ const EDGES = [
     label: '',
     path: 'M 540,240 C 570,240 570,355 601,355',
   },
-  // MCP tool calls — dashed (specialist → MCP)
+  // MCP tool calls — dashed, bidirectional (specialist ⇄ MCP), straight horizontal paths
   {
-    from: 'reader', to: 'mcpTools',
-    label: 'tool calls',
-    path: 'M 759,100 C 820,100 826,222 826,222',
-    dashed: true,
+    from: 'reader', to: 'readerMcp',
+    label: 'call / result',
+    path: 'M 759,100 H 826',
+    dashed: true, bidir: true,
   },
   {
-    from: 'builder', to: 'mcpTools',
+    from: 'builder', to: 'builderMcp',
     label: '',
-    path: 'M 759,185 C 820,185 826,226 826,226',
-    dashed: true,
+    path: 'M 759,185 H 826',
+    dashed: true, bidir: true,
   },
   {
-    from: 'styleGuide', to: 'mcpTools',
+    from: 'styleGuide', to: 'styleGuideMcp',
     label: '',
-    path: 'M 759,270 C 820,270 826,232 826,232',
-    dashed: true,
+    path: 'M 759,270 H 826',
+    dashed: true, bidir: true,
   },
   {
-    from: 'generator', to: 'mcpTools',
+    from: 'generator', to: 'generatorMcp',
     label: '',
-    path: 'M 759,355 C 820,355 826,236 826,236',
-    dashed: true,
+    path: 'M 759,355 H 826',
+    dashed: true, bidir: true,
   },
-  // Specialist → response — dashed (final answer)
+  // MCP → response — dashed (grounded final answer fans into output)
   {
-    from: 'reader', to: 'response',
+    from: 'readerMcp', to: 'response',
     label: 'response',
-    path: 'M 759,92 C 950,92 950,218 1050,218',
+    path: 'M 984,100 C 1020,100 1020,214 1050,214',
     dashed: true,
   },
   {
-    from: 'builder', to: 'response',
+    from: 'builderMcp', to: 'response',
     label: '',
-    path: 'M 759,177 C 950,177 950,222 1050,222',
+    path: 'M 984,185 C 1020,185 1020,220 1050,220',
     dashed: true,
   },
   {
-    from: 'styleGuide', to: 'response',
+    from: 'styleGuideMcp', to: 'response',
     label: '',
-    path: 'M 759,278 C 950,278 950,234 1050,234',
+    path: 'M 984,270 C 1020,270 1020,232 1050,232',
     dashed: true,
   },
   {
-    from: 'generator', to: 'response',
+    from: 'generatorMcp', to: 'response',
     label: '',
-    path: 'M 759,363 C 950,363 950,238 1050,238',
+    path: 'M 984,355 C 1020,355 1020,242 1050,242',
     dashed: true,
   },
 ];
@@ -178,12 +193,12 @@ function svgEl(tag, attrs = {}) {
   return el;
 }
 
-function buildArrowMarker(id, color) {
+function buildArrowMarker(id, color, orient = 'auto') {
   const marker = svgEl('marker', {
     id,
     markerWidth: '8', markerHeight: '8',
     refX: '7', refY: '3',
-    orient: 'auto',
+    orient,
   });
   marker.appendChild(svgEl('path', {
     d: 'M0,0 L0,6 L8,3 z',
@@ -207,6 +222,7 @@ function buildDiagramSvg() {
   // One marker per node type color, plus a dim one for dashed edges
   defs.appendChild(buildArrowMarker('arr-solid', '#94a3b8'));
   defs.appendChild(buildArrowMarker('arr-dashed', '#94a3b8'));
+  defs.appendChild(buildArrowMarker('arr-dashed-rev', '#94a3b8', 'auto-start-reverse'));
   for (const [type, style] of Object.entries(NODE_TYPES)) {
     defs.appendChild(buildArrowMarker(`arr-${type}`, style.stroke));
   }
@@ -238,10 +254,10 @@ function buildDiagramSvg() {
   // ── Edges ──
   const edgeG = svgEl('g', { 'data-layer': 'edges' });
   for (const edge of EDGES) {
-    const fromNode = NODES.find(n => n.id === edge.from);
     const stroke = edge.dashed ? '#4b5563' : '#6b7280';
     const strokeW = edge.dashed ? 1.5 : 2;
-    const marker = `url(#arr-${edge.dashed ? 'dashed' : 'solid'})`;
+    const markerEnd = `url(#arr-${edge.dashed ? 'dashed' : 'solid'})`;
+    const markerStart = edge.bidir ? 'url(#arr-dashed-rev)' : undefined;
 
     const g = svgEl('g');
     g.appendChild(svgEl('path', {
@@ -250,7 +266,8 @@ function buildDiagramSvg() {
       stroke,
       'stroke-width': strokeW,
       'stroke-dasharray': edge.dashed ? '6 4' : undefined,
-      'marker-end': marker,
+      'marker-end': markerEnd,
+      'marker-start': markerStart,
     }));
 
     // Edge label (only for labeled edges)
@@ -338,19 +355,6 @@ function buildDiagramSvg() {
     nodeG.appendChild(g);
   }
   svg.appendChild(nodeG);
-
-  // ── Agentic loop annotation ──
-  const loopText = svgEl('text', {
-    x: 906, y: 266,
-    'text-anchor': 'middle',
-    fill: '#0d9488',
-    'font-size': 9.5,
-    'font-weight': 600,
-    'font-family': 'system-ui, sans-serif',
-    'letter-spacing': '0.03em',
-  });
-  loopText.textContent = '↺ agentic loop';
-  svg.appendChild(loopText);
 
   return svg;
 }
@@ -463,32 +467,5 @@ export function initDiagram() {
         g.dispatchEvent(new MouseEvent('click'));
       }
     });
-  }
-
-  // Build the legend
-  const legendWrap = document.getElementById('diag-legend');
-  if (legendWrap) {
-    for (const [type, style] of Object.entries(NODE_TYPES)) {
-      const item = document.createElement('div');
-      item.className = 'diag-legend-item';
-      const swatch = document.createElement('span');
-      swatch.className = 'diag-legend-swatch';
-      if (type === 'mcp') {
-        swatch.style.cssText = `background:${style.fill}; border:1.5px dashed ${style.stroke}`;
-      } else {
-        swatch.style.cssText = `background:${style.fill}; border:1.5px solid ${style.stroke}`;
-      }
-      const label = document.createElement('span');
-      label.className = 'diag-legend-label';
-      label.textContent = style.legendLabel;
-      item.appendChild(swatch);
-      item.appendChild(label);
-      legendWrap.appendChild(item);
-    }
-    // Dashed arrow legend
-    const dashItem = document.createElement('div');
-    dashItem.className = 'diag-legend-item';
-    dashItem.innerHTML = '<span class="diag-legend-dash"></span><span class="diag-legend-label">Background / on-demand</span>';
-    legendWrap.appendChild(dashItem);
   }
 }

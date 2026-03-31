@@ -182,7 +182,7 @@ async function handleSend() {
       const trace = getOrCreateTrace();
       const row = document.createElement("div");
       row.className = "trace-item trace-routed";
-      const agentLabel = { reader: "Design System Reader", builder: "Component Builder", generator: "System Generator" }[agent] ?? agent;
+      const agentLabel = { orchestrator: "Orchestrator", reader: "Design System Reader", builder: "Component Builder", generator: "System Generator", "style-guide": "Style Guide" }[agent] ?? agent;
       row.innerHTML = `<span class="trace-agent-name">${escapeHtml(agentLabel)}</span>`;
       if (reason) {
         const tip = document.createElement("span");

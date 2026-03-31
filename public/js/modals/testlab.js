@@ -25,6 +25,7 @@ const PREVIEW_TRUNCATE_LENGTH = 400; // preview HTML truncation in playground
 //     { type: "contains",        value: "keyword" }       → message contains value (case-insensitive)
 //     { type: "toolUsed",        value: "get_tokens" }    → toolCallsUsed includes the tool name
 //     { type: "hasPreview" }                              → preview HTML must be non-empty
+//     { type: "noPreview" }                               → response must NOT include a preview
 //     { type: "previewContains", value: "#2563eb" }       → preview HTML contains value (case-insensitive)
 //     { type: "notEmpty" }                                → message must be non-empty
 // ─────────────────────────────────────────────────────────────────────────────

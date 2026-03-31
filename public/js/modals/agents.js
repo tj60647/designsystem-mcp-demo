@@ -1,4 +1,5 @@
 import { escapeHtml, loadAgentSettings, saveAgentSettings } from '../utils.js';
+import { AGENT_COLORS, AGENT_LABELS } from './testlab.js';
 
 const MODEL_OPTIONS = [
   "openai/gpt-oss-20b:nitro",
@@ -300,15 +301,6 @@ const SR_SCENARIOS = {
   },
 };
 
-const SR_AGENT_COLORS = {
-  orchestrator: "purple", reader: "accent", builder: "orange",
-  generator: "green", "style-guide": "red",
-};
-const SR_AGENT_LABELS = {
-  orchestrator: "Orchestrator", reader: "Reader", builder: "Builder",
-  generator: "Generator", "style-guide": "Style Guide",
-};
-
 // Delegate to the already-imported escapeHtml (which also escapes single quotes)
 const escHtml = (s) => escapeHtml(String(s));
 
@@ -334,7 +326,7 @@ function srRenderChain(wrap) {
     ${idx > 0 ? '<div class="pg-chain-arrow">→</div>' : ""}
     <div class="pg-chain-node pg-chain-node-${step.status}">
       <span class="pg-node-num">${idx + 1}</span>
-      <span class="pg-node-agent">${escHtml(SR_AGENT_LABELS[step.agentId] ?? step.agentId)}</span>
+      <span class="pg-node-agent">${escHtml(AGENT_LABELS[step.agentId] ?? step.agentId)}</span>
     </div>
   `).join("");
 }
@@ -383,7 +375,7 @@ function srRenderTimeline(wrap) {
         <div class="pg-step-identity">
           <span class="pg-status-dot pg-status-dot-${step.status}"></span>
           <span class="pg-step-num">${idx + 1}</span>
-          <span class="pg-step-agent">${escHtml(SR_AGENT_LABELS[step.agentId] ?? step.agentId)}</span>
+          <span class="pg-step-agent">${escHtml(AGENT_LABELS[step.agentId] ?? step.agentId)}</span>
         </div>
         <div class="pg-step-meta">${chips}</div>
       </div>

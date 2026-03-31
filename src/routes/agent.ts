@@ -4,7 +4,7 @@
  * License: MIT
  *
  * Routes:
- *   GET /api/agent-info      — machine-readable description of all four agents
+ *   GET /api/agent-info      — machine-readable description of all five agents
  *   GET /prompt-templates    — DEPRECATED: legacy prompt template list
  */
 

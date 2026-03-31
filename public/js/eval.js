@@ -388,7 +388,7 @@ function initSuiteSection() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 2. TOOL EXPLORER
+// 4. TOOL EXPLORER
 // ═══════════════════════════════════════════════════════════════════════════════
 let toolsList = null;
 let selectedTool = null;
@@ -598,7 +598,7 @@ async function callTool(tool) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 3. PROMPT LAB
+// 5. PROMPT LAB
 // ═══════════════════════════════════════════════════════════════════════════════
 let templates = null;
 let selectedTemplate = null;
@@ -763,7 +763,7 @@ async function runPromptLab() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 4. AGENT CONFIG
+// 7. AGENTS
 // ═══════════════════════════════════════════════════════════════════════════════
 let agentSectionInited = false;
 let agentsLastLoadedModel = '';
@@ -886,7 +886,7 @@ function renderAgentsSection(wrap, agents, model) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 5. METRICS
+// 8. METRICS
 // ═══════════════════════════════════════════════════════════════════════════════
 async function loadMetrics() {
   const wrap = document.getElementById('eval-section-metrics');
@@ -986,14 +986,6 @@ const PLAYGROUND_SCENARIOS = {
   },
 };
 
-const PG_AGENT_LABELS = {
-  orchestrator: 'Orchestrator',
-  reader:        'Reader',
-  builder:       'Builder',
-  generator:     'Generator',
-  'style-guide': 'Style Guide',
-};
-
 // ── State ─────────────────────────────────────────────────────────────────────
 let pgSteps          = [];
 let pgObservations   = [];
@@ -1087,7 +1079,7 @@ function pgRenderChain() {
     ${idx > 0 ? '<div class="pg-chain-arrow">→</div>' : ''}
     <div class="pg-chain-node pg-chain-node-${step.status}">
       <span class="pg-node-num">${idx + 1}</span>
-      <span class="pg-node-agent">${escapeHtml(PG_AGENT_LABELS[step.agentId] ?? step.agentId)}</span>
+      <span class="pg-node-agent">${escapeHtml(AGENT_LABELS[step.agentId] ?? step.agentId)}</span>
     </div>
   `).join('');
 }
@@ -1144,7 +1136,7 @@ function pgRenderTimeline() {
         <div class="pg-step-identity">
           <span class="pg-status-dot pg-status-dot-${step.status}"></span>
           <span class="pg-step-num">${idx + 1}</span>
-          <span class="pg-step-agent">${escapeHtml(PG_AGENT_LABELS[step.agentId] ?? step.agentId)}</span>
+          <span class="pg-step-agent">${escapeHtml(AGENT_LABELS[step.agentId] ?? step.agentId)}</span>
         </div>
         <div class="pg-step-meta">${chips}${removeBtn}</div>
       </div>
@@ -1237,7 +1229,7 @@ function initPlaygroundSection() {
     .join('');
 
   const agentOpts = ['orchestrator','reader','builder','generator','style-guide']
-    .map(a => `<option value="${a}">${escapeHtml(PG_AGENT_LABELS[a])}</option>`)
+    .map(a => `<option value="${a}">${escapeHtml(AGENT_LABELS[a])}</option>`)
     .join('');
 
   wrap.insertAdjacentHTML('beforeend', `
@@ -1323,7 +1315,7 @@ function initPlaygroundSection() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 7. COMPARISON
+// 2. TEST INSPECTOR
 // ═══════════════════════════════════════════════════════════════════════════════
 // Select a predefined test from the sidebar, run it, watch the live SSE tool
 // trace stream in, then see per-check pass/fail results at the end.
@@ -1362,6 +1354,8 @@ function cmpEvalCheck(check, result) {
       return { label: `Called tool "${check.value}"`, passed: Array.isArray(result.toolCallsUsed) && result.toolCallsUsed.includes(check.value), detail: result.toolCallsUsed?.join(', ') || 'no tools' };
     case 'hasPreview':
       return { label: 'Response includes a preview', passed: typeof result.preview === 'string' && result.preview.trim().length > 0, detail: result.preview ? 'preview present' : 'no preview' };
+    case 'noPreview':
+      return { label: 'Response must not include a preview', passed: !(result.preview && result.preview.trim()), detail: result.preview ? 'preview unexpectedly present' : 'no preview (correct)' };
     case 'previewContains':
       return { label: `Preview contains "${check.value}"`, passed: typeof result.preview === 'string' && result.preview.toLowerCase().includes(check.value.toLowerCase()), detail: result.preview ? 'checked preview' : 'no preview' };
     case 'notEmpty':
@@ -1559,7 +1553,7 @@ async function runComparison() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 8. BATCH
+// 3. BATCH
 // ═══════════════════════════════════════════════════════════════════════════════
 // Runs the full 110-test suite sequentially, renders results grouped by agent,
 // shows a live progress bar, and provides a summary grid + JSON export.

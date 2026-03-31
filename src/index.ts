@@ -71,7 +71,7 @@ app.get("/health", (_req, res) => {
     description:
       "A queryable context layer that makes design systems machine-readable and usable by AI.",
     primitives: {
-      tools: 27,
+      tools: 28,
       resources: "16 URIs",
       prompts: 10,
       logging: "4 levels, 14 events",
@@ -161,7 +161,7 @@ if (!isVercel) {
     console.log(`  Health check  : GET  /health`);
     console.log(`  MCP endpoint  : POST /mcp`);
     console.log(`  Version       : 0.3.0`);
-    console.log(`  Tools         : 27`);
+    console.log(`  Tools         : 28`);
     console.log(`  Resources     : 14 URIs + 4 templates`);
     console.log(`  Prompts       : 10\n`);
   });

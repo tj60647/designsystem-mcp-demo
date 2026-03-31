@@ -228,6 +228,10 @@ export function initAgentsPanel() {
 
   // ── Load panel ─────────────────────────────────────────────────────────
   async function loadPanel() {
+    if (allAgents.length > 0) {
+      renderLobby();
+      return;
+    }
     container.innerHTML = '<div class="agents-loading">Loading agent info…</div>';
     try {
       try {

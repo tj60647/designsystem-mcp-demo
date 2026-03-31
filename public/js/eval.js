@@ -1,14 +1,17 @@
 /**
  * Design System MCP — Eval Lab
  *
- * Full-page evaluation workspace with five sections:
+ * Full-page evaluation workspace with eight sections:
  *   1. Test Suite     — run the 110-test prompt suite against real agents
- *   2. Tool Explorer  — invoke any of the 27 MCP tools directly via POST /mcp
- *   3. Prompt Lab     — pick a prompt template, send it, view the full tool trace
- *   4. Agents         — browse live agent config (system prompts, tool sets, diagram)
- *   5. Metrics        — in-process request / routing / tool-call counters
+ *   2. Test Inspector — pick a test, run it, inspect the live tool trace and checks
+ *   3. Batch          — full suite with agent-grouped results and progress bar
+ *   4. Tool Explorer  — invoke any of the 27 MCP tools directly via POST /mcp
+ *   5. Prompt Lab     — pick a prompt template, send it, view the full tool trace
+ *   6. Playground     — build and run chained agent sequences
+ *   7. Agents         — browse live agent config (system prompts, tool sets, diagram)
+ *   8. Metrics        — in-process request / routing / tool-call counters
  */
-import { TEST_SUITE, runTest } from './modals/testlab.js';
+import { TEST_SUITE, runTest, AGENT_COLORS, AGENT_LABELS, TAG_STYLES } from './modals/testlab.js';
 import { escapeHtml } from './utils.js';
 
 // ── Shared state ──────────────────────────────────────────────────────────────
@@ -55,22 +58,6 @@ let suiteRunning     = false;
 let suiteStopFlag    = false;
 let suiteInited      = false;
 let suiteConcurrency = 4;
-
-const AGENT_COLORS = {
-  orchestrator:  'purple', reader: 'accent', builder: 'orange',
-  generator: 'green', 'style-guide': 'red',
-};
-const AGENT_LABELS = {
-  orchestrator: 'Orchestrator', reader: 'Reader', builder: 'Builder',
-  generator: 'Generator', 'style-guide': 'Style Guide',
-};
-const TAG_STYLES = {
-  routing:     { cls: 'tl-tag-routing',     label: 'routing'     },
-  epistemic:   { cls: 'tl-tag-epistemic',   label: 'epistemic'   },
-  grounding:   { cls: 'tl-tag-grounding',   label: 'grounding'   },
-  behavioral:  { cls: 'tl-tag-behavioral',  label: 'behavioral'  },
-  mechanistic: { cls: 'tl-tag-mechanistic', label: 'mechanistic' },
-};
 
 function agentBadge(agent) {
   const color = AGENT_COLORS[agent] ?? 'accent';
@@ -616,10 +603,12 @@ async function callTool(tool) {
 let templates = null;
 let selectedTemplate = null;
 let promptRunning = false;
+let promptsInited = false;
 
 async function initPromptsSection() {
   const wrap = document.getElementById('eval-section-prompts');
   if (!wrap) return;
+  if (promptsInited) return;
   if (templates) { renderPromptsLayout(); return; }
 
   wrap.innerHTML = '<div class="eval-loading">Loading prompt templates…</div>';
@@ -694,6 +683,7 @@ function renderPromptsLayout() {
   });
 
   document.getElementById('eval-pl-run-btn')?.addEventListener('click', runPromptLab);
+  promptsInited = true;
 }
 
 async function runPromptLab() {
@@ -744,9 +734,9 @@ async function runPromptLab() {
         } else if (event.type === 'agent_routed') {
           appendStep(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-agent">ROUTED → ${escapeHtml(event.agent)}</div><div class="eval-pl-step-content">${escapeHtml(event.reason ?? '')}</div></div>`);
         } else if (event.type === 'tool_call') {
-          appendStep(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-tool">TOOL CALL — ${escapeHtml(event.tool)}</div><div class="eval-pl-step-content"><pre style="margin:0;font-size:11px;overflow:auto">${escapeHtml(JSON.stringify(event.args, null, 2))}</pre></div></div>`);
+          appendStep(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-tool">TOOL CALL — ${escapeHtml(event.tool)}</div><div class="eval-pl-step-content"><pre class="tl-trace-pre">${escapeHtml(JSON.stringify(event.args, null, 2))}</pre></div></div>`);
         } else if (event.type === 'tool_result') {
-          appendStep(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-result">TOOL RESULT — ${escapeHtml(event.tool)}</div><div class="eval-pl-step-content">${event.chars} chars · ${escapeHtml(event.preview ?? '')}</div></div>`);
+          appendStep(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-result">TOOL RESULT — ${escapeHtml(event.tool)}</div><div class="eval-pl-step-content">${escapeHtml(String(event.chars ?? '?'))} chars · ${escapeHtml(event.preview ?? '')}</div></div>`);
         } else if (event.type === 'done') {
           const tools = event.toolCallsUsed ?? [];
           const toolChips = tools.map(t => `<span class="eval-pl-tool-chip">${escapeHtml(t)}</span>`).join('');
@@ -776,9 +766,11 @@ async function runPromptLab() {
 // 4. AGENT CONFIG
 // ═══════════════════════════════════════════════════════════════════════════════
 let agentSectionInited = false;
+let agentsLastLoadedModel = '';
 
 function initAgentsSection() {
-  if (agentSectionInited) return;
+  const currentModel = getModel();
+  if (agentSectionInited && agentsLastLoadedModel === currentModel) return;
   // The agents modal init code attaches to DOM elements by ID. We need to render
   // the same lobby/diagram HTML into the eval page section instead.
   // We'll fetch /api/agent-info directly and render using a simplified version
@@ -788,11 +780,12 @@ function initAgentsSection() {
 
   wrap.innerHTML = '<div class="eval-loading">Loading agent config…</div>';
 
-  fetch(`/api/agent-info?model=${encodeURIComponent(getModel())}`)
+  fetch(`/api/agent-info?model=${encodeURIComponent(currentModel)}`)
     .then(r => r.json())
     .then(data => {
       renderAgentsSection(wrap, data.agents ?? [], data.model ?? '');
       agentSectionInited = true;
+      agentsLastLoadedModel = currentModel;
     })
     .catch(err => {
       wrap.innerHTML = `<div class="eval-section-body"><div class="eval-error">Failed to load: ${escapeHtml(String(err))}</div></div>`;
@@ -1522,7 +1515,7 @@ async function runComparison() {
         } else if (ev.type === 'tool_call') {
           appendTrace(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-tool">TOOL CALL — ${escapeHtml(ev.tool)}</div><div class="eval-pl-step-content"><pre class="cmp-trace-pre">${escapeHtml(JSON.stringify(ev.args, null, 2))}</pre></div></div>`);
         } else if (ev.type === 'tool_result') {
-          appendTrace(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-result">TOOL RESULT — ${escapeHtml(ev.tool)}</div><div class="eval-pl-step-content">${ev.chars} chars · ${escapeHtml(ev.preview ?? '')}</div></div>`);
+          appendTrace(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-result">TOOL RESULT — ${escapeHtml(ev.tool)}</div><div class="eval-pl-step-content">${escapeHtml(String(ev.chars ?? '?'))} chars · ${escapeHtml(ev.preview ?? '')}</div></div>`);
         } else if (ev.type === 'done') {
           finalResult = { message: ev.message ?? '', preview: ev.preview ?? null, routedAgent: ev.routedAgent ?? null, toolCallsUsed: ev.toolCallsUsed ?? [] };
           const tools = (ev.toolCallsUsed ?? []).map(t => `<span class="eval-pl-tool-chip">${escapeHtml(t)}</span>`).join('');
@@ -1804,6 +1797,8 @@ async function runBatchAll() {
       if (finalResult) {
         const checkResults = test.checks.map(c => cmpEvalCheck(c, finalResult));
         batchResults[test.id] = { status: 'done', passed: checkResults.every(r => r.passed), result: finalResult, checkResults };
+      } else {
+        batchResults[test.id] = { status: 'done', passed: false, result: null, checkResults: [{ label: 'Stream ended without a response', passed: false, detail: 'no done event received' }] };
       }
     } catch (err) {
       batchResults[test.id] = { status: 'done', passed: false, result: null, checkResults: [{ label: 'Error', passed: false, detail: String(err) }] };

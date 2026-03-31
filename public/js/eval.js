@@ -1533,6 +1533,10 @@ async function runComparison() {
       }
     }
 
+    if (!finalResult) {
+      appendTrace(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-error">ERROR</div><div class="eval-pl-step-content">Stream ended without a response.</div></div>`);
+    }
+
     if (finalResult && cmpSelectedTest.checks) {
       const checkResults = cmpSelectedTest.checks.map(c => cmpEvalCheck(c, finalResult));
       const allPassed    = checkResults.every(r => r.passed);
@@ -1605,11 +1609,12 @@ function renderBatchGroupRow(test) {
       `<div class="tl-check-row ${r.passed ? 'tl-check-pass' : 'tl-check-fail'}"><span class="tl-check-icon">${r.passed ? '✓' : '✗'}</span><span class="tl-check-label">${escapeHtml(r.label)}</span><span class="tl-check-detail">${escapeHtml(r.detail ?? '')}</span></div>`
     ).join('');
     const output = st.result?.message ? `<pre class="batch-output-pre">${escapeHtml(st.result.message.slice(0, 300))}${st.result.message.length > 300 ? '…' : ''}</pre>` : '';
-    detail = `<div class="batch-test-detail">${rows}${output}</div>`;
+    const detailId = `batch-detail-${test.id}`;
+    detail = `<div class="batch-test-detail" id="${detailId}"${st.passed ? ' style="display:none"' : ''}>${rows}${output}</div>`;
   }
 
   return `<div class="batch-test-row${st.passed ? ' batch-row-pass' : st.status !== 'idle' && !isRunning ? ' batch-row-fail' : ''}" data-batch-test="${test.id}">
-    <div class="batch-test-row-header">
+    <div class="batch-test-row-header" data-detail-id="batch-detail-${test.id}">
       <span class="pg-status-dot ${dotClass}"></span>
       <span class="batch-test-name">${escapeHtml(test.description)}</span>
       <div class="batch-test-meta">${badge}</div>
@@ -1647,7 +1652,7 @@ function renderBatchResults() {
   }).join('');
 
   container.querySelectorAll('[data-batch-toggle]').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.onclick = function() {
       const group = btn.closest('.batch-agent-group');
       if (!group) return;
       const tests = group.querySelector('.batch-group-tests');
@@ -1656,7 +1661,7 @@ function renderBatchResults() {
       const collapsed = tests.style.display === 'none';
       tests.style.display = collapsed ? '' : 'none';
       if (chevron) chevron.textContent = collapsed ? '▼' : '▶';
-    });
+    };
   });
 }
 
@@ -1724,6 +1729,19 @@ function initBatchSection() {
     if (exportBtn) exportBtn.style.display = 'none';
   });
   document.getElementById('batch-export-btn')?.addEventListener('click', exportBatchResults);
+
+  // Delegate row-header clicks to toggle per-test detail panels
+  const batchResultsContainer = document.getElementById('batch-results');
+  if (batchResultsContainer) {
+    batchResultsContainer.addEventListener('click', e => {
+      const header = e.target.closest('.batch-test-row-header');
+      if (!header) return;
+      const detailId = header.dataset.detailId;
+      if (!detailId) return;
+      const detail = document.getElementById(detailId);
+      if (detail) detail.style.display = detail.style.display === 'none' ? '' : 'none';
+    });
+  }
 
   batchInited = true;
 }
@@ -1804,15 +1822,14 @@ async function runBatchAll() {
         const metaEl = header.querySelector('.batch-group-meta');
         if (metaEl) metaEl.innerHTML = ran > 0 ? `<span class="${passed === ran ? 'batch-pass-chip' : 'batch-fail-chip'}">${passed}/${ran}</span><span class="batch-chevron">▼</span>` : '<span class="batch-chevron">▼</span>';
         // Re-bind collapse
-        header.onclick = null;
-        header.addEventListener('click', () => {
+        header.onclick = function() {
           const groupTests = header.closest('.batch-agent-group')?.querySelector('.batch-group-tests');
           const chevron = header.querySelector('.batch-chevron');
           if (!groupTests) return;
           const collapsed = groupTests.style.display === 'none';
           groupTests.style.display = collapsed ? '' : 'none';
           if (chevron) chevron.textContent = collapsed ? '▼' : '▶';
-        });
+        };
       }
     }
 

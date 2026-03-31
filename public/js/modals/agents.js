@@ -305,11 +305,8 @@ const SR_AGENT_LABELS = {
   generator: "Generator", "style-guide": "Style Guide",
 };
 
-function escHtml(s) {
-  return String(s)
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
+// Delegate to the already-imported escapeHtml (which also escapes single quotes)
+const escHtml = (s) => escapeHtml(String(s));
 
 let srSelectedKey = "token_audit";
 let srSteps       = [];
@@ -318,7 +315,7 @@ let srStopFlag    = false;
 let srInited      = false;
 
 function srFreshStep(s) {
-  return { ...s, status: "pending", traceEvents: [], latencyMs: undefined, error: undefined };
+  return { ...s, status: "pending", traceEvents: [], latencyMs: undefined, error: undefined, message: undefined };
 }
 
 function srLoadScenario(key) {
@@ -368,7 +365,11 @@ function srRenderTimeline(wrap) {
     } else if (step.status === "running") {
       content = `<div class="pg-running-indicator"><span class="pg-spinner"></span>Executing…</div>`;
     } else if (step.status === "complete") {
-      content = srTraceHtml(step.traceEvents);
+      const traceHtml = srTraceHtml(step.traceEvents);
+      const msgHtml = step.message
+        ? `<pre class="pg-step-output">${escapeHtml(step.message.slice(0, 400))}${step.message.length > 400 ? "…" : ""}</pre>`
+        : "";
+      content = traceHtml + msgHtml;
     } else if (step.status === "error") {
       content = `<div class="pg-error-box">${escHtml(step.error ?? "Error")}</div>`;
     }
@@ -446,11 +447,14 @@ async function srRunAll(wrap) {
             if (traceEvents.length < 50) traceEvents.push(ev);
           }
           if (ev.type === "done") {
-            srSteps[i] = { ...srSteps[i], status: "complete", traceEvents, latencyMs: Date.now() - start };
+            srSteps[i] = { ...srSteps[i], status: "complete", traceEvents, latencyMs: Date.now() - start, message: ev.message ?? "" };
             break outer;
           }
           if (ev.type === "error") throw new Error(ev.error ?? "Unknown error");
         }
+      }
+      if (srSteps[i].status === "running") {
+        srSteps[i] = { ...srSteps[i], status: "error", error: "Stream ended unexpectedly", latencyMs: Date.now() - start };
       }
     } catch (err) {
       srSteps[i] = { ...srSteps[i], status: "error", error: String(err), latencyMs: Date.now() - start };

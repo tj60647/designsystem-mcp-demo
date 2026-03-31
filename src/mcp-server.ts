@@ -26,10 +26,10 @@ import { DATA_SCHEMAS } from "./schemas.js";
 // ── Types ─────────────────────────────────────────────────────────────────
 
 interface TokenEntry {
-  value: string;
-  type: string;
-  description?: string;
-  resolvedValue?: string;
+  $value: string;
+  $type: string;
+  $description?: string;
+  $extensions?: Record<string, unknown>;
 }
 
 type TokenNode = TokenEntry | Record<string, unknown>;
@@ -146,8 +146,8 @@ function flattenTokenValues(
   const result: Record<string, string> = {};
   for (const [key, val] of Object.entries(obj)) {
     const fullPath = prefix ? `${prefix}.${key}` : key;
-    if (val !== null && typeof val === "object" && "value" in (val as object)) {
-      result[fullPath] = (val as TokenEntry).value;
+    if (val !== null && typeof val === "object" && "$value" in (val as object)) {
+      result[fullPath] = (val as TokenEntry).$value;
     } else if (val !== null && typeof val === "object") {
       Object.assign(result, flattenTokenValues(val as Record<string, unknown>, fullPath));
     }
@@ -172,12 +172,12 @@ function flattenAllTokens(
   const result: Record<string, { value: string; type: string; description?: string }> = {};
   for (const [key, val] of Object.entries(obj)) {
     const fullPath = prefix ? `${prefix}.${key}` : key;
-    if (val !== null && typeof val === "object" && "value" in (val as object)) {
+    if (val !== null && typeof val === "object" && "$value" in (val as object)) {
       const entry = val as TokenEntry;
       result[fullPath] = {
-        value: entry.value,
-        type: entry.type,
-        ...(entry.description ? { description: entry.description } : {}),
+        value: entry.$value,
+        type: entry.$type,
+        ...(entry.$description ? { description: entry.$description } : {}),
       };
     } else if (val !== null && typeof val === "object") {
       Object.assign(result, flattenAllTokens(val as Record<string, unknown>, fullPath));
@@ -1187,9 +1187,9 @@ export function createMcpServer(): McpServer {
       };
       const scale = Object.entries(spacingTokens).map(([key, entry]) => ({
         token: `spacing.${key}`,
-        value: entry.value,
-        type:  entry.type,
-        usage: semanticHints[key] ?? `spacing.${key} - ${entry.value}`,
+        value: entry.$value,
+        type:  entry.$type,
+        usage: semanticHints[key] ?? `spacing.${key} - ${entry.$value}`,
       }));
       log("info", "tool.invoked", { tool: "get_spacing_scale", params: {}, duration_ms: Date.now() - start, result_size: scale.length });
       return {

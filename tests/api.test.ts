@@ -434,10 +434,10 @@ describe("MCP tool correctness", () => {
     })) as { content: Array<{ text: string }> };
     const text = result.content.map((c) => c.text).join("");
     const parsed = JSON.parse(text) as {
-      containerMaxWidth: Record<string, { value: string }>;
+      containerMaxWidth: Record<string, { $value: string }>;
     };
     assert.equal(
-      parsed.containerMaxWidth.xl?.value,
+      parsed.containerMaxWidth.xl?.["$value"],
       "1280px",
       "xl container max-width should be 1280px"
     );

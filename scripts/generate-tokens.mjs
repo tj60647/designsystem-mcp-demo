@@ -9,7 +9,7 @@
  *   - Converts slash-delimited variable names to dot-path token keys
  *   - Maps Figma value types: COLOR → hex string, FLOAT → "Npx", STRING → string
  *   - Resolves $alias references and stores them as both the alias reference
- *     string and a resolvedValue (the concrete primitive value)
+ *     string and a $extensions.resolvedValue (the concrete primitive value)
  *   - Picks the Light mode (or Default if no Light mode exists) as canonical value
  *
  * Usage:
@@ -152,22 +152,22 @@ for (const [varName, { figmaType, modeValue, description }] of Object.entries(al
   let tokenEntry;
 
   if (modeValue && typeof modeValue === "object" && "$alias" in modeValue) {
-    // Alias token: value is a reference string, resolvedValue is the concrete value
+    // Alias token: $value is a reference string, $extensions.resolvedValue is the concrete value
     const aliasRef      = slashToDot(modeValue["$alias"]);
     const resolvedValue = resolveAlias(modeValue["$alias"]);
     tokenEntry = {
-      value:         `{${aliasRef}}`,
-      type:          tokenType,
-      resolvedValue,
-      ...(description ? { description } : {}),
+      $value:         `{${aliasRef}}`,
+      $type:          tokenType,
+      $extensions:    { resolvedValue },
+      ...(description ? { $description: description } : {}),
     };
   } else {
     // Primitive token
     const value = primitiveToTokenValue(modeValue, figmaType);
     tokenEntry = {
-      value,
-      type: tokenType,
-      ...(description ? { description } : {}),
+      $value: value,
+      $type:  tokenType,
+      ...(description ? { $description: description } : {}),
     };
   }
 

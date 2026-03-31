@@ -57,9 +57,24 @@ const NODES = [
     description: 'Gathers brand requirements through a short conversation, then calls the generate_design_system MCP tool to produce a complete design system (tokens, components, themes, icons). It has access to 1 MCP tool and may use up to 8 tool calls to gather inputs, generate, and confirm the result — the highest budget of any specialist.',
   },
   {
-    id: 'mcpTools', label: 'MCP Tool Calls', sublabel: '28 tools · per-specialist subset',
-    type: 'mcp', cx: 905, cy: 228, w: 158, h: 44, background: true,
-    description: 'The live MCP (Model Context Protocol) server — a standardised way for AI models to call external tools. Only the active specialist can call it, and each specialist has a different curated subset of the 28 available tools (Reader: 25 read-only tools; Builder: 14 build/validate tools; Style Guide: 4 tools; Generator: 1 tool). The specialist calls a tool, gets real design system data back, then decides whether to call more tools or write its final answer. This ↺ agentic loop is what grounds responses in real data rather than guesses.',
+    id: 'readerMcp', label: 'Reader MCP', sublabel: '25 read-only tools',
+    type: 'mcp', cx: 905, cy: 100, w: 158, h: 44,
+    description: 'The Design System Reader\'s MCP toolkit — 25 read-only tools covering token lookup, component specs, theme data, icon catalog, layout rules, and accessibility guidelines. The agent calls these tools iteratively (↺ agentic loop), receiving real design system data each time, before composing its final answer.',
+  },
+  {
+    id: 'builderMcp', label: 'Builder MCP', sublabel: '14 tools · build + validate',
+    type: 'mcp', cx: 905, cy: 185, w: 158, h: 44,
+    description: 'The Component Builder\'s MCP toolkit — 14 tools for component specs, token values, validation, and accessibility checks. Each call returns real design system data the agent uses to ground its generated HTML/CSS before writing the final code.',
+  },
+  {
+    id: 'styleGuideMcp', label: 'Style Guide MCP', sublabel: '4 tools',
+    type: 'mcp', cx: 905, cy: 270, w: 158, h: 44,
+    description: 'The Style Guide\'s MCP toolkit — 4 focused tools: style guide content retrieval, token lookup, contrast checking, and color palette queries. The tight set keeps the specialist on-topic and avoids over-fetching.',
+  },
+  {
+    id: 'generatorMcp', label: 'Generator MCP', sublabel: '1 tool · generate_design_system',
+    type: 'mcp', cx: 905, cy: 355, w: 158, h: 44,
+    description: 'The System Generator\'s MCP toolkit — a single powerful tool: generate_design_system(). The agent may invoke it up to 8 times across the conversation to gather brand requirements, trigger generation, and confirm the result. Highest call budget of any specialist.',
   },
   {
     id: 'response', label: 'Response', sublabel: 'message + preview + metadata',
@@ -100,54 +115,54 @@ const EDGES = [
     label: '',
     path: 'M 540,240 C 570,240 570,355 601,355',
   },
-  // MCP tool calls — dashed, bidirectional (specialist ⇄ MCP)
+  // MCP tool calls — dashed, bidirectional (specialist ⇄ MCP), straight horizontal paths
   {
-    from: 'reader', to: 'mcpTools',
+    from: 'reader', to: 'readerMcp',
     label: 'call / result',
-    path: 'M 759,100 C 820,100 826,222 826,222',
+    path: 'M 759,100 H 826',
     dashed: true, bidir: true,
   },
   {
-    from: 'builder', to: 'mcpTools',
+    from: 'builder', to: 'builderMcp',
     label: '',
-    path: 'M 759,185 C 820,185 826,226 826,226',
+    path: 'M 759,185 H 826',
     dashed: true, bidir: true,
   },
   {
-    from: 'styleGuide', to: 'mcpTools',
+    from: 'styleGuide', to: 'styleGuideMcp',
     label: '',
-    path: 'M 759,270 C 820,270 826,232 826,232',
+    path: 'M 759,270 H 826',
     dashed: true, bidir: true,
   },
   {
-    from: 'generator', to: 'mcpTools',
+    from: 'generator', to: 'generatorMcp',
     label: '',
-    path: 'M 759,355 C 820,355 826,236 826,236',
+    path: 'M 759,355 H 826',
     dashed: true, bidir: true,
   },
-  // Specialist → response — dashed (final answer)
+  // MCP → response — dashed (grounded final answer fans into output)
   {
-    from: 'reader', to: 'response',
+    from: 'readerMcp', to: 'response',
     label: 'response',
-    path: 'M 759,92 C 950,92 950,218 1050,218',
+    path: 'M 984,100 C 1020,100 1020,214 1050,214',
     dashed: true,
   },
   {
-    from: 'builder', to: 'response',
+    from: 'builderMcp', to: 'response',
     label: '',
-    path: 'M 759,177 C 950,177 950,222 1050,222',
+    path: 'M 984,185 C 1020,185 1020,220 1050,220',
     dashed: true,
   },
   {
-    from: 'styleGuide', to: 'response',
+    from: 'styleGuideMcp', to: 'response',
     label: '',
-    path: 'M 759,278 C 950,278 950,234 1050,234',
+    path: 'M 984,270 C 1020,270 1020,232 1050,232',
     dashed: true,
   },
   {
-    from: 'generator', to: 'response',
+    from: 'generatorMcp', to: 'response',
     label: '',
-    path: 'M 759,363 C 950,363 950,238 1050,238',
+    path: 'M 984,355 C 1020,355 1020,242 1050,242',
     dashed: true,
   },
 ];
@@ -340,19 +355,6 @@ function buildDiagramSvg() {
     nodeG.appendChild(g);
   }
   svg.appendChild(nodeG);
-
-  // ── Agentic loop annotation ──
-  const loopText = svgEl('text', {
-    x: 906, y: 266,
-    'text-anchor': 'middle',
-    fill: '#0d9488',
-    'font-size': 9.5,
-    'font-weight': 600,
-    'font-family': 'system-ui, sans-serif',
-    'letter-spacing': '0.03em',
-  });
-  loopText.textContent = '↺ agentic loop';
-  svg.appendChild(loopText);
 
   return svg;
 }

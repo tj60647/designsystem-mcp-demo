@@ -37,9 +37,9 @@ const NODES = [
     description: 'A lightweight AI "traffic director" that reads your message and decides which specialist should handle it — in exactly one AI call. It only has one tool: delegate_to_agent(), which routes to Reader, Builder, Style Guide, or Generator. It never answers questions itself and has no access to design system data.',
   },
   {
-    id: 'reader', label: 'DS Reader', sublabel: 'READER · up to 5 tool calls',
+    id: 'reader', label: 'Design System Reader', sublabel: 'READER · up to 5 tool calls',
     type: 'reader', cx: 680, cy: 100, w: 158, h: 44,
-    description: '"DS" = Design System. The Design System Reader answers questions about tokens, components, themes, icons, layout, and accessibility. It has access to 25 read-only MCP tools and can call up to 5 of them per turn before writing its final answer.',
+    description: 'Answers questions about tokens, components, themes, icons, layout, and accessibility. It has access to 25 read-only MCP tools and can call up to 5 of them per turn before writing its final answer.',
   },
   {
     id: 'builder', label: 'Component Builder', sublabel: 'BUILDER · up to 6 tool calls',
@@ -100,30 +100,30 @@ const EDGES = [
     label: '',
     path: 'M 540,240 C 570,240 570,355 601,355',
   },
-  // MCP tool calls — dashed (specialist → MCP)
+  // MCP tool calls — dashed, bidirectional (specialist ⇄ MCP)
   {
     from: 'reader', to: 'mcpTools',
-    label: 'tool calls',
+    label: 'call / result',
     path: 'M 759,100 C 820,100 826,222 826,222',
-    dashed: true,
+    dashed: true, bidir: true,
   },
   {
     from: 'builder', to: 'mcpTools',
     label: '',
     path: 'M 759,185 C 820,185 826,226 826,226',
-    dashed: true,
+    dashed: true, bidir: true,
   },
   {
     from: 'styleGuide', to: 'mcpTools',
     label: '',
     path: 'M 759,270 C 820,270 826,232 826,232',
-    dashed: true,
+    dashed: true, bidir: true,
   },
   {
     from: 'generator', to: 'mcpTools',
     label: '',
     path: 'M 759,355 C 820,355 826,236 826,236',
-    dashed: true,
+    dashed: true, bidir: true,
   },
   // Specialist → response — dashed (final answer)
   {
@@ -178,12 +178,12 @@ function svgEl(tag, attrs = {}) {
   return el;
 }
 
-function buildArrowMarker(id, color) {
+function buildArrowMarker(id, color, orient = 'auto') {
   const marker = svgEl('marker', {
     id,
     markerWidth: '8', markerHeight: '8',
     refX: '7', refY: '3',
-    orient: 'auto',
+    orient,
   });
   marker.appendChild(svgEl('path', {
     d: 'M0,0 L0,6 L8,3 z',
@@ -207,6 +207,7 @@ function buildDiagramSvg() {
   // One marker per node type color, plus a dim one for dashed edges
   defs.appendChild(buildArrowMarker('arr-solid', '#94a3b8'));
   defs.appendChild(buildArrowMarker('arr-dashed', '#94a3b8'));
+  defs.appendChild(buildArrowMarker('arr-dashed-rev', '#94a3b8', 'auto-start-reverse'));
   for (const [type, style] of Object.entries(NODE_TYPES)) {
     defs.appendChild(buildArrowMarker(`arr-${type}`, style.stroke));
   }
@@ -238,10 +239,10 @@ function buildDiagramSvg() {
   // ── Edges ──
   const edgeG = svgEl('g', { 'data-layer': 'edges' });
   for (const edge of EDGES) {
-    const fromNode = NODES.find(n => n.id === edge.from);
     const stroke = edge.dashed ? '#4b5563' : '#6b7280';
     const strokeW = edge.dashed ? 1.5 : 2;
-    const marker = `url(#arr-${edge.dashed ? 'dashed' : 'solid'})`;
+    const markerEnd = `url(#arr-${edge.dashed ? 'dashed' : 'solid'})`;
+    const markerStart = edge.bidir ? 'url(#arr-dashed-rev)' : undefined;
 
     const g = svgEl('g');
     g.appendChild(svgEl('path', {
@@ -250,7 +251,8 @@ function buildDiagramSvg() {
       stroke,
       'stroke-width': strokeW,
       'stroke-dasharray': edge.dashed ? '6 4' : undefined,
-      'marker-end': marker,
+      'marker-end': markerEnd,
+      'marker-start': markerStart,
     }));
 
     // Edge label (only for labeled edges)
@@ -463,32 +465,5 @@ export function initDiagram() {
         g.dispatchEvent(new MouseEvent('click'));
       }
     });
-  }
-
-  // Build the legend
-  const legendWrap = document.getElementById('diag-legend');
-  if (legendWrap) {
-    for (const [type, style] of Object.entries(NODE_TYPES)) {
-      const item = document.createElement('div');
-      item.className = 'diag-legend-item';
-      const swatch = document.createElement('span');
-      swatch.className = 'diag-legend-swatch';
-      if (type === 'mcp') {
-        swatch.style.cssText = `background:${style.fill}; border:1.5px dashed ${style.stroke}`;
-      } else {
-        swatch.style.cssText = `background:${style.fill}; border:1.5px solid ${style.stroke}`;
-      }
-      const label = document.createElement('span');
-      label.className = 'diag-legend-label';
-      label.textContent = style.legendLabel;
-      item.appendChild(swatch);
-      item.appendChild(label);
-      legendWrap.appendChild(item);
-    }
-    // Dashed arrow legend
-    const dashItem = document.createElement('div');
-    dashItem.className = 'diag-legend-item';
-    dashItem.innerHTML = '<span class="diag-legend-dash"></span><span class="diag-legend-label">Background / on-demand</span>';
-    legendWrap.appendChild(dashItem);
   }
 }

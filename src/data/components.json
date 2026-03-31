@@ -1,6 +1,7 @@
 {
   "button": {
     "name": "Button",
+    "type": "button",
     "description": "Primary interactive element for triggering actions. Use for form submissions, confirmations, and navigation.",
     "variants": [
       "primary",
@@ -119,7 +120,7 @@
       "Always use an approved variant; never use arbitrary background colors on buttons",
       "Use the 'destructive' variant only for irreversible actions (delete, remove)",
       "A loading button must disable all interaction and show a spinner",
-      "Minimum touch target is 44\u00d744px to meet WCAG accessibility requirements",
+      "Minimum touch target is 44×44px to meet WCAG accessibility requirements",
       "Button labels should be sentence case (e.g. 'Save changes', not 'SAVE CHANGES')",
       "Do not use more than one primary button per section or form",
       "Icon-only buttons must include an aria-label describing the action"
@@ -178,6 +179,7 @@
   },
   "input": {
     "name": "Input",
+    "type": "input",
     "description": "Single-line text input for collecting user data. Always pair with a visible label.",
     "variants": [
       "default",
@@ -226,7 +228,7 @@
       "label": {
         "type": "string",
         "optional": false,
-        "description": "Visible label text \u2014 always required"
+        "description": "Visible label text — always required"
       },
       "helperText": {
         "type": "string",
@@ -241,7 +243,7 @@
       "placeholder": {
         "type": "string",
         "optional": true,
-        "description": "Hint text inside the field \u2014 not a substitute for a label"
+        "description": "Hint text inside the field — not a substitute for a label"
       },
       "leftIcon": {
         "type": "ReactNode",
@@ -289,11 +291,11 @@
       "borderRadius": "{borderRadius.md}"
     },
     "constraints": [
-      "Every input must have a visible label \u2014 do not rely on placeholder text alone",
+      "Every input must have a visible label — do not rely on placeholder text alone",
       "Error messages must be linked to the input via aria-describedby",
       "Do not use placeholder text as a substitute for a label",
       "Input borders must achieve 3:1 contrast ratio against the background (WCAG 1.4.11)",
-      "Display error state and errorMessage together \u2014 never show one without the other",
+      "Display error state and errorMessage together — never show one without the other",
       "Helper text and error messages must not overlap; show only the error when invalid"
     ],
     "accessibility": {
@@ -344,11 +346,12 @@
       "default": "Standard bordered input; use for most free-text form fields.",
       "filled": "Filled/shaded background variant; use on light surfaces where more visual weight is needed.",
       "outline": "Outlined variant with prominent border; use when the field needs to stand out on a dense layout.",
-      "error": "Set automatically via state='error'; do not set variant='error' directly \u2014 use state prop."
+      "error": "Set automatically via state='error'; do not set variant='error' directly — use state prop."
     }
   },
   "card": {
     "name": "Card",
+    "type": "card",
     "description": "Container for grouping related content into a visually distinct surface.",
     "variants": [
       "default",
@@ -406,7 +409,7 @@
     "constraints": [
       "Do not nest interactive cards inside other interactive cards",
       "Elevated cards should not be used on dark or colored backgrounds without a token adjustment",
-      "Internal card content must use the established spacing scale \u2014 no arbitrary padding values",
+      "Internal card content must use the established spacing scale — no arbitrary padding values",
       "If a card is entirely clickable, wrap it in an anchor element and set an appropriate aria-label"
     ],
     "accessibility": {
@@ -419,10 +422,10 @@
     "anatomy": {
       "root": "div[role='region'] or article",
       "slots": {
-        "header": "Optional card header \u2014 title and optional actions",
+        "header": "Optional card header — title and optional actions",
         "media": "Optional image or media area at the top of the card",
         "body": "Primary content area",
-        "footer": "Optional footer \u2014 typically actions (buttons)"
+        "footer": "Optional footer — typically actions (buttons)"
       },
       "validChildren": [
         "Button",
@@ -463,7 +466,8 @@
   },
   "badge": {
     "name": "Badge",
-    "description": "Small label used to convey status, counts, or categorical metadata. Purely informational \u2014 not interactive.",
+    "type": "badge",
+    "description": "Small label used to convey status, counts, or categorical metadata. Purely informational — not interactive.",
     "variants": [
       "primary",
       "success",
@@ -498,7 +502,7 @@
       "dot": {
         "type": "boolean",
         "default": false,
-        "description": "Renders a colored dot instead of text \u2014 useful for status indicators"
+        "description": "Renders a colored dot instead of text — useful for status indicators"
       }
     },
     "tokens": {
@@ -530,8 +534,8 @@
       }
     },
     "constraints": [
-      "Do not use a badge as an interactive element \u2014 use a button or tag component instead",
-      "Badge text should be 1\u20133 words maximum; longer strings break the visual compact form",
+      "Do not use a badge as an interactive element — use a button or tag component instead",
+      "Badge text should be 1–3 words maximum; longer strings break the visual compact form",
       "Never use arbitrary colors; only approved variants are permitted",
       "Dot badges must include a visually hidden text label for screen readers"
     ],
@@ -581,7 +585,8 @@
   },
   "modal": {
     "name": "Modal",
-    "description": "Dialog overlay that interrupts the current flow to request a decision or display critical information. Use sparingly \u2014 prefer inline patterns when possible.",
+    "type": "modal",
+    "description": "Dialog overlay that interrupts the current flow to request a decision or display critical information. Use sparingly — prefer inline patterns when possible.",
     "variants": [
       "default",
       "alert",
@@ -658,7 +663,7 @@
       "Focus must be trapped inside the modal while it is open",
       "Pressing Escape must close non-alert modals",
       "Scroll must be locked on the document body while a modal is open",
-      "Do not stack more than two modals \u2014 prefer wizards or multi-step flows instead",
+      "Do not stack more than two modals — prefer wizards or multi-step flows instead",
       "fullscreen variant should only be used on mobile or for immersive content"
     ],
     "accessibility": {
@@ -680,7 +685,7 @@
       "slots": {
         "overlay": "Full-screen backdrop behind the modal",
         "container": "The modal panel itself",
-        "header": "Title bar \u2014 title text and optional close button",
+        "header": "Title bar — title text and optional close button",
         "body": "Scrollable content area",
         "footer": "Action buttons area (confirm, cancel, etc.)"
       },
@@ -723,6 +728,7 @@
   },
   "select": {
     "name": "Select",
+    "type": "select",
     "description": "Dropdown select input for choosing one option from a list. Use when there are five or more options; prefer radio buttons for fewer choices.",
     "variants": [
       "default",
@@ -772,7 +778,7 @@
       "label": {
         "type": "string",
         "required": true,
-        "description": "Visible label text \u2014 always required"
+        "description": "Visible label text — always required"
       },
       "helperText": {
         "type": "string",
@@ -843,11 +849,11 @@
       "borderRadius": "{borderRadius.md}"
     },
     "constraints": [
-      "Every select must have a visible label \u2014 do not rely on placeholder alone",
+      "Every select must have a visible label — do not rely on placeholder alone",
       "Error messages must be linked to the control via aria-describedby",
-      "Do not use select for binary yes/no choices \u2014 use a checkbox or toggle instead",
+      "Do not use select for binary yes/no choices — use a checkbox or toggle instead",
       "Option lists longer than 10 items should consider a searchable combobox instead",
-      "Display error state and errorMessage together \u2014 never show one without the other"
+      "Display error state and errorMessage together — never show one without the other"
     ],
     "accessibility": {
       "role": "combobox",
@@ -909,6 +915,7 @@
   },
   "checkbox": {
     "name": "Checkbox",
+    "type": "checkbox",
     "description": "Binary or tri-state input for selecting one or multiple items from a list. Always pair with a visible label.",
     "variants": [
       "default",
@@ -929,7 +936,7 @@
       "indeterminate": {
         "type": "boolean",
         "default": false,
-        "description": "Tri-state indeterminate visual \u2014 used for parent checkboxes in a group"
+        "description": "Tri-state indeterminate visual — used for parent checkboxes in a group"
       },
       "disabled": {
         "type": "boolean",
@@ -981,7 +988,7 @@
       "focusRing": "{color.semantic.border.focus}"
     },
     "constraints": [
-      "Always provide a visible label \u2014 a standalone checkbox is inaccessible",
+      "Always provide a visible label — a standalone checkbox is inaccessible",
       "Use indeterminate only for parent checkboxes that partially select a child group",
       "Disabled checkboxes must not be the only way to convey required state",
       "Group related checkboxes inside a fieldset with a legend",
@@ -1039,6 +1046,7 @@
   },
   "toast": {
     "name": "Toast",
+    "type": "toast",
     "description": "Transient notification that appears at the edge of the screen to communicate feedback without interrupting the user's flow.",
     "variants": [
       "info",
@@ -1114,7 +1122,7 @@
     },
     "constraints": [
       "Toasts must not contain critical information the user cannot recover if missed",
-      "Use error toasts sparingly \u2014 prefer inline form errors for field-level issues",
+      "Use error toasts sparingly — prefer inline form errors for field-level issues",
       "Auto-dismiss duration must be at least 4000ms to meet WCAG 2.2.1 timing requirements",
       "Toasts with action links must not auto-dismiss while the action is still relevant",
       "Do not stack more than three toasts simultaneously; queue additional ones"
@@ -1172,6 +1180,7 @@
   },
   "navigation": {
     "name": "Navigation",
+    "type": "navigation",
     "description": "Top navigation bar providing site-wide wayfinding, branding, and primary actions.",
     "variants": [
       "default",
@@ -1228,7 +1237,7 @@
       "zIndex": "{layout.zIndex.sticky}"
     },
     "constraints": [
-      "Do not add more than seven primary navigation items \u2014 use mega-menus or drawers for deep structures",
+      "Do not add more than seven primary navigation items — use mega-menus or drawers for deep structures",
       "The logo must link to the home page and carry an aria-label describing the site name",
       "Active item must be visually distinct through color and an accessible indicator, not color alone",
       "transparent variant must ensure sufficient contrast with page hero imagery below it",
@@ -1290,6 +1299,7 @@
   },
   "table": {
     "name": "Table",
+    "type": "table",
     "description": "Data table for displaying structured, comparative information in rows and columns.",
     "variants": [
       "default",
@@ -1368,7 +1378,7 @@
       }
     },
     "constraints": [
-      "Tables must not be used for layout \u2014 only for tabular data with logical row/column relationships",
+      "Tables must not be used for layout — only for tabular data with logical row/column relationships",
       "Every column must have a non-empty header label",
       "Sortable columns must indicate sort direction with both a visual icon and aria attributes",
       "Tables wider than their container must scroll horizontally, not clip content",
@@ -1436,6 +1446,7 @@
   },
   "form": {
     "name": "Form",
+    "type": "form",
     "description": "Layout wrapper that organises form controls into a consistent vertical or horizontal structure. References Button, Input, Checkbox, and Select components for field composition.",
     "variants": [
       "vertical",
@@ -1488,7 +1499,7 @@
       "Always include at least one Button with type='submit' inside a Form",
       "All fields within a Form must follow the label requirements of their respective components",
       "Use horizontal layout only for simple forms with short labels and short inputs",
-      "Do not place a Form inside another Form \u2014 nested forms are invalid HTML",
+      "Do not place a Form inside another Form — nested forms are invalid HTML",
       "Provide an accessible name for the form via aria-label or an associated heading"
     ],
     "accessibility": {
@@ -1517,7 +1528,7 @@
         "Button",
         "FormField"
       ],
-      "compositionNotes": "Use FormField as the wrapper for each field \u2014 it pairs the label, input, helper text, and error message. The actions slot should have the primary submit button on the right."
+      "compositionNotes": "Use FormField as the wrapper for each field — it pairs the label, input, helper text, and error message. The actions slot should have the primary submit button on the right."
     },
     "relationships": {
       "parent": null,

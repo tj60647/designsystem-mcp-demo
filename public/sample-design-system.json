@@ -5,7 +5,7 @@
         "50": {
           "$value": "#f0fdf4",
           "$type": "color",
-          "$description": "Lightest primary — tinted backgrounds"
+          "$description": "Lightest primary \u2014 tinted backgrounds"
         },
         "100": {
           "$value": "#dcfce7",
@@ -35,7 +35,7 @@
         "600": {
           "$value": "#16a34a",
           "$type": "color",
-          "$description": "Primary default — buttons, links"
+          "$description": "Primary default \u2014 buttons, links"
         },
         "700": {
           "$value": "#15803d",
@@ -208,68 +208,44 @@
           "primary": {
             "$value": "{color.primary.600}",
             "$type": "color",
-            "$description": "Primary action color",
-            "$extensions": {
-              "resolvedValue": "#16a34a"
-            }
+            "$description": "Primary action color"
           },
           "primaryHover": {
             "$value": "{color.primary.700}",
             "$type": "color",
-            "$description": "Primary action hover",
-            "$extensions": {
-              "resolvedValue": "#15803d"
-            }
+            "$description": "Primary action hover"
           }
         },
         "background": {
           "$value": "{color.neutral.0}",
           "$type": "color",
-          "$description": "Default page background",
-          "$extensions": {
-            "resolvedValue": "#ffffff"
-          }
+          "$description": "Default page background"
         },
         "surface": {
           "$value": "{color.neutral.50}",
           "$type": "color",
-          "$description": "Card / panel surface",
-          "$extensions": {
-            "resolvedValue": "#f8fafc"
-          }
+          "$description": "Card / panel surface"
         },
         "border": {
           "$value": "{color.neutral.200}",
           "$type": "color",
-          "$description": "Default border color",
-          "$extensions": {
-            "resolvedValue": "#e2e8f0"
-          }
+          "$description": "Default border color"
         },
         "text": {
           "primary": {
             "$value": "{color.neutral.900}",
             "$type": "color",
-            "$description": "Primary text",
-            "$extensions": {
-              "resolvedValue": "#0f172a"
-            }
+            "$description": "Primary text"
           },
           "secondary": {
             "$value": "{color.neutral.600}",
             "$type": "color",
-            "$description": "Secondary / muted text",
-            "$extensions": {
-              "resolvedValue": "#475569"
-            }
+            "$description": "Secondary / muted text"
           },
           "disabled": {
             "$value": "{color.neutral.400}",
             "$type": "color",
-            "$description": "Disabled text",
-            "$extensions": {
-              "resolvedValue": "#94a3b8"
-            }
+            "$description": "Disabled text"
           }
         }
       }
@@ -291,42 +267,42 @@
         "xs": {
           "$value": "0.75rem",
           "$type": "dimension",
-          "$description": "12px — captions, labels"
+          "$description": "12px \u2014 captions, labels"
         },
         "sm": {
           "$value": "0.875rem",
           "$type": "dimension",
-          "$description": "14px — small body, metadata"
+          "$description": "14px \u2014 small body, metadata"
         },
         "base": {
           "$value": "1rem",
           "$type": "dimension",
-          "$description": "16px — default body"
+          "$description": "16px \u2014 default body"
         },
         "lg": {
           "$value": "1.125rem",
           "$type": "dimension",
-          "$description": "18px — large body, subheadings"
+          "$description": "18px \u2014 large body, subheadings"
         },
         "xl": {
           "$value": "1.25rem",
           "$type": "dimension",
-          "$description": "20px — small headings"
+          "$description": "20px \u2014 small headings"
         },
         "2xl": {
           "$value": "1.5rem",
           "$type": "dimension",
-          "$description": "24px — section headings"
+          "$description": "24px \u2014 section headings"
         },
         "3xl": {
           "$value": "1.875rem",
           "$type": "dimension",
-          "$description": "30px — page headings"
+          "$description": "30px \u2014 page headings"
         },
         "4xl": {
           "$value": "2.25rem",
           "$type": "dimension",
-          "$description": "36px — display headings"
+          "$description": "36px \u2014 display headings"
         }
       },
       "fontWeight": {
@@ -571,27 +547,27 @@
         "sm": {
           "$value": "640px",
           "$type": "dimension",
-          "$description": "Small — mobile landscape"
+          "$description": "Small \u2014 mobile landscape"
         },
         "md": {
           "$value": "768px",
           "$type": "dimension",
-          "$description": "Medium — tablet"
+          "$description": "Medium \u2014 tablet"
         },
         "lg": {
           "$value": "1024px",
           "$type": "dimension",
-          "$description": "Large — small desktop"
+          "$description": "Large \u2014 small desktop"
         },
         "xl": {
           "$value": "1280px",
           "$type": "dimension",
-          "$description": "XL — desktop"
+          "$description": "XL \u2014 desktop"
         },
         "2xl": {
           "$value": "1536px",
           "$type": "dimension",
-          "$description": "2XL — wide desktop"
+          "$description": "2XL \u2014 wide desktop"
         }
       },
       "grid": {
@@ -764,7 +740,7 @@
         "focusRing": "{color.primary.500}"
       },
       "constraints": [
-        "Button label must be concise — 1–4 words. Use tooltips for additional context.",
+        "Button label must be concise \u2014 1\u20134 words. Use tooltips for additional context.",
         "Destructive buttons must be separated from non-destructive actions by at least 8px.",
         "Loading state must disable interaction and show a spinner.",
         "Icon-only buttons must include an aria-label.",
@@ -774,8 +750,8 @@
       "accessibility": {
         "role": "button",
         "keyboardSupport": [
-          "Enter — activate",
-          "Space — activate"
+          "Enter \u2014 activate",
+          "Space \u2014 activate"
         ],
         "ariaAttributes": [
           "aria-disabled when disabled",
@@ -817,7 +793,7 @@
       "variantGuidance": {
         "primary": "Default action. One per context.",
         "secondary": "Alternative or less prominent actions alongside a primary.",
-        "outline": "Bordered but low-fill — good for secondary actions in white backgrounds.",
+        "outline": "Bordered but low-fill \u2014 good for secondary actions in white backgrounds.",
         "ghost": "Tertiary actions, toolbars. No background until hover.",
         "destructive": "Irreversible actions (delete, revoke). Separate visually from other actions."
       }
@@ -911,7 +887,7 @@
         "borderRadius": "{borderRadius.sm}"
       },
       "constraints": [
-        "Every input must have an associated label — either visible or via aria-label.",
+        "Every input must have an associated label \u2014 either visible or via aria-label.",
         "Error messages must describe what went wrong and how to fix it.",
         "Do not rely solely on color to communicate validation state.",
         "Passwords must use type='password'."
@@ -959,8 +935,8 @@
         ]
       },
       "variantGuidance": {
-        "default": "Outlined border on white backgrounds — general forms.",
-        "filled": "Light background fill — use on coloured page backgrounds."
+        "default": "Outlined border on white backgrounds \u2014 general forms.",
+        "filled": "Light background fill \u2014 use on coloured page backgrounds."
       }
     },
     "badge": {
@@ -1033,9 +1009,9 @@
         }
       },
       "constraints": [
-        "Badges must not be interactive — use a Tag or Chip for interactive labels.",
-        "Limit to 2–3 words or a short alphanumeric string.",
-        "Do not rely solely on colour to convey meaning — include a label or icon."
+        "Badges must not be interactive \u2014 use a Tag or Chip for interactive labels.",
+        "Limit to 2\u20133 words or a short alphanumeric string.",
+        "Do not rely solely on colour to convey meaning \u2014 include a label or icon."
       ],
       "accessibility": {
         "role": "status or none depending on context",
@@ -1067,7 +1043,7 @@
         ]
       },
       "variantGuidance": {
-        "neutral": "Default — unclassified or inactive status.",
+        "neutral": "Default \u2014 unclassified or inactive status.",
         "primary": "Active or selected items.",
         "success": "Completed, approved, or healthy.",
         "warning": "Pending review, degraded, or at risk.",
@@ -1185,10 +1161,10 @@
         ]
       },
       "variantGuidance": {
-        "default": "Standard bordered card — use in most contexts.",
-        "outlined": "Stronger border, no shadow — tabular lists.",
-        "elevated": "Drop-shadow emphasis — feature cards, CTAs.",
-        "filled": "Subtle background fill — secondary content areas."
+        "default": "Standard bordered card \u2014 use in most contexts.",
+        "outlined": "Stronger border, no shadow \u2014 tabular lists.",
+        "elevated": "Drop-shadow emphasis \u2014 feature cards, CTAs.",
+        "filled": "Subtle background fill \u2014 secondary content areas."
       }
     },
     "modal": {
@@ -1278,9 +1254,9 @@
           "aria-describedby for modal body if needed"
         ],
         "keyboardSupport": [
-          "Escape — close",
-          "Tab — cycle focus within modal",
-          "Shift+Tab — reverse focus cycle"
+          "Escape \u2014 close",
+          "Tab \u2014 cycle focus within modal",
+          "Shift+Tab \u2014 reverse focus cycle"
         ],
         "focusManagement": "First focusable element receives focus on open. Trigger element receives focus on close."
       },
@@ -1376,7 +1352,7 @@
       "constraints": [
         "Toasts must auto-dismiss (default 5 seconds) unless they contain an action.",
         "Display no more than 3 toasts simultaneously.",
-        "Do not use toasts for errors that require user action — use an inline error instead.",
+        "Do not use toasts for errors that require user action \u2014 use an inline error instead.",
         "Toast messages must be concise (max 80 characters).",
         "Toasts must pause auto-dismiss on hover."
       ],
@@ -1416,17 +1392,17 @@
         ]
       },
       "variantGuidance": {
-        "info": "Neutral updates — item saved, process started.",
-        "success": "Completed actions — file uploaded, changes saved.",
+        "info": "Neutral updates \u2014 item saved, process started.",
+        "success": "Completed actions \u2014 file uploaded, changes saved.",
         "warning": "Soft warnings that don't block the user.",
-        "error": "Recoverable errors where context is lost — use inline errors for form failures."
+        "error": "Recoverable errors where context is lost \u2014 use inline errors for form failures."
       }
     }
   },
   "themes": {
     "light": {
       "name": "Light",
-      "description": "Default light theme — white backgrounds with slate text.",
+      "description": "Default light theme \u2014 white backgrounds with slate text.",
       "semantic": {
         "color.semantic.background": "#ffffff",
         "color.semantic.surface": "#f8fafc",
@@ -1440,7 +1416,7 @@
     },
     "dark": {
       "name": "Dark",
-      "description": "Dark theme — dark slate backgrounds with light text.",
+      "description": "Dark theme \u2014 dark slate backgrounds with light text.",
       "semantic": {
         "color.semantic.background": "#0f172a",
         "color.semantic.surface": "#1e293b",
@@ -1454,7 +1430,7 @@
     },
     "forest": {
       "name": "Forest",
-      "description": "Deep nature-inspired theme — dark green backgrounds with warm cream text.",
+      "description": "Deep nature-inspired theme \u2014 dark green backgrounds with warm cream text.",
       "semantic": {
         "color.semantic.background": "#0d1f13",
         "color.semantic.surface": "#132b1a",
@@ -1759,7 +1735,7 @@
         20,
         24
       ],
-      "description": "Nature or eco-friendly indicator — brand icon for this design system"
+      "description": "Nature or eco-friendly indicator \u2014 brand icon for this design system"
     }
   },
   "style-guide": {
@@ -1771,7 +1747,7 @@
       },
       {
         "name": "Spatial consistency",
-        "description": "Spacing communicates hierarchy and relationship. Elements that belong together are closer together. Unrelated elements have more space between them. Spacing values always come from the spacing scale — never arbitrary px values.",
+        "description": "Spacing communicates hierarchy and relationship. Elements that belong together are closer together. Unrelated elements have more space between them. Spacing values always come from the spacing scale \u2014 never arbitrary px values.",
         "implication": "Use spacing.2 (8px) for tightly related inline elements, spacing.4 (16px) between fields in a form, spacing.8 (32px) between card groups, spacing.16 (64px) between page sections."
       },
       {
@@ -1787,7 +1763,7 @@
       {
         "name": "Tokens are the API",
         "description": "Designers and engineers share a single vocabulary: token names. A token name is a promise about intent (color.semantic.error is always the error color regardless of theme or mode). Hard-coded values break this contract.",
-        "implication": "Reference tokens by path in all component code. When a value is not in the token set, add a token — do not hard-code the value."
+        "implication": "Reference tokens by path in all component code. When a value is not in the token set, add a token \u2014 do not hard-code the value."
       },
       {
         "name": "Composability over completeness",
@@ -1799,7 +1775,7 @@
       "roles": {
         "action": {
           "token": "color.semantic.action",
-          "description": "Primary interactive actions — buttons, links, selected states. Conveys 'this is clickable and important'.",
+          "description": "Primary interactive actions \u2014 buttons, links, selected states. Conveys 'this is clickable and important'.",
           "approvedPairings": [
             {
               "foreground": "color.neutral.0",
@@ -1819,7 +1795,7 @@
         },
         "surface": {
           "token": "color.semantic.surface",
-          "description": "Card, panel, and container backgrounds — one level above the page background.",
+          "description": "Card, panel, and container backgrounds \u2014 one level above the page background.",
           "approvedPairings": [
             {
               "foreground": "color.semantic.text",
@@ -1839,7 +1815,7 @@
         },
         "destructive": {
           "token": "color.semantic.error",
-          "description": "Irreversible or dangerous actions — delete, revoke, permanently disable. Always pair with confirmation.",
+          "description": "Irreversible or dangerous actions \u2014 delete, revoke, permanently disable. Always pair with confirmation.",
           "approvedPairings": [
             {
               "foreground": "color.neutral.0",
@@ -1905,7 +1881,7 @@
         },
         "textSubtle": {
           "token": "color.semantic.textSubtle",
-          "description": "Secondary text — captions, helper text, metadata. Never use for primary content.",
+          "description": "Secondary text \u2014 captions, helper text, metadata. Never use for primary content.",
           "approvedPairings": [
             {
               "foreground": "color.semantic.textSubtle",
@@ -1931,10 +1907,10 @@
         }
       },
       "notes": [
-        "Never use color.primary.* tokens directly on interactive elements — always map through a semantic role.",
+        "Never use color.primary.* tokens directly on interactive elements \u2014 always map through a semantic role.",
         "Dark mode is handled by theme overrides on the same semantic token names. Code that uses semantic tokens requires no changes to support dark mode.",
         "The brand palette (color.primary.*) may change between design system versions; semantic tokens are stable identifiers.",
-        "Avoid combining two saturated colors (e.g. action + destructive) in the same visual cluster — one should always dominate."
+        "Avoid combining two saturated colors (e.g. action + destructive) in the same visual cluster \u2014 one should always dominate."
       ]
     },
     "typographyUsage": {
@@ -1957,7 +1933,7 @@
           "lineHeight": "typography.lineHeight.tight",
           "use": "Page title. One per page.",
           "constraints": [
-            "Do not nest h1 inside cards or panels — use h2 for section titles within a page"
+            "Do not nest h1 inside cards or panels \u2014 use h2 for section titles within a page"
           ]
         },
         {
@@ -2015,7 +1991,7 @@
           "lineHeight": "typography.lineHeight.normal",
           "use": "Fine print, legal text, secondary badge labels.",
           "constraints": [
-            "Must always meet 4.5:1 contrast ratio — xs size is below large text threshold"
+            "Must always meet 4.5:1 contrast ratio \u2014 xs size is below large text threshold"
           ]
         },
         {
@@ -2031,16 +2007,16 @@
         }
       ],
       "scale": {
-        "intent": "The type scale follows a 1.25 major third ratio. Neighbouring steps are visually distinct but harmonically related — xs through sm for supporting text, base for body, lg through 2xl for headings, 3xl and above for display use only.",
+        "intent": "The type scale follows a 1.25 major third ratio. Neighbouring steps are visually distinct but harmonically related \u2014 xs through sm for supporting text, base for body, lg through 2xl for headings, 3xl and above for display use only.",
         "productUI": "In product interfaces, 90% of text should sit between typography.fontSize.sm and typography.fontSize.xl. Reserve 2xl and above for page-level headings only.",
-        "marketingUI": "In marketing and landing pages, display and 4xl sizes are appropriate for hero content. Use sparingly — maximum two oversized steps per page."
+        "marketingUI": "In marketing and landing pages, display and 4xl sizes are appropriate for hero content. Use sparingly \u2014 maximum two oversized steps per page."
       },
       "pairings": [
         {
           "name": "Heading + body",
           "heading": "typography.fontFamily.sans at fontWeight.bold",
           "body": "typography.fontFamily.sans at fontWeight.regular",
-          "use": "Standard product UI. All headings and body text use the same sans-serif family — hierarchy comes from size and weight, not font switching."
+          "use": "Standard product UI. All headings and body text use the same sans-serif family \u2014 hierarchy comes from size and weight, not font switching."
         },
         {
           "name": "Heading + code",
@@ -2051,7 +2027,7 @@
       ],
       "lineLength": {
         "prose": "65-75 characters (approximately 32-36em at base size). Use max-width: 72ch for all prose containers.",
-        "formLabels": "No max-width restriction — labels wrap naturally with their input.",
+        "formLabels": "No max-width restriction \u2014 labels wrap naturally with their input.",
         "dataTableCells": "Constrain cell content with overflow: hidden / text-overflow: ellipsis at a column-level max-width, not a character limit."
       }
     },
@@ -2115,12 +2091,12 @@
           "betweenWidgetsInRow": "spacing.6 (24px)"
         },
         "slots": {
-          "nav": "Navigation component — vertical, with aria-label='Main navigation'",
-          "main": "Main content area — landmark role main, scrollable",
+          "nav": "Navigation component \u2014 vertical, with aria-label='Main navigation'",
+          "main": "Main content area \u2014 landmark role main, scrollable",
           "header": "Page title (h1) + optional contextual action buttons",
           "content": "One or more card rows, data tables, or widget grids"
         },
-        "notes": "The navigation and main area should be siblings inside a CSS grid or flexbox container. Do not use nested scrolling containers — only the main area scrolls."
+        "notes": "The navigation and main area should be siblings inside a CSS grid or flexbox container. Do not use nested scrolling containers \u2014 only the main area scrolls."
       },
       {
         "name": "Dialog composition",
@@ -2138,11 +2114,11 @@
           "dialogMaxWidth": "560px (confirmation), 640px (form)"
         },
         "slots": {
-          "title": "h2 — concise action phrase ('Delete this item?', 'Edit profile')",
+          "title": "h2 \u2014 concise action phrase ('Delete this item?', 'Edit profile')",
           "body": "Explanation text and optional form fields",
           "actions": "Right-aligned button group: primary action + Cancel. Destructive dialogs use the destructive button variant for the primary action."
         },
-        "notes": "Modal dialogs must trap focus. The Cancel button must always be available and must not be styled as a ghost button when the primary action is destructive — use secondary variant to ensure equal visual weight for the safe option."
+        "notes": "Modal dialogs must trap focus. The Cancel button must always be available and must not be styled as a ghost button when the primary action is destructive \u2014 use secondary variant to ensure equal visual weight for the safe option."
       },
       {
         "name": "Notification pattern",
@@ -2160,7 +2136,7 @@
           "toast-message": "One sentence at typography.fontSize.sm. No bullet points.",
           "toast-action": "Optional single text link for an undo or view action"
         },
-        "notes": "Toasts are ephemeral — do not use them for errors that require user action. Errors that block progress belong inline, adjacent to the field or action that caused them. Use badge for persistent status, toast for transient confirmation."
+        "notes": "Toasts are ephemeral \u2014 do not use them for errors that require user action. Errors that block progress belong inline, adjacent to the field or action that caused them. Use badge for persistent status, toast for transient confirmation."
       }
     ]
   }

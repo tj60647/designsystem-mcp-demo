@@ -16,7 +16,6 @@ const TOKEN_ENTRY_SCHEMA = {
     $value:       { type: "string", description: "The raw token value, e.g. '#2563eb' or '16px'. May be an alias reference like '{color.primary.600}'." },
     $type:        { type: "string", description: "Token type, e.g. 'color', 'dimension', 'fontFamily'. Follows the W3C Design Token Community Group spec." },
     $description: { type: "string", description: "Human-readable description of the token's intent." },
-    $extensions:  { type: "object", description: "Tool-specific extensions, e.g. resolvedValue for alias tokens." },
   },
   additionalProperties: false,
 };

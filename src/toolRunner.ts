@@ -19,7 +19,6 @@ interface TokenEntry {
   $value: string;
   $type: string;
   $description?: string;
-  $extensions?: Record<string, unknown>;
 }
 type TokenNode = TokenEntry | Record<string, unknown>;
 interface TokensData {

@@ -2,7 +2,6 @@ import { escapeHtml, renderMarkdown, highlightTokens, loadAgentSettings } from '
 import { updateLivePreview } from './preview.js';
 
 // ── Constants ────────────────────────────────────────────────────────────────
-const MODEL_STORAGE_KEY  = "designsystem-mcp-demo.chat.model";
 const DEFAULT_CHAT_MODEL = "openai/gpt-oss-20b:nitro";
 
 // ── Local state ──────────────────────────────────────────────────────────────
@@ -14,7 +13,7 @@ let generatedDesignSystemData = null;
 let lastRoutedAgent = null;
 
 // ── DOM refs (populated by initChat) ─────────────────────────────────────────
-let messagesEl, chipsEl, inputEl, sendBtn, downloadDsBtn, modelSelect;
+let messagesEl, chipsEl, inputEl, sendBtn, downloadDsBtn;
 
 export function initChat() {
   messagesEl    = document.getElementById("messages");
@@ -22,12 +21,6 @@ export function initChat() {
   inputEl       = document.getElementById("user-input");
   sendBtn       = document.getElementById("send-btn");
   downloadDsBtn = document.getElementById("download-ds-btn");
-  modelSelect   = document.getElementById("model-select");
-
-  restoreModelSelection();
-  modelSelect?.addEventListener("change", () => {
-    localStorage.setItem(MODEL_STORAGE_KEY, getSelectedModel());
-  });
 
   inputEl.addEventListener("input", () => {
     inputEl.style.height = "auto";
@@ -49,21 +42,7 @@ export function initChat() {
 
 // ── Model selection ───────────────────────────────────────────────────────────
 function getSelectedModel() {
-  return modelSelect?.value || DEFAULT_CHAT_MODEL;
-}
-
-function restoreModelSelection() {
-  const savedModel = localStorage.getItem(MODEL_STORAGE_KEY);
-  const nextModel  = savedModel || DEFAULT_CHAT_MODEL;
-  if (!modelSelect) return;
-  const exists = Array.from(modelSelect.options).some((opt) => opt.value === nextModel);
-  if (!exists && nextModel) {
-    const custom = document.createElement("option");
-    custom.value = nextModel;
-    custom.textContent = `${nextModel} (saved)`;
-    modelSelect.appendChild(custom);
-  }
-  modelSelect.value = nextModel;
+  return loadAgentSettings().global.model || DEFAULT_CHAT_MODEL;
 }
 
 
@@ -114,10 +93,7 @@ async function handleSend() {
 
   try {
     const selectedModel = getSelectedModel();
-    const agentSettings = loadAgentSettings(selectedModel);
-    // Keep the topbar model as the canonical global model while allowing
-    // per-agent overrides when useGlobalModel is disabled.
-    agentSettings.global.model = selectedModel;
+    const agentSettings = loadAgentSettings();
 
     const res = await fetch("/api/chat", {
       method: "POST",
@@ -206,7 +182,7 @@ async function handleSend() {
       const trace = getOrCreateTrace();
       const row = document.createElement("div");
       row.className = "trace-item trace-routed";
-      const agentLabel = { reader: "Design System Reader", builder: "Component Builder", generator: "System Generator" }[agent] ?? agent;
+      const agentLabel = { orchestrator: "Orchestrator", reader: "Design System Reader", builder: "Component Builder", generator: "System Generator", "style-guide": "Style Guide" }[agent] ?? agent;
       row.innerHTML = `<span class="trace-agent-name">${escapeHtml(agentLabel)}</span>`;
       if (reason) {
         const tip = document.createElement("span");

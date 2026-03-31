@@ -1,82 +1,40 @@
 import { escapeHtml, loadAgentSettings, saveAgentSettings } from '../utils.js';
+import { AGENT_COLORS, AGENT_LABELS } from './testlab.js';
 
-export function initAgentsModal() {
-  const overlay    = document.getElementById("agents-modal");
-  const modalBody  = document.getElementById("agents-modal-body");
-  const closeBtn  = document.getElementById("agents-modal-close");
-  const cancelBtn = document.getElementById("agents-modal-cancel");
-  const openBtn   = document.getElementById("view-agents-btn");
-  const lobbyTabs = overlay.querySelectorAll(".agents-lobby-tab");
+const MODEL_OPTIONS = [
+  "openai/gpt-oss-20b:nitro",
+  "anthropic/claude-sonnet-4.6",
+  "anthropic/claude-3.7-sonnet",
+  "openai/gpt-4.1",
+  "google/gemini-2.5-pro",
+];
 
-  let allAgents = [];
-  let modelMeta = { model: "", modelSource: "" };
-  let selectedModel = "";
-  let settings = null;
+function modelSelectHtml(dataAttr, currentValue, disabled = false) {
+  const opts = MODEL_OPTIONS.map(m => {
+    const selected = m === currentValue ? " selected" : "";
+    return `<option value="${escapeHtml(m)}"${selected}>${escapeHtml(m)}</option>`;
+  });
+  // If the stored value isn't in the list, add it as a custom option
+  if (!MODEL_OPTIONS.includes(currentValue)) {
+    opts.unshift(`<option value="${escapeHtml(currentValue)}" selected>${escapeHtml(currentValue)}</option>`);
+  }
+  return `<select ${dataAttr} class="lobby-input"${disabled ? " disabled" : ""}>${opts.join("")}</select>`;
+}
+
+export function initAgentsPanel() {
+  const container = document.getElementById("agents-panel-body");
+  const navBtn    = document.querySelector('[data-section="section-agent-sandbox"]');
+  if (!container) return;
+
+  let allAgents   = [];
+  let modelMeta   = { model: "", modelSource: "" };
+  let settings    = null;
   let lobbyFilter = "";
   let lobbyDensity = "detailed";
-  let activeTab = "lobby";
   const LOBBY_DENSITY_KEY = "designsystem-mcp-demo.lobby-density";
 
   // Colour token per agent index — matches diagram node colours
   const ROLE_COLORS = ["purple", "accent", "orange", "green", "red"];
-
-  // ── System Diagram ─────────────────────────────────────────────────────
-  function renderDiagram() {
-    modalBody.innerHTML = `
-    <div class="diagram-wrap">
-      <div class="diagram">
-        <div class="diag-row">
-          <div class="diag-node accent">User Input</div>
-        </div>
-        <div class="diag-arrow-down">↓</div>
-        <div class="diag-label">POST /api/chat  { messages[] }</div>
-        <div class="diag-row">
-          <div class="diag-node accent">Chat API  <small style="opacity:.7;font-weight:400">/api/chat</small></div>
-        </div>
-        <div class="diag-arrow-down">↓</div>
-        <div class="diag-label">last user message</div>
-        <div class="diag-row">
-          <div class="diag-node purple">Orchestrator Agent<br><small style="opacity:.7;font-weight:400">classify intent — 1 LLM call</small></div>
-        </div>
-        <div class="diag-arrow-down">↓</div>
-        <div class="diag-label">delegate_to_agent("reader" | "builder" | "generator")</div>
-        <div class="diag-row" style="gap:10px;align-items:stretch">
-          <div class="diag-node accent" style="font-size:11px;flex:1;text-align:center">
-            Design System<br>Reader<br><small style="opacity:.7;font-weight:400">up to 5 iters</small>
-          </div>
-          <div class="diag-node orange" style="font-size:11px;flex:1;text-align:center">
-            Component<br>Builder<br><small style="opacity:.7;font-weight:400">up to 6 iters</small>
-          </div>
-          <div class="diag-node green" style="font-size:11px;flex:1;text-align:center">
-            System<br>Generator<br><small style="opacity:.7;font-weight:400">up to 8 iters</small>
-          </div>
-        </div>
-        <div class="diag-arrow-down">↓</div>
-        <div class="diag-label">tool calls (per-agent subset)</div>
-        <div class="diag-row" style="gap:32px">
-          <div class="diag-node orange" style="font-size:11px">MCP Tool Calls<br><small style="opacity:.7;font-weight:400">runMcpTool()</small></div>
-          <div class="diag-arrow" style="align-self:center">↺</div>
-          <div class="diag-node" style="font-size:11px">agentic<br>loop</div>
-        </div>
-        <div class="diag-arrow-down">↓</div>
-        <div class="diag-label">JSON { "message":"…", "preview":"…html…" }</div>
-        <div class="diag-row">
-          <div class="diag-node green">✓ parseChatResponse()</div>
-        </div>
-        <div class="diag-arrow-down">↓</div>
-        <div class="diag-split">
-          <div class="diag-branch">
-            <div class="diag-node accent" style="font-size:11px">message<br><small style="opacity:.7;font-weight:400">Chat bubble</small></div>
-          </div>
-          <div class="diag-branch">
-            <div class="diag-node green" style="font-size:11px">preview<br><small style="opacity:.7;font-weight:400">Live Preview iframe</small></div>
-            <div class="diag-arrow-down">↓</div>
-            <div class="diag-node" style="font-size:11px">Show Code ⟷ Show Preview toggle</div>
-          </div>
-        </div>
-      </div>
-    </div>`;
-  }
 
   // ── Agent Lobby ────────────────────────────────────────────────────────
   function buildToolCards(tools) {
@@ -99,10 +57,7 @@ export function initAgentsModal() {
 
   function ensureSettings() {
     if (!settings) {
-      settings = loadAgentSettings(selectedModel || modelMeta.model || "openai/gpt-oss-20b:nitro");
-    }
-    if (selectedModel) {
-      settings.global.model = selectedModel;
+      settings = loadAgentSettings();
     }
   }
 
@@ -112,7 +67,7 @@ export function initAgentsModal() {
   }
 
   function bindLobbyControls() {
-    const densityButtons = modalBody.querySelectorAll('[data-role="density-toggle"]');
+    const densityButtons = container.querySelectorAll('[data-role="density-toggle"]');
     densityButtons.forEach((btn) => {
       btn.addEventListener("click", (e) => {
         const next = String(e.currentTarget.getAttribute("data-density") || "detailed");
@@ -123,7 +78,7 @@ export function initAgentsModal() {
       });
     });
 
-    const filterInput = modalBody.querySelector('[data-role="agent-filter"]');
+    const filterInput = container.querySelector('[data-role="agent-filter"]');
     if (filterInput) {
       filterInput.addEventListener("input", (e) => {
         lobbyFilter = String(e.target.value || "");
@@ -131,7 +86,7 @@ export function initAgentsModal() {
       });
     }
 
-    const globalToggle = modalBody.querySelector('[data-role="use-global-model"]');
+    const globalToggle = container.querySelector('[data-role="use-global-model"]');
     if (globalToggle) {
       globalToggle.addEventListener("change", (e) => {
         ensureSettings();
@@ -141,17 +96,26 @@ export function initAgentsModal() {
       });
     }
 
-    modalBody.querySelectorAll('[data-setting="global-temp"]').forEach((el) => {
+    container.querySelectorAll('[data-setting="global-model"]').forEach((el) => {
+      el.addEventListener("change", (e) => {
+        ensureSettings();
+        const v = String(e.target.value || "").trim();
+        if (!v) return;
+        settings.global.model = v;
+        saveAgentSettings(settings);
+      });
+    });
+
+    container.querySelectorAll('[data-setting="global-temp"]').forEach((el) => {
       el.addEventListener("change", (e) => {
         ensureSettings();
         const n = Number(e.target.value);
         settings.global.temperature = Number.isFinite(n) ? n : 0;
         saveAgentSettings(settings);
-        renderLobby();
       });
     });
 
-    modalBody.querySelectorAll('[data-agent-model]').forEach((el) => {
+    container.querySelectorAll('[data-agent-model]').forEach((el) => {
       el.addEventListener("change", (e) => {
         ensureSettings();
         const key = e.target.getAttribute("data-agent-model");
@@ -159,11 +123,10 @@ export function initAgentsModal() {
         if (!key || !v || !settings.agents[key]) return;
         settings.agents[key].model = v;
         saveAgentSettings(settings);
-        renderLobby();
       });
     });
 
-    modalBody.querySelectorAll('[data-agent-temp]').forEach((el) => {
+    container.querySelectorAll('[data-agent-temp]').forEach((el) => {
       el.addEventListener("change", (e) => {
         ensureSettings();
         const key = e.target.getAttribute("data-agent-temp");
@@ -171,11 +134,10 @@ export function initAgentsModal() {
         if (!key || !settings.agents[key]) return;
         settings.agents[key].temperature = Number.isFinite(n) ? n : 0;
         saveAgentSettings(settings);
-        renderLobby();
       });
     });
 
-    modalBody.querySelectorAll('[data-action="toggle-tools"]').forEach((btn) => {
+    container.querySelectorAll('[data-action="toggle-tools"]').forEach((btn) => {
       btn.addEventListener("click", (e) => {
         const card = e.target.closest(".lobby-card");
         if (!card) return;
@@ -206,18 +168,15 @@ export function initAgentsModal() {
       return haystack.includes(q);
     });
 
-    const globalSettings = modelMeta.model
-      ? `<div class="lobby-global-settings">
-          <div class="lobby-global-title">Global Model</div>
-          <div class="lobby-controls-grid">
-            <label class="lobby-check"><input type="checkbox" data-role="use-global-model" ${settings.useGlobalModel ? "checked" : ""}> Use global model for all agents</label>
-            <label class="lobby-control">Model (from top bar)<input class="lobby-input" value="${escapeHtml(selectedModel || settings.global.model)}" disabled /></label>
-            <label class="lobby-control">Temperature<input data-setting="global-temp" class="lobby-input" type="number" step="0.1" min="0" max="2" value="${escapeHtml(String(settings.global.temperature))}" /></label>
-          </div>
-          <div class="lobby-global-row"><span class="lobby-global-key">model</span><span class="lobby-global-val">${escapeHtml(modelMeta.model)}</span></div>
-          <div class="lobby-global-row"><span class="lobby-global-key">source</span><span class="lobby-global-val">${escapeHtml(modelMeta.modelSource || "unknown")}</span></div>
-        </div>`
-      : "";
+    const globalSettings = `<div class="lobby-global-settings">
+      <div class="lobby-global-title">Model Settings</div>
+      <div class="lobby-controls-grid">
+        <label class="lobby-check"><input type="checkbox" data-role="use-global-model" ${settings.useGlobalModel ? "checked" : ""}> Use same model for all agents</label>
+        <label class="lobby-control">Default model${modelSelectHtml('data-setting="global-model"', settings.global.model, !settings.useGlobalModel)}</label>
+        <label class="lobby-control">Temperature<input data-setting="global-temp" class="lobby-input" type="number" step="0.1" min="0" max="2" value="${escapeHtml(String(settings.global.temperature))}" ${!settings.useGlobalModel ? "disabled" : ""} /></label>
+      </div>
+      ${modelMeta.model ? `<div class="lobby-global-row"><span class="lobby-global-key">server default</span><span class="lobby-global-val">${escapeHtml(modelMeta.model)}</span></div>` : ""}
+    </div>`;
 
     const legend = `<div class="lobby-legend"><div class="lobby-global-title">Agent Legend</div><div class="lobby-legend-row">${legendItems}</div><div class="lobby-toolbar"><label class="lobby-control lobby-filter">Filter<input data-role="agent-filter" class="lobby-input" value="${escapeHtml(lobbyFilter)}" placeholder="Search agents or tools" /></label><div class="lobby-density-switch" role="group" aria-label="Lobby density"><button type="button" class="lobby-density-btn ${lobbyDensity === "compact" ? "active" : ""}" data-role="density-toggle" data-density="compact">Compact</button><button type="button" class="lobby-density-btn ${lobbyDensity === "detailed" ? "active" : ""}" data-role="density-toggle" data-density="detailed">Detailed</button></div></div></div>`;
 
@@ -242,7 +201,7 @@ export function initAgentsModal() {
         </div>
 
         <div class="lobby-controls-grid lobby-controls-grid-agent">
-          <label class="lobby-control">Model<input data-agent-model="${escapeHtml(agentKey)}" class="lobby-input" value="${escapeHtml(cfg.model)}" ${settings.useGlobalModel ? "disabled" : ""} /></label>
+          <label class="lobby-control">Model${modelSelectHtml(`data-agent-model="${escapeHtml(agentKey)}"`, cfg.model, settings.useGlobalModel)}</label>
           <label class="lobby-control">Temperature<input data-agent-temp="${escapeHtml(agentKey)}" class="lobby-input" type="number" step="0.1" min="0" max="2" value="${escapeHtml(String(cfg.temperature))}" ${settings.useGlobalModel ? "disabled" : ""} /></label>
           <button class="lobby-tools-toggle" data-action="toggle-tools" type="button">Toggle Tools</button>
         </div>
@@ -264,42 +223,27 @@ export function initAgentsModal() {
       </div>`;
     }).join("");
 
-    modalBody.innerHTML = `<div class="lobby-list ${lobbyDensity === "compact" ? "lobby-list-compact" : ""}">${legend}${globalSettings}${cards || '<div class="agents-loading">No agents match this filter.</div>'}</div>`;
+    container.innerHTML = `<div class="lobby-list ${lobbyDensity === "compact" ? "lobby-list-compact" : ""}">${legend}${globalSettings}${cards || '<div class="agents-loading">No agents match this filter.</div>'}</div>`;
     bindLobbyControls();
   }
 
-  // ── Tab switching ──────────────────────────────────────────────────────
-  function switchTab(tab) {
-    activeTab = tab;
-    lobbyTabs.forEach(t => {
-      t.classList.toggle("active", t.dataset.tab === tab);
-      t.setAttribute("aria-selected", String(t.dataset.tab === tab));
-    });
-    if (tab === "diagram") renderDiagram();
-    else if (allAgents.length > 0) renderLobby();
-  }
-
-  // ── Open / close ───────────────────────────────────────────────────────
-  async function openModal() {
-    modalBody.innerHTML = '<div class="agents-loading">Loading agent info…</div>';
-    overlay.classList.add("open");
+  // ── Load panel ─────────────────────────────────────────────────────────
+  async function loadPanel() {
+    if (allAgents.length > 0) {
+      renderLobby();
+      return;
+    }
+    container.innerHTML = '<div class="agents-loading">Loading agent info…</div>';
     try {
       try {
         const storedDensity = localStorage.getItem(LOBBY_DENSITY_KEY);
         if (storedDensity === "compact" || storedDensity === "detailed") {
           lobbyDensity = storedDensity;
         }
-      } catch {
-        // Ignore storage failures.
-      }
+      } catch { /* ignore */ }
 
-      const modelSelect = document.getElementById("model-select");
-      selectedModel = modelSelect && "value" in modelSelect ? String(modelSelect.value || "").trim() : "";
-      settings = loadAgentSettings(selectedModel || modelMeta.model || "openai/gpt-oss-20b:nitro");
-      const url = selectedModel
-        ? `/api/agent-info?model=${encodeURIComponent(selectedModel)}`
-        : "/api/agent-info";
-      const res = await fetch(url);
+      settings = loadAgentSettings();
+      const res = await fetch("/api/agent-info");
       if (!res.ok) throw new Error("HTTP " + res.status);
       const data = await res.json();
       allAgents = data.agents ?? [];
@@ -307,20 +251,283 @@ export function initAgentsModal() {
         model: typeof data.model === "string" ? data.model : "",
         modelSource: typeof data.modelSource === "string" ? data.modelSource : "",
       };
-      switchTab(activeTab);
+      renderLobby();
     } catch (err) {
-      modalBody.innerHTML = `<div class="agents-loading">Could not load agent info: ${escapeHtml(err.message)}</div>`;
+      container.innerHTML = `<div class="agents-loading">Could not load agent info: ${escapeHtml(err.message)}</div>`;
     }
   }
 
-  function closeModal() { overlay.classList.remove("open"); }
+  // Lazy load on first visit, reload on each subsequent visit
+  if (navBtn) {
+    navBtn.addEventListener("click", loadPanel);
+  }
 
-  lobbyTabs.forEach(t => t.addEventListener("click", () => switchTab(t.dataset.tab)));
-  openBtn.addEventListener("click", openModal);
-  closeBtn.addEventListener("click", closeModal);
-  cancelBtn.addEventListener("click", closeModal);
-  overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && overlay.classList.contains("open")) closeModal();
+  // ── Scenario Runner ────────────────────────────────────────────────────
+  initScenarioRunner();
+}
+
+// ── Scenario Runner ──────────────────────────────────────────────────────────
+// Inline "watch it work" panel below the agent lobby. Shows 3 design-system
+// scenarios as a chip row, a chain visualization, and a live per-step
+// tool-call trace streamed from /api/chat.
+
+const SR_SCENARIOS = {
+  token_audit: {
+    name: "Token Audit",
+    description: "Read primary colors → spacing → typography scale",
+    steps: [
+      { id: "sr-ta-1", agentId: "reader",      prompt: "What are the primary color tokens?" },
+      { id: "sr-ta-2", agentId: "reader",      prompt: "What spacing tokens are defined in the design system?" },
+      { id: "sr-ta-3", agentId: "reader",      prompt: "What typography tokens are available — sizes, weights, and line-heights?" },
+    ],
+  },
+  build_flow: {
+    name: "Read + Build",
+    description: "Inspect button specs → build component → get style guidance",
+    steps: [
+      { id: "sr-bf-1", agentId: "reader",      prompt: "What are the button component variants and their token properties?" },
+      { id: "sr-bf-2", agentId: "builder",     prompt: "Build a primary and secondary button component using design system tokens" },
+      { id: "sr-bf-3", agentId: "style-guide", prompt: "What are the best practices for choosing between primary and secondary buttons?" },
+    ],
+  },
+  compliance_check: {
+    name: "Style Compliance",
+    description: "Get color principles → read exact tokens → build a compliant form",
+    steps: [
+      { id: "sr-cc-1", agentId: "style-guide", prompt: "What color usage principles and contrast requirements should I follow?" },
+      { id: "sr-cc-2", agentId: "reader",      prompt: "What is the exact hex value of the primary action color and its accessible text pair?" },
+      { id: "sr-cc-3", agentId: "builder",     prompt: "Build an accessible login form with a primary submit button following the design system color principles" },
+    ],
+  },
+};
+
+// Delegate to the already-imported escapeHtml (which also escapes single quotes)
+const escHtml = (s) => escapeHtml(String(s));
+
+let srSelectedKey = "token_audit";
+let srSteps       = [];
+let srRunning     = false;
+let srStopFlag    = false;
+let srInited      = false;
+
+function srFreshStep(s) {
+  return { ...s, status: "pending", traceEvents: [], latencyMs: undefined, error: undefined, message: undefined };
+}
+
+function srLoadScenario(key) {
+  srSelectedKey = key;
+  srSteps = SR_SCENARIOS[key].steps.map(srFreshStep);
+}
+
+function srRenderChain(wrap) {
+  const chainEl = wrap.querySelector("#sr-chain");
+  if (!chainEl) return;
+  chainEl.innerHTML = srSteps.map((step, idx) => `
+    ${idx > 0 ? '<div class="pg-chain-arrow">→</div>' : ""}
+    <div class="pg-chain-node pg-chain-node-${step.status}">
+      <span class="pg-node-num">${idx + 1}</span>
+      <span class="pg-node-agent">${escHtml(AGENT_LABELS[step.agentId] ?? step.agentId)}</span>
+    </div>
+  `).join("");
+}
+
+function srTraceHtml(events) {
+  if (!events || events.length === 0) return "";
+  const rows = events.map(ev => {
+    if (ev.type === "agent_routed") {
+      return `<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-agent">ROUTED → ${escHtml(ev.agent ?? "")}</div>${ev.reason ? `<div class="eval-pl-step-content">${escHtml(ev.reason)}</div>` : ""}</div>`;
+    }
+    if (ev.type === "tool_call") {
+      return `<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-tool">TOOL CALL — ${escHtml(ev.tool ?? "")}</div><div class="eval-pl-step-content"><pre class="sr-trace-pre">${escHtml(JSON.stringify(ev.args, null, 2).slice(0, 400))}</pre></div></div>`;
+    }
+    if (ev.type === "tool_result") {
+      return `<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-result">TOOL RESULT — ${escHtml(ev.tool ?? "")}</div><div class="eval-pl-step-content">${escHtml(`${ev.chars ?? "?"} chars`)}${ev.preview ? ` · ${escHtml(ev.preview)}` : ""}</div></div>`;
+    }
+    if (ev.type === "progress") {
+      return `<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-agent">PROGRESS</div><div class="eval-pl-step-content">${escHtml(ev.message ?? "")}</div></div>`;
+    }
+    return "";
+  }).join("");
+  return `<div class="sr-step-trace"><div class="eval-pl-trace-header">Tool Trace</div><div class="eval-pl-trace-body">${rows}</div></div>`;
+}
+
+function srRenderTimeline(wrap) {
+  const timeline = wrap.querySelector("#sr-timeline");
+  if (!timeline) return;
+  timeline.innerHTML = srSteps.map((step, idx) => {
+    let content = "";
+    if (step.status === "pending") {
+      content = `<div class="pg-prompt-preview"><span class="pg-prompt-label">Prompt:</span><code class="pg-prompt-code">${escHtml(step.prompt.slice(0, 120))}${step.prompt.length > 120 ? "…" : ""}</code></div>`;
+    } else if (step.status === "running") {
+      content = `<div class="pg-running-indicator"><span class="pg-spinner"></span>Executing…</div>`;
+    } else if (step.status === "complete") {
+      const traceHtml = srTraceHtml(step.traceEvents);
+      const msgHtml = step.message
+        ? `<pre class="pg-step-output">${escapeHtml(step.message.slice(0, 400))}${step.message.length > 400 ? "…" : ""}</pre>`
+        : "";
+      content = traceHtml + msgHtml;
+    } else if (step.status === "error") {
+      content = `<div class="pg-error-box">${escHtml(step.error ?? "Error")}</div>`;
+    }
+    const chips = step.latencyMs !== undefined ? `<span class="pg-meta-chip">${step.latencyMs}ms</span>` : "";
+    return `<div class="pg-step-card pg-step-card-${step.status}">
+      <div class="pg-step-header">
+        <div class="pg-step-identity">
+          <span class="pg-status-dot pg-status-dot-${step.status}"></span>
+          <span class="pg-step-num">${idx + 1}</span>
+          <span class="pg-step-agent">${escHtml(AGENT_LABELS[step.agentId] ?? step.agentId)}</span>
+        </div>
+        <div class="pg-step-meta">${chips}</div>
+      </div>
+      ${content}
+    </div>`;
+  }).join("");
+}
+
+function srUpdateControls(wrap) {
+  const runBtn  = wrap.querySelector("#sr-run-btn");
+  const stopBtn = wrap.querySelector("#sr-stop-btn");
+  const resetBtn = wrap.querySelector("#sr-reset-btn");
+  if (runBtn)   { runBtn.disabled = srRunning; runBtn.textContent = srRunning ? "⏳ Running…" : "▶ Run Scenario"; }
+  if (stopBtn)  { stopBtn.style.display = srRunning ? "" : "none"; }
+  if (resetBtn) { resetBtn.disabled = srRunning; }
+}
+
+async function srRunAll(wrap) {
+  if (srRunning) return;
+  srRunning  = true;
+  srStopFlag = false;
+  srSteps    = srSteps.map(srFreshStep);
+  srUpdateControls(wrap);
+  srRenderChain(wrap);
+  srRenderTimeline(wrap);
+
+  const settings = loadAgentSettings();
+  const model    = settings.global.model || "openai/gpt-oss-20b:nitro";
+
+  for (let i = 0; i < srSteps.length; i++) {
+    if (srStopFlag) break;
+    srSteps[i] = { ...srSteps[i], status: "running" };
+    srRenderChain(wrap);
+    srRenderTimeline(wrap);
+
+    const step  = srSteps[i];
+    const start = Date.now();
+    const body  = { messages: [{ role: "user", content: step.prompt }], model };
+    if (step.agentId !== "orchestrator") body.previousAgent = step.agentId;
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+
+      const reader  = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+      const traceEvents = [];
+
+      outer: while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const parts = buf.split("\n\n");
+        buf = parts.pop() ?? "";
+        for (const part of parts) {
+          if (!part.startsWith("data: ")) continue;
+          let ev;
+          try { ev = JSON.parse(part.slice(6)); } catch { continue; }
+          if (["agent_routed", "tool_call", "tool_result", "progress"].includes(ev.type)) {
+            if (traceEvents.length < 50) traceEvents.push(ev);
+          }
+          if (ev.type === "done") {
+            srSteps[i] = { ...srSteps[i], status: "complete", traceEvents, latencyMs: Date.now() - start, message: ev.message ?? "" };
+            break outer;
+          }
+          if (ev.type === "error") throw new Error(ev.error ?? "Unknown error");
+        }
+      }
+      if (srSteps[i].status === "running") {
+        srSteps[i] = { ...srSteps[i], status: "error", error: "Stream ended unexpectedly", latencyMs: Date.now() - start };
+      }
+    } catch (err) {
+      srSteps[i] = { ...srSteps[i], status: "error", error: String(err), latencyMs: Date.now() - start };
+    }
+    srRenderChain(wrap);
+    srRenderTimeline(wrap);
+  }
+
+  srRunning = false;
+  srUpdateControls(wrap);
+}
+
+function initScenarioRunner() {
+  const wrap = document.getElementById("scenario-runner-body");
+  if (!wrap || srInited) return;
+
+  srLoadScenario(srSelectedKey);
+
+  const chipHtml = Object.entries(SR_SCENARIOS).map(([key, s]) =>
+    `<button class="sr-scenario-chip${srSelectedKey === key ? " active" : ""}" data-sr-key="${key}" title="${escHtml(s.description)}">${escHtml(s.name)}</button>`
+  ).join("");
+
+  wrap.innerHTML = `
+    <div class="sr-section">
+      <div class="sr-section-header">
+        <span class="sandbox-coming-soon-icon">⬡</span>
+        <div>
+          <h3 class="sr-section-title">Scenario Runner</h3>
+          <p class="sr-section-desc">Watch agents work through a real design-system request chain — tool calls and all.</p>
+        </div>
+      </div>
+
+      <div class="sr-scenario-chips" id="sr-scenario-chips">${chipHtml}</div>
+      <p class="sr-scenario-desc-line" id="sr-scenario-desc">${escHtml(SR_SCENARIOS[srSelectedKey].description)}</p>
+
+      <div class="sr-actions">
+        <button class="eval-btn eval-btn-green" id="sr-run-btn">▶ Run Scenario</button>
+        <button class="eval-btn" id="sr-stop-btn" style="display:none">⏹ Stop</button>
+        <button class="eval-btn" id="sr-reset-btn">↺ Reset</button>
+      </div>
+
+      <div class="pg-chain" id="sr-chain"></div>
+      <div class="pg-timeline" id="sr-timeline"></div>
+
+      <div class="sr-eval-entry">
+        <span class="sandbox-coming-soon-icon" style="font-size:18px">⬡</span>
+        <div class="sr-eval-entry-text">
+          <strong>Go deeper in the Eval Lab</strong>
+          <span>Assertions, batch regression runs, comparison mode, and more.</span>
+        </div>
+        <a href="/eval" class="eval-btn eval-btn-primary sr-eval-link">Open Eval Lab →</a>
+      </div>
+    </div>`;
+
+  srRenderChain(wrap);
+  srRenderTimeline(wrap);
+
+  wrap.querySelectorAll("[data-sr-key]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (srRunning) return;
+      srLoadScenario(btn.dataset.srKey);
+      wrap.querySelectorAll("[data-sr-key]").forEach(b => b.classList.toggle("active", b.dataset.srKey === btn.dataset.srKey));
+      const descEl = document.getElementById("sr-scenario-desc");
+      if (descEl) descEl.textContent = SR_SCENARIOS[btn.dataset.srKey].description;
+      srRenderChain(wrap);
+      srRenderTimeline(wrap);
+    });
   });
+
+  wrap.querySelector("#sr-run-btn")?.addEventListener("click", () => srRunAll(wrap));
+  wrap.querySelector("#sr-stop-btn")?.addEventListener("click", () => { srStopFlag = true; });
+  wrap.querySelector("#sr-reset-btn")?.addEventListener("click", () => {
+    if (srRunning) return;
+    srSteps = srSteps.map(srFreshStep);
+    srRenderChain(wrap);
+    srRenderTimeline(wrap);
+  });
+
+  srInited = true;
 }

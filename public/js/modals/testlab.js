@@ -25,6 +25,7 @@ const PREVIEW_TRUNCATE_LENGTH = 400; // preview HTML truncation in playground
 //     { type: "contains",        value: "keyword" }       → message contains value (case-insensitive)
 //     { type: "toolUsed",        value: "get_tokens" }    → toolCallsUsed includes the tool name
 //     { type: "hasPreview" }                              → preview HTML must be non-empty
+//     { type: "noPreview" }                               → response must NOT include a preview
 //     { type: "previewContains", value: "#2563eb" }       → preview HTML contains value (case-insensitive)
 //     { type: "notEmpty" }                                → message must be non-empty
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1072,7 +1073,7 @@ export async function runTest(test, model) {
 }
 
 // ── UI ────────────────────────────────────────────────────────────────────────
-const AGENT_COLORS = {
+export const AGENT_COLORS = {
   orchestrator:  "purple",
   reader:        "accent",
   builder:       "orange",
@@ -1080,7 +1081,7 @@ const AGENT_COLORS = {
   "style-guide": "red",
 };
 
-const AGENT_LABELS = {
+export const AGENT_LABELS = {
   orchestrator:  "Orchestrator",
   reader:        "Reader",
   builder:       "Builder",
@@ -1088,7 +1089,7 @@ const AGENT_LABELS = {
   "style-guide": "Style Guide",
 };
 
-const TAG_STYLES = {
+export const TAG_STYLES = {
   routing:     { cls: "tl-tag-routing",     label: "routing"     },
   epistemic:   { cls: "tl-tag-epistemic",   label: "epistemic"   },
   grounding:   { cls: "tl-tag-grounding",   label: "grounding"   },

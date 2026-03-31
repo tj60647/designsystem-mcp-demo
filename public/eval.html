@@ -40,6 +40,14 @@
       <span class="eval-nav-icon">📋</span>
       <span>Test Suite</span>
     </button>
+    <button class="eval-nav-btn" data-section="comparison" title="Select a predefined test, run it, and inspect the live tool trace and check results">
+      <span class="eval-nav-icon">🔍</span>
+      <span>Test Inspector</span>
+    </button>
+    <button class="eval-nav-btn" data-section="batch" title="Run the full suite with agent-grouped results and a progress bar">
+      <span class="eval-nav-icon">📦</span>
+      <span>Batch</span>
+    </button>
     <button class="eval-nav-btn" data-section="tools" title="Explore and invoke MCP tools directly">
       <span class="eval-nav-icon">🔧</span>
       <span>Tool Explorer</span>
@@ -75,7 +83,25 @@
       <!-- Populated by eval.js initSuiteSection() -->
     </section>
 
-    <!-- ── 2. Tool Explorer ──────────────────────────────────────────── -->
+    <!-- ── 2. Test Inspector ─────────────────────────────────────────── -->
+    <section id="eval-section-comparison" class="eval-section" aria-label="Test Inspector">
+      <div class="eval-section-header">
+        <span class="eval-section-title">Test Inspector</span>
+        <span class="eval-section-subtitle">Pick any predefined test, run it, and inspect the live tool trace and check results</span>
+      </div>
+      <!-- Populated by eval.js initComparisonSection() -->
+    </section>
+
+    <!-- ── 3. Batch ───────────────────────────────────────────────────── -->
+    <section id="eval-section-batch" class="eval-section" aria-label="Batch">
+      <div class="eval-section-header">
+        <span class="eval-section-title">Batch</span>
+        <span class="eval-section-subtitle">Run the full suite — agent-grouped results, progress bar, and exportable summary</span>
+      </div>
+      <!-- Populated by eval.js initBatchSection() -->
+    </section>
+
+    <!-- ── 4. Tool Explorer ──────────────────────────────────────────── -->
     <section id="eval-section-tools" class="eval-section" aria-label="Tool Explorer">
       <div class="eval-section-header">
         <span class="eval-section-title">MCP Tool Explorer</span>
@@ -84,7 +110,7 @@
       <!-- Populated by eval.js initToolsSection() -->
     </section>
 
-    <!-- ── 3. Prompt Lab ────────────────────────────────────────────── -->
+    <!-- ── 5. Prompt Lab ────────────────────────────────────────────── -->
     <section id="eval-section-prompts" class="eval-section" aria-label="Prompt Lab">
       <div class="eval-section-header">
         <span class="eval-section-title">Prompt Lab</span>
@@ -93,7 +119,7 @@
       <!-- Populated by eval.js initPromptsSection() -->
     </section>
 
-    <!-- ── 4. Playground ─────────────────────────────────────────────── -->
+    <!-- ── 6. Playground ─────────────────────────────────────────────── -->
     <section id="eval-section-playground" class="eval-section" aria-label="Playground">
       <div class="eval-section-header">
         <span class="eval-section-title">Playground</span>
@@ -102,7 +128,7 @@
       <!-- Populated by eval.js initPlaygroundSection() -->
     </section>
 
-    <!-- ── 5. Agents ─────────────────────────────────────────────────── -->
+    <!-- ── 7. Agents ─────────────────────────────────────────────────── -->
     <section id="eval-section-agents" class="eval-section" aria-label="Agent Config">
       <div class="eval-section-header">
         <span class="eval-section-title">Agents</span>
@@ -111,7 +137,7 @@
       <!-- Populated by eval.js initAgentsSection() -->
     </section>
 
-    <!-- ── 5. Metrics ────────────────────────────────────────────────── -->
+    <!-- ── 8. Metrics ────────────────────────────────────────────────── -->
     <section id="eval-section-metrics" class="eval-section" aria-label="Metrics">
       <div class="eval-section-header">
         <span class="eval-section-title">Metrics</span>

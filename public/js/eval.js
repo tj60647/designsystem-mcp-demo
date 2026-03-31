@@ -1,14 +1,17 @@
 /**
  * Design System MCP — Eval Lab
  *
- * Full-page evaluation workspace with five sections:
+ * Full-page evaluation workspace with eight sections:
  *   1. Test Suite     — run the 110-test prompt suite against real agents
- *   2. Tool Explorer  — invoke any of the 27 MCP tools directly via POST /mcp
- *   3. Prompt Lab     — pick a prompt template, send it, view the full tool trace
- *   4. Agents         — browse live agent config (system prompts, tool sets, diagram)
- *   5. Metrics        — in-process request / routing / tool-call counters
+ *   2. Test Inspector — pick a test, run it, inspect the live tool trace and checks
+ *   3. Batch          — full suite with agent-grouped results and progress bar
+ *   4. Tool Explorer  — invoke any of the 27 MCP tools directly via POST /mcp
+ *   5. Prompt Lab     — pick a prompt template, send it, view the full tool trace
+ *   6. Playground     — build and run chained agent sequences
+ *   7. Agents         — browse live agent config (system prompts, tool sets, diagram)
+ *   8. Metrics        — in-process request / routing / tool-call counters
  */
-import { TEST_SUITE, runTest } from './modals/testlab.js';
+import { TEST_SUITE, runTest, AGENT_COLORS, AGENT_LABELS, TAG_STYLES } from './modals/testlab.js';
 import { escapeHtml } from './utils.js';
 
 // ── Shared state ──────────────────────────────────────────────────────────────
@@ -33,6 +36,8 @@ function showSection(id) {
   if (id === 'playground') initPlaygroundSection();
   if (id === 'agents')     initAgentsSection();
   if (id === 'metrics')    loadMetrics();
+  if (id === 'comparison') initComparisonSection();
+  if (id === 'batch')      initBatchSection();
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
@@ -53,22 +58,6 @@ let suiteRunning     = false;
 let suiteStopFlag    = false;
 let suiteInited      = false;
 let suiteConcurrency = 4;
-
-const AGENT_COLORS = {
-  orchestrator:  'purple', reader: 'accent', builder: 'orange',
-  generator: 'green', 'style-guide': 'red',
-};
-const AGENT_LABELS = {
-  orchestrator: 'Orchestrator', reader: 'Reader', builder: 'Builder',
-  generator: 'Generator', 'style-guide': 'Style Guide',
-};
-const TAG_STYLES = {
-  routing:     { cls: 'tl-tag-routing',     label: 'routing'     },
-  epistemic:   { cls: 'tl-tag-epistemic',   label: 'epistemic'   },
-  grounding:   { cls: 'tl-tag-grounding',   label: 'grounding'   },
-  behavioral:  { cls: 'tl-tag-behavioral',  label: 'behavioral'  },
-  mechanistic: { cls: 'tl-tag-mechanistic', label: 'mechanistic' },
-};
 
 function agentBadge(agent) {
   const color = AGENT_COLORS[agent] ?? 'accent';
@@ -399,7 +388,7 @@ function initSuiteSection() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 2. TOOL EXPLORER
+// 4. TOOL EXPLORER
 // ═══════════════════════════════════════════════════════════════════════════════
 let toolsList = null;
 let selectedTool = null;
@@ -609,15 +598,17 @@ async function callTool(tool) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 3. PROMPT LAB
+// 5. PROMPT LAB
 // ═══════════════════════════════════════════════════════════════════════════════
 let templates = null;
 let selectedTemplate = null;
 let promptRunning = false;
+let promptsInited = false;
 
 async function initPromptsSection() {
   const wrap = document.getElementById('eval-section-prompts');
   if (!wrap) return;
+  if (promptsInited) return;
   if (templates) { renderPromptsLayout(); return; }
 
   wrap.innerHTML = '<div class="eval-loading">Loading prompt templates…</div>';
@@ -692,6 +683,7 @@ function renderPromptsLayout() {
   });
 
   document.getElementById('eval-pl-run-btn')?.addEventListener('click', runPromptLab);
+  promptsInited = true;
 }
 
 async function runPromptLab() {
@@ -742,9 +734,9 @@ async function runPromptLab() {
         } else if (event.type === 'agent_routed') {
           appendStep(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-agent">ROUTED → ${escapeHtml(event.agent)}</div><div class="eval-pl-step-content">${escapeHtml(event.reason ?? '')}</div></div>`);
         } else if (event.type === 'tool_call') {
-          appendStep(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-tool">TOOL CALL — ${escapeHtml(event.tool)}</div><div class="eval-pl-step-content"><pre style="margin:0;font-size:11px;overflow:auto">${escapeHtml(JSON.stringify(event.args, null, 2))}</pre></div></div>`);
+          appendStep(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-tool">TOOL CALL — ${escapeHtml(event.tool)}</div><div class="eval-pl-step-content"><pre class="tl-trace-pre">${escapeHtml(JSON.stringify(event.args, null, 2))}</pre></div></div>`);
         } else if (event.type === 'tool_result') {
-          appendStep(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-result">TOOL RESULT — ${escapeHtml(event.tool)}</div><div class="eval-pl-step-content">${event.chars} chars · ${escapeHtml(event.preview ?? '')}</div></div>`);
+          appendStep(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-result">TOOL RESULT — ${escapeHtml(event.tool)}</div><div class="eval-pl-step-content">${escapeHtml(String(event.chars ?? '?'))} chars · ${escapeHtml(event.preview ?? '')}</div></div>`);
         } else if (event.type === 'done') {
           const tools = event.toolCallsUsed ?? [];
           const toolChips = tools.map(t => `<span class="eval-pl-tool-chip">${escapeHtml(t)}</span>`).join('');
@@ -771,12 +763,14 @@ async function runPromptLab() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 4. AGENT CONFIG
+// 7. AGENTS
 // ═══════════════════════════════════════════════════════════════════════════════
 let agentSectionInited = false;
+let agentsLastLoadedModel = '';
 
 function initAgentsSection() {
-  if (agentSectionInited) return;
+  const currentModel = getModel();
+  if (agentSectionInited && agentsLastLoadedModel === currentModel) return;
   // The agents modal init code attaches to DOM elements by ID. We need to render
   // the same lobby/diagram HTML into the eval page section instead.
   // We'll fetch /api/agent-info directly and render using a simplified version
@@ -786,11 +780,12 @@ function initAgentsSection() {
 
   wrap.innerHTML = '<div class="eval-loading">Loading agent config…</div>';
 
-  fetch(`/api/agent-info?model=${encodeURIComponent(getModel())}`)
+  fetch(`/api/agent-info?model=${encodeURIComponent(currentModel)}`)
     .then(r => r.json())
     .then(data => {
       renderAgentsSection(wrap, data.agents ?? [], data.model ?? '');
       agentSectionInited = true;
+      agentsLastLoadedModel = currentModel;
     })
     .catch(err => {
       wrap.innerHTML = `<div class="eval-section-body"><div class="eval-error">Failed to load: ${escapeHtml(String(err))}</div></div>`;
@@ -891,7 +886,7 @@ function renderAgentsSection(wrap, agents, model) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 5. METRICS
+// 8. METRICS
 // ═══════════════════════════════════════════════════════════════════════════════
 async function loadMetrics() {
   const wrap = document.getElementById('eval-section-metrics');
@@ -991,14 +986,6 @@ const PLAYGROUND_SCENARIOS = {
   },
 };
 
-const PG_AGENT_LABELS = {
-  orchestrator: 'Orchestrator',
-  reader:        'Reader',
-  builder:       'Builder',
-  generator:     'Generator',
-  'style-guide': 'Style Guide',
-};
-
 // ── State ─────────────────────────────────────────────────────────────────────
 let pgSteps          = [];
 let pgObservations   = [];
@@ -1009,7 +996,7 @@ let pgInited         = false;
 let pgCustomStepSeq  = 0; // monotonic counter for custom step IDs
 
 function pgFreshStep(s) {
-  return { ...s, status: 'pending', output: undefined, model: undefined, latencyMs: undefined, toolCallsUsed: undefined, error: undefined };
+  return { ...s, status: 'pending', output: undefined, model: undefined, latencyMs: undefined, toolCallsUsed: undefined, traceEvents: undefined, error: undefined };
 }
 
 function pgLoadScenario(key) {
@@ -1038,6 +1025,7 @@ async function pgRunStep(step, model) {
   const reader  = res.body.getReader();
   const decoder = new TextDecoder();
   let buf = '';
+  const traceEvents = [];
 
   while (true) {
     const { done, value } = await reader.read();
@@ -1049,12 +1037,16 @@ async function pgRunStep(step, model) {
       if (!part.startsWith('data: ')) continue;
       let ev;
       try { ev = JSON.parse(part.slice(6)); } catch { continue; }
+      if (['agent_routed', 'tool_call', 'tool_result', 'progress'].includes(ev.type)) {
+        if (traceEvents.length < 50) traceEvents.push(ev);
+      }
       if (ev.type === 'done') {
         return {
           output:        ev.message        ?? '',
           model:         ev.model          ?? model,
           latencyMs:     Date.now() - start,
           toolCallsUsed: ev.toolCallsUsed  ?? [],
+          traceEvents,
         };
       }
       if (ev.type === 'error') throw new Error(ev.error ?? 'Unknown error');
@@ -1087,7 +1079,7 @@ function pgRenderChain() {
     ${idx > 0 ? '<div class="pg-chain-arrow">→</div>' : ''}
     <div class="pg-chain-node pg-chain-node-${step.status}">
       <span class="pg-node-num">${idx + 1}</span>
-      <span class="pg-node-agent">${escapeHtml(PG_AGENT_LABELS[step.agentId] ?? step.agentId)}</span>
+      <span class="pg-node-agent">${escapeHtml(AGENT_LABELS[step.agentId] ?? step.agentId)}</span>
     </div>
   `).join('');
 }
@@ -1105,11 +1097,28 @@ function pgRenderTimeline() {
       </div>`;
     } else if (step.status === 'running') {
       content = `<div class="pg-running-indicator"><span class="pg-spinner"></span>Executing…</div>`;
-    } else if (step.status === 'complete' && step.output) {
-      const tools = (step.toolCallsUsed ?? []).map(t => `<span class="pg-tool-chip">${escapeHtml(t)}</span>`).join('');
+    } else if (step.status === 'complete') {
+      // Per-step tool-call trace
+      const traceRows = (step.traceEvents ?? []).map(ev => {
+        if (ev.type === 'agent_routed') {
+          return `<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-agent">ROUTED → ${escapeHtml(ev.agent ?? '')}</div>${ev.reason ? `<div class="eval-pl-step-content">${escapeHtml(ev.reason)}</div>` : ''}</div>`;
+        }
+        if (ev.type === 'tool_call') {
+          return `<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-tool">TOOL CALL — ${escapeHtml(ev.tool ?? '')}</div><div class="eval-pl-step-content"><pre class="pg-trace-pre">${escapeHtml(JSON.stringify(ev.args, null, 2).slice(0, 400))}</pre></div></div>`;
+        }
+        if (ev.type === 'tool_result') {
+          return `<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-result">TOOL RESULT — ${escapeHtml(ev.tool ?? '')}</div><div class="eval-pl-step-content">${escapeHtml(`${ev.chars ?? '?'} chars`)}${ev.preview ? ` · ${escapeHtml(ev.preview)}` : ''}</div></div>`;
+        }
+        return '';
+      }).join('');
+
+      const traceBlock = traceRows
+        ? `<div class="pg-step-trace"><div class="pg-step-trace-label">Tool Trace</div><div class="eval-pl-trace-body">${traceRows}</div></div>`
+        : '';
+
       content = `
-        ${tools ? `<div class="pg-tool-chips">${tools}</div>` : ''}
-        <pre class="pg-step-output">${escapeHtml(step.output.slice(0, 400))}${step.output.length > 400 ? '…' : ''}</pre>`;
+        ${traceBlock}
+        <pre class="pg-step-output">${escapeHtml((step.output ?? '').slice(0, 400))}${(step.output ?? '').length > 400 ? '…' : ''}</pre>`;
     } else if (step.status === 'error') {
       content = `<div class="pg-error-box">${escapeHtml(step.error ?? 'Error')}</div>`;
     }
@@ -1127,7 +1136,7 @@ function pgRenderTimeline() {
         <div class="pg-step-identity">
           <span class="pg-status-dot pg-status-dot-${step.status}"></span>
           <span class="pg-step-num">${idx + 1}</span>
-          <span class="pg-step-agent">${escapeHtml(PG_AGENT_LABELS[step.agentId] ?? step.agentId)}</span>
+          <span class="pg-step-agent">${escapeHtml(AGENT_LABELS[step.agentId] ?? step.agentId)}</span>
         </div>
         <div class="pg-step-meta">${chips}${removeBtn}</div>
       </div>
@@ -1184,6 +1193,7 @@ async function pgRunAll() {
         model:         result.model,
         latencyMs:     result.latencyMs,
         toolCallsUsed: result.toolCallsUsed,
+        traceEvents:   result.traceEvents,
       };
       pgLog(`Step ${i + 1}: ${pgSteps[i].agentId} — done in ${result.latencyMs}ms (${result.model})`);
     } catch (err) {
@@ -1219,7 +1229,7 @@ function initPlaygroundSection() {
     .join('');
 
   const agentOpts = ['orchestrator','reader','builder','generator','style-guide']
-    .map(a => `<option value="${a}">${escapeHtml(PG_AGENT_LABELS[a])}</option>`)
+    .map(a => `<option value="${a}">${escapeHtml(AGENT_LABELS[a])}</option>`)
     .join('');
 
   wrap.insertAdjacentHTML('beforeend', `
@@ -1302,4 +1312,550 @@ function initPlaygroundSection() {
   pgRenderObservations();
   pgUpdateControls();
   pgInited = true;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 2. TEST INSPECTOR
+// ═══════════════════════════════════════════════════════════════════════════════
+// Select a predefined test from the sidebar, run it, watch the live SSE tool
+// trace stream in, then see per-check pass/fail results at the end.
+
+let cmpInited        = false;
+let cmpSelectedTest  = null;
+let cmpAgentFilter   = 'all';
+let cmpRunning       = false;
+
+function cmpGetTests() {
+  return cmpAgentFilter === 'all'
+    ? TEST_SUITE
+    : TEST_SUITE.filter(t => t.agent === cmpAgentFilter);
+}
+
+function buildCmpTestList() {
+  const tests = cmpGetTests();
+  if (tests.length === 0) return '<div class="cmp-empty">No tests match this filter.</div>';
+  return tests.map(t => {
+    const color = AGENT_COLORS[t.agent] ?? 'accent';
+    const active = cmpSelectedTest?.id === t.id ? ' active' : '';
+    return `<div class="cmp-test-item${active}" data-cmp-test="${t.id}">
+      <span class="tl-agent-badge tl-badge-${color} cmp-badge">${escapeHtml(AGENT_LABELS[t.agent] ?? t.agent)}</span>
+      <span class="cmp-test-desc">${escapeHtml(t.description)}</span>
+    </div>`;
+  }).join('');
+}
+
+function cmpEvalCheck(check, result) {
+  switch (check.type) {
+    case 'agentMatch':
+      return { label: `Routed to "${check.value}"`, passed: result.routedAgent === check.value, detail: `Got: ${result.routedAgent ?? 'unknown'}` };
+    case 'contains':
+      return { label: `Response contains "${check.value}"`, passed: typeof result.message === 'string' && result.message.toLowerCase().includes(check.value.toLowerCase()), detail: result.message?.slice(0, 80) ?? '' };
+    case 'toolUsed':
+      return { label: `Called tool "${check.value}"`, passed: Array.isArray(result.toolCallsUsed) && result.toolCallsUsed.includes(check.value), detail: result.toolCallsUsed?.join(', ') || 'no tools' };
+    case 'hasPreview':
+      return { label: 'Response includes a preview', passed: typeof result.preview === 'string' && result.preview.trim().length > 0, detail: result.preview ? 'preview present' : 'no preview' };
+    case 'noPreview':
+      return { label: 'Response must not include a preview', passed: !(result.preview && result.preview.trim()), detail: result.preview ? 'preview unexpectedly present' : 'no preview (correct)' };
+    case 'previewContains':
+      return { label: `Preview contains "${check.value}"`, passed: typeof result.preview === 'string' && result.preview.toLowerCase().includes(check.value.toLowerCase()), detail: result.preview ? 'checked preview' : 'no preview' };
+    case 'notEmpty':
+      return { label: 'Response is not empty', passed: typeof result.message === 'string' && result.message.trim().length > 0, detail: result.message ? 'non-empty' : 'empty' };
+    default:
+      return { label: check.type, passed: false, detail: 'unknown check type' };
+  }
+}
+
+function cmpSelectTest(test) {
+  cmpSelectedTest = test;
+  const wrap = document.getElementById('eval-section-comparison');
+  if (!wrap) return;
+  wrap.querySelectorAll('[data-cmp-test]').forEach(el =>
+    el.classList.toggle('active', el.dataset.cmpTest === String(test.id))
+  );
+  const noSelEl    = document.getElementById('cmp-no-selection');
+  const workspaceEl = document.getElementById('cmp-workspace');
+  if (noSelEl)     noSelEl.style.display    = 'none';
+  if (workspaceEl) workspaceEl.style.display = '';
+
+  const promptEl = document.getElementById('cmp-prompt-text');
+  if (promptEl) promptEl.textContent = test.prompt;
+
+  const traceBody = document.getElementById('cmp-trace-body');
+  if (traceBody) traceBody.innerHTML = '<span class="cmp-trace-placeholder">Run the test to see the tool trace…</span>';
+
+  const checksWrap = document.getElementById('cmp-checks-wrap');
+  if (checksWrap) checksWrap.style.display = 'none';
+
+  const verdictEl = document.getElementById('cmp-verdict');
+  if (verdictEl) verdictEl.style.display = 'none';
+}
+
+function bindCmpTestList() {
+  const wrap = document.getElementById('eval-section-comparison');
+  wrap?.querySelectorAll('[data-cmp-test]').forEach(el => {
+    el.addEventListener('click', () => {
+      const test = TEST_SUITE.find(t => t.id === Number(el.dataset.cmpTest));
+      if (test) cmpSelectTest(test);
+    });
+  });
+}
+
+function initComparisonSection() {
+  const wrap = document.getElementById('eval-section-comparison');
+  if (!wrap || cmpInited) return;
+
+  const agentFilters = ['all', 'orchestrator', 'reader', 'builder', 'generator', 'style-guide'].map(a => {
+    const cnt = a === 'all' ? TEST_SUITE.length : TEST_SUITE.filter(t => t.agent === a).length;
+    return `<button class="tl-filter-tab${cmpAgentFilter === a ? ' active' : ''}" data-cmp-agent="${a}">${a === 'all' ? 'All' : AGENT_LABELS[a] ?? a} <span class="tl-filter-count">${cnt}</span></button>`;
+  }).join('');
+
+  wrap.insertAdjacentHTML('beforeend', `
+    <div class="cmp-layout">
+      <aside class="cmp-sidebar">
+        <div class="cmp-sidebar-filters eval-suite-filter-group">${agentFilters}</div>
+        <div class="cmp-test-list" id="cmp-test-list">${buildCmpTestList()}</div>
+      </aside>
+      <main class="cmp-main">
+        <div class="cmp-no-selection" id="cmp-no-selection">← Select a test from the list to begin</div>
+        <div class="cmp-workspace" id="cmp-workspace" style="display:none">
+          <div class="eval-pl-field-label">Prompt</div>
+          <div class="cmp-prompt-box" id="cmp-prompt-text"></div>
+          <div class="cmp-run-row">
+            <button class="eval-btn eval-btn-primary" id="cmp-run-btn">▶ Run Test</button>
+            <span id="cmp-verdict" style="display:none"></span>
+          </div>
+          <div class="eval-pl-field-label" style="margin-top:12px">Tool Trace</div>
+          <div class="eval-pl-trace" id="cmp-trace">
+            <div class="eval-pl-trace-header">Trace</div>
+            <div class="eval-pl-trace-body" id="cmp-trace-body">
+              <span class="cmp-trace-placeholder">Run the test to see the tool trace…</span>
+            </div>
+          </div>
+          <div id="cmp-checks-wrap" style="display:none">
+            <div class="eval-pl-field-label" style="margin-top:12px">Check Results</div>
+            <div class="tl-check-list" id="cmp-check-list"></div>
+          </div>
+        </div>
+      </main>
+    </div>`);
+
+  wrap.querySelectorAll('[data-cmp-agent]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      cmpAgentFilter = btn.dataset.cmpAgent;
+      wrap.querySelectorAll('[data-cmp-agent]').forEach(b =>
+        b.classList.toggle('active', b.dataset.cmpAgent === cmpAgentFilter)
+      );
+      const listEl = document.getElementById('cmp-test-list');
+      if (listEl) listEl.innerHTML = buildCmpTestList();
+      bindCmpTestList();
+    });
+  });
+
+  bindCmpTestList();
+  document.getElementById('cmp-run-btn')?.addEventListener('click', runComparison);
+  cmpInited = true;
+}
+
+async function runComparison() {
+  if (!cmpSelectedTest || cmpRunning) return;
+  cmpRunning = true;
+
+  const runBtn     = document.getElementById('cmp-run-btn');
+  const traceBody  = document.getElementById('cmp-trace-body');
+  const checksWrap = document.getElementById('cmp-checks-wrap');
+  const checkList  = document.getElementById('cmp-check-list');
+  const verdictEl  = document.getElementById('cmp-verdict');
+
+  if (runBtn) { runBtn.disabled = true; runBtn.textContent = '⏳ Running…'; }
+  if (verdictEl) verdictEl.style.display = 'none';
+  if (checksWrap) checksWrap.style.display = 'none';
+  if (traceBody) traceBody.innerHTML = '';
+
+  function appendTrace(html) {
+    if (traceBody) traceBody.insertAdjacentHTML('beforeend', html);
+  }
+
+  appendTrace(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-agent">REQUEST</div><div class="eval-pl-step-content">${escapeHtml(cmpSelectedTest.prompt)}</div></div>`);
+
+  const model = getModel();
+  let finalResult = null;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: [{ role: 'user', content: cmpSelectedTest.prompt }], model }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const parts = buf.split('\n\n');
+      buf = parts.pop() ?? '';
+      for (const part of parts) {
+        if (!part.startsWith('data: ')) continue;
+        let ev;
+        try { ev = JSON.parse(part.slice(6)); } catch { continue; }
+        if (ev.type === 'progress') {
+          appendTrace(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-agent">PROGRESS</div><div class="eval-pl-step-content">${escapeHtml(ev.message)}</div></div>`);
+        } else if (ev.type === 'agent_routed') {
+          appendTrace(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-agent">ROUTED → ${escapeHtml(ev.agent)}</div><div class="eval-pl-step-content">${escapeHtml(ev.reason ?? '')}</div></div>`);
+        } else if (ev.type === 'tool_call') {
+          appendTrace(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-tool">TOOL CALL — ${escapeHtml(ev.tool)}</div><div class="eval-pl-step-content"><pre class="cmp-trace-pre">${escapeHtml(JSON.stringify(ev.args, null, 2))}</pre></div></div>`);
+        } else if (ev.type === 'tool_result') {
+          appendTrace(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-result">TOOL RESULT — ${escapeHtml(ev.tool)}</div><div class="eval-pl-step-content">${escapeHtml(String(ev.chars ?? '?'))} chars · ${escapeHtml(ev.preview ?? '')}</div></div>`);
+        } else if (ev.type === 'done') {
+          finalResult = { message: ev.message ?? '', preview: ev.preview ?? null, routedAgent: ev.routedAgent ?? null, toolCallsUsed: ev.toolCallsUsed ?? [] };
+          const tools = (ev.toolCallsUsed ?? []).map(t => `<span class="eval-pl-tool-chip">${escapeHtml(t)}</span>`).join('');
+          appendTrace(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-result">DONE — ${escapeHtml(ev.routedAgent ?? 'unknown')}</div>${tools ? `<div class="eval-pl-step-tools">${tools}</div>` : ''}<div class="eval-pl-step-content" style="margin-top:6px">${escapeHtml((ev.message ?? '').slice(0, 400))}${(ev.message ?? '').length > 400 ? '…' : ''}</div></div>`);
+        } else if (ev.type === 'error') {
+          appendTrace(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-error">ERROR</div><div class="eval-pl-step-content">${escapeHtml(ev.error ?? 'Unknown error')}</div></div>`);
+        }
+      }
+    }
+
+    if (!finalResult) {
+      appendTrace(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-error">ERROR</div><div class="eval-pl-step-content">Stream ended without a response.</div></div>`);
+    }
+
+    if (finalResult && cmpSelectedTest.checks) {
+      const checkResults = cmpSelectedTest.checks.map(c => cmpEvalCheck(c, finalResult));
+      const allPassed    = checkResults.every(r => r.passed);
+      if (checksWrap) checksWrap.style.display = '';
+      if (checkList) {
+        checkList.innerHTML = checkResults.map(r =>
+          `<div class="tl-check-row ${r.passed ? 'tl-check-pass' : 'tl-check-fail'}">
+            <span class="tl-check-icon">${r.passed ? '✓' : '✗'}</span>
+            <span class="tl-check-label">${escapeHtml(r.label)}</span>
+            <span class="tl-check-detail">${escapeHtml(r.detail ?? '')}</span>
+          </div>`
+        ).join('');
+      }
+      if (verdictEl) {
+        verdictEl.style.display = '';
+        verdictEl.innerHTML = allPassed
+          ? `<span class="tl-status-chip tl-status-pass">✓ PASS</span>`
+          : `<span class="tl-status-chip tl-status-fail">✗ FAIL</span>`;
+      }
+    }
+  } catch (err) {
+    appendTrace(`<div class="eval-pl-trace-step"><div class="eval-pl-step-type type-error">ERROR</div><div class="eval-pl-step-content">${escapeHtml(String(err))}</div></div>`);
+  } finally {
+    cmpRunning = false;
+    if (runBtn) { runBtn.disabled = false; runBtn.textContent = '▶ Run Test'; }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 3. BATCH
+// ═══════════════════════════════════════════════════════════════════════════════
+// Runs the full 110-test suite sequentially, renders results grouped by agent,
+// shows a live progress bar, and provides a summary grid + JSON export.
+
+let batchInited   = false;
+let batchRunning  = false;
+let batchStopFlag = false;
+let batchResults  = {}; // testId → { status, result, checkResults, passed, error }
+let batchCurrentId = null;
+let batchHistory  = []; // last 5 run summaries
+
+function batchGetState(id) { return batchResults[id] ?? { status: 'idle' }; }
+
+function batchUpdateProgress() {
+  const progressWrap = document.getElementById('batch-progress-wrap');
+  const fill         = document.getElementById('batch-progress-fill');
+  const stats        = document.getElementById('batch-progress-stats');
+  if (!progressWrap) return;
+
+  const total   = TEST_SUITE.length;
+  const ran     = TEST_SUITE.filter(t => batchResults[t.id]).length;
+  const passed  = TEST_SUITE.filter(t => batchResults[t.id]?.passed).length;
+  const failed  = ran - passed;
+  const pct     = total > 0 ? Math.round((ran / total) * 100) : 0;
+
+  if (ran > 0 || batchRunning) progressWrap.style.display = '';
+  if (fill)  fill.style.width = `${pct}%`;
+  if (stats) stats.innerHTML  = `<span>${ran} / ${total} complete</span>${ran > 0 ? `<span class="batch-pass-chip">✓ ${passed}</span>${failed > 0 ? `<span class="batch-fail-chip">✗ ${failed}</span>` : ''}` : ''}`;
+}
+
+function renderBatchGroupRow(test) {
+  const st = batchGetState(test.id);
+  const isRunning = batchRunning && batchCurrentId === test.id;
+  const dotClass = isRunning ? 'pg-status-dot-running' : st.status === 'idle' ? 'pg-status-dot-pending' : st.passed ? 'pg-status-dot-complete' : 'pg-status-dot-error';
+  const badge = st.status !== 'idle' ? (st.passed ? '<span class="tl-status-chip tl-status-pass">✓ PASS</span>' : '<span class="tl-status-chip tl-status-fail">✗ FAIL</span>') : (isRunning ? '<span class="tl-status-chip tl-status-running">⏳</span>' : '');
+
+  let detail = '';
+  if (st.status !== 'idle' && !isRunning && st.checkResults) {
+    const rows = st.checkResults.map(r =>
+      `<div class="tl-check-row ${r.passed ? 'tl-check-pass' : 'tl-check-fail'}"><span class="tl-check-icon">${r.passed ? '✓' : '✗'}</span><span class="tl-check-label">${escapeHtml(r.label)}</span><span class="tl-check-detail">${escapeHtml(r.detail ?? '')}</span></div>`
+    ).join('');
+    const output = st.result?.message ? `<pre class="batch-output-pre">${escapeHtml(st.result.message.slice(0, 300))}${st.result.message.length > 300 ? '…' : ''}</pre>` : '';
+    const detailId = `batch-detail-${test.id}`;
+    detail = `<div class="batch-test-detail" id="${detailId}"${st.passed ? ' style="display:none"' : ''}>${rows}${output}</div>`;
+  }
+
+  return `<div class="batch-test-row${st.passed ? ' batch-row-pass' : st.status !== 'idle' && !isRunning ? ' batch-row-fail' : ''}" data-batch-test="${test.id}">
+    <div class="batch-test-row-header" data-detail-id="batch-detail-${test.id}">
+      <span class="pg-status-dot ${dotClass}"></span>
+      <span class="batch-test-name">${escapeHtml(test.description)}</span>
+      <div class="batch-test-meta">${badge}</div>
+    </div>
+    ${detail}
+  </div>`;
+}
+
+function renderBatchResults() {
+  const container = document.getElementById('batch-results');
+  if (!container) return;
+
+  const agentGroups = {};
+  for (const test of TEST_SUITE) {
+    if (!agentGroups[test.agent]) agentGroups[test.agent] = [];
+    agentGroups[test.agent].push(test);
+  }
+
+  container.innerHTML = Object.entries(agentGroups).map(([agent, tests]) => {
+    const color = AGENT_COLORS[agent] ?? 'accent';
+    const ran    = tests.filter(t => batchResults[t.id]).length;
+    const passed = tests.filter(t => batchResults[t.id]?.passed).length;
+    const countBadge = ran > 0
+      ? `<span class="${passed === ran ? 'batch-pass-chip' : 'batch-fail-chip'}">${passed}/${ran}</span>`
+      : '';
+    const rows = tests.map(t => renderBatchGroupRow(t)).join('');
+    return `<div class="batch-agent-group" data-batch-agent="${agent}">
+      <button class="batch-group-header" data-batch-toggle="${agent}">
+        <span class="tl-agent-badge tl-badge-${color}">${escapeHtml(AGENT_LABELS[agent] ?? agent)}</span>
+        <span class="batch-group-count">${tests.length} tests</span>
+        <div class="batch-group-meta">${countBadge}<span class="batch-chevron">▼</span></div>
+      </button>
+      <div class="batch-group-tests">${rows}</div>
+    </div>`;
+  }).join('');
+
+  container.querySelectorAll('[data-batch-toggle]').forEach(btn => {
+    btn.onclick = function() {
+      const group = btn.closest('.batch-agent-group');
+      if (!group) return;
+      const tests = group.querySelector('.batch-group-tests');
+      const chevron = btn.querySelector('.batch-chevron');
+      if (!tests) return;
+      const collapsed = tests.style.display === 'none';
+      tests.style.display = collapsed ? '' : 'none';
+      if (chevron) chevron.textContent = collapsed ? '▼' : '▶';
+    };
+  });
+}
+
+function updateBatchSummary() {
+  const summaryEl = document.getElementById('batch-summary');
+  if (!summaryEl) return;
+  const total  = TEST_SUITE.length;
+  const ran    = TEST_SUITE.filter(t => batchResults[t.id]).length;
+  const passed = TEST_SUITE.filter(t => batchResults[t.id]?.passed).length;
+  const failed = ran - passed;
+  const rate   = ran > 0 ? Math.round((passed / ran) * 100) : 0;
+
+  const historyHtml = batchHistory.length > 0
+    ? `<div class="batch-history"><strong class="batch-history-title">Recent Runs</strong>${batchHistory.map(h =>
+        `<div class="batch-history-item"><span>${new Date(h.timestamp).toLocaleString()}</span><span>${h.passed}/${h.total} passed</span><span>${(h.durationMs / 1000).toFixed(1)}s</span></div>`
+      ).join('')}</div>`
+    : '';
+
+  summaryEl.style.display = ran > 0 ? '' : 'none';
+  summaryEl.innerHTML = `
+    <div class="eval-pl-field-label" style="margin-top:16px">Summary</div>
+    <div class="batch-summary-grid">
+      <div class="batch-summary-card"><div class="batch-summary-val">${total}</div><div class="batch-summary-lbl">Total</div></div>
+      <div class="batch-summary-card batch-summary-pass"><div class="batch-summary-val">${passed}</div><div class="batch-summary-lbl">Passed</div></div>
+      <div class="batch-summary-card ${failed > 0 ? 'batch-summary-fail' : ''}"><div class="batch-summary-val">${failed}</div><div class="batch-summary-lbl">Failed</div></div>
+      <div class="batch-summary-card"><div class="batch-summary-val">${rate}%</div><div class="batch-summary-lbl">Pass rate</div></div>
+    </div>
+    ${historyHtml}`;
+}
+
+function initBatchSection() {
+  const wrap = document.getElementById('eval-section-batch');
+  if (!wrap || batchInited) return;
+
+  wrap.insertAdjacentHTML('beforeend', `
+    <div class="batch-layout">
+      <div class="batch-header">
+        <div class="batch-actions">
+          <button class="eval-btn eval-btn-green" id="batch-run-btn">▶ Run All (${TEST_SUITE.length})</button>
+          <button class="eval-btn" id="batch-stop-btn" style="display:none">⏹ Stop</button>
+          <button class="eval-btn" id="batch-reset-btn">↺ Reset</button>
+          <button class="eval-btn" id="batch-export-btn" style="display:none">⬇ Export JSON</button>
+        </div>
+        <div class="batch-progress-wrap" id="batch-progress-wrap" style="display:none">
+          <div class="batch-progress-bar"><div class="batch-progress-fill" id="batch-progress-fill"></div></div>
+          <div class="batch-progress-stats" id="batch-progress-stats"></div>
+        </div>
+      </div>
+      <div id="batch-results"></div>
+      <div id="batch-summary"></div>
+    </div>`);
+
+  renderBatchResults();
+
+  document.getElementById('batch-run-btn')?.addEventListener('click', runBatchAll);
+  document.getElementById('batch-stop-btn')?.addEventListener('click', () => { batchStopFlag = true; });
+  document.getElementById('batch-reset-btn')?.addEventListener('click', () => {
+    if (batchRunning) return;
+    batchResults    = {};
+    batchCurrentId  = null;
+    renderBatchResults();
+    batchUpdateProgress();
+    updateBatchSummary();
+    const exportBtn = document.getElementById('batch-export-btn');
+    if (exportBtn) exportBtn.style.display = 'none';
+  });
+  document.getElementById('batch-export-btn')?.addEventListener('click', exportBatchResults);
+
+  // Delegate row-header clicks to toggle per-test detail panels
+  const batchResultsContainer = document.getElementById('batch-results');
+  if (batchResultsContainer) {
+    batchResultsContainer.addEventListener('click', e => {
+      const header = e.target.closest('.batch-test-row-header');
+      if (!header) return;
+      const detailId = header.dataset.detailId;
+      if (!detailId) return;
+      const detail = document.getElementById(detailId);
+      if (detail) detail.style.display = detail.style.display === 'none' ? '' : 'none';
+    });
+  }
+
+  batchInited = true;
+}
+
+async function runBatchAll() {
+  if (batchRunning) return;
+  batchRunning  = true;
+  batchStopFlag = false;
+  batchResults  = {};
+  batchCurrentId = null;
+
+  const runBtn   = document.getElementById('batch-run-btn');
+  const stopBtn  = document.getElementById('batch-stop-btn');
+  const exportBtn = document.getElementById('batch-export-btn');
+  if (runBtn)  { runBtn.disabled = true; runBtn.textContent = '⏳ Running…'; }
+  if (stopBtn) stopBtn.style.display = '';
+  if (exportBtn) exportBtn.style.display = 'none';
+
+  const model = getModel();
+  const start = Date.now();
+
+  renderBatchResults();
+  batchUpdateProgress();
+
+  for (const test of TEST_SUITE) {
+    if (batchStopFlag) break;
+    batchCurrentId = test.id;
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [{ role: 'user', content: test.prompt }], model }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const reader  = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
+      let finalResult = null;
+
+      outer: while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const parts = buf.split('\n\n');
+        buf = parts.pop() ?? '';
+        for (const part of parts) {
+          if (!part.startsWith('data: ')) continue;
+          let ev;
+          try { ev = JSON.parse(part.slice(6)); } catch { continue; }
+          if (ev.type === 'done') {
+            finalResult = { message: ev.message ?? '', preview: ev.preview ?? null, routedAgent: ev.routedAgent ?? null, toolCallsUsed: ev.toolCallsUsed ?? [] };
+            break outer;
+          }
+          if (ev.type === 'error') throw new Error(ev.error ?? 'Unknown error');
+        }
+      }
+
+      if (finalResult) {
+        const checkResults = test.checks.map(c => cmpEvalCheck(c, finalResult));
+        batchResults[test.id] = { status: 'done', passed: checkResults.every(r => r.passed), result: finalResult, checkResults };
+      } else {
+        batchResults[test.id] = { status: 'done', passed: false, result: null, checkResults: [{ label: 'Stream ended without a response', passed: false, detail: 'no done event received' }] };
+      }
+    } catch (err) {
+      batchResults[test.id] = { status: 'done', passed: false, result: null, checkResults: [{ label: 'Error', passed: false, detail: String(err) }] };
+    }
+
+    // Re-render only the affected agent group to avoid full DOM rebuild on every test
+    const groupEl = document.querySelector(`[data-batch-agent="${test.agent}"] .batch-group-tests`);
+    if (groupEl) {
+      const agentTests = TEST_SUITE.filter(t => t.agent === test.agent);
+      groupEl.innerHTML = agentTests.map(t => renderBatchGroupRow(t)).join('');
+      // Update the group header badge
+      const header = document.querySelector(`[data-batch-toggle="${test.agent}"]`);
+      if (header) {
+        const ran    = agentTests.filter(t => batchResults[t.id]).length;
+        const passed = agentTests.filter(t => batchResults[t.id]?.passed).length;
+        const metaEl = header.querySelector('.batch-group-meta');
+        if (metaEl) metaEl.innerHTML = ran > 0 ? `<span class="${passed === ran ? 'batch-pass-chip' : 'batch-fail-chip'}">${passed}/${ran}</span><span class="batch-chevron">▼</span>` : '<span class="batch-chevron">▼</span>';
+        // Re-bind collapse
+        header.onclick = function() {
+          const groupTests = header.closest('.batch-agent-group')?.querySelector('.batch-group-tests');
+          const chevron = header.querySelector('.batch-chevron');
+          if (!groupTests) return;
+          const collapsed = groupTests.style.display === 'none';
+          groupTests.style.display = collapsed ? '' : 'none';
+          if (chevron) chevron.textContent = collapsed ? '▼' : '▶';
+        };
+      }
+    }
+
+    batchCurrentId = null;
+    batchUpdateProgress();
+  }
+
+  const duration = Date.now() - start;
+  const total  = TEST_SUITE.length;
+  const ran    = TEST_SUITE.filter(t => batchResults[t.id]).length;
+  const passed = TEST_SUITE.filter(t => batchResults[t.id]?.passed).length;
+  batchHistory = [{ timestamp: new Date().toISOString(), total: ran, passed, durationMs: duration }, ...batchHistory].slice(0, 5);
+
+  batchRunning = false;
+  if (runBtn)    { runBtn.disabled = false; runBtn.textContent = `▶ Run All (${total})`; }
+  if (stopBtn)   stopBtn.style.display = 'none';
+  if (exportBtn && Object.keys(batchResults).length > 0) exportBtn.style.display = '';
+
+  updateBatchSummary();
+}
+
+function exportBatchResults() {
+  const data = {
+    exportedAt: new Date().toISOString(),
+    total: TEST_SUITE.length,
+    ran: Object.keys(batchResults).length,
+    passed: TEST_SUITE.filter(t => batchResults[t.id]?.passed).length,
+    results: TEST_SUITE.map(t => {
+      const st = batchResults[t.id];
+      return { id: t.id, agent: t.agent, description: t.description, passed: st?.passed ?? null, checkResults: st?.checkResults ?? [] };
+    }),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `batch-results-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
 }

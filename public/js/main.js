@@ -9,16 +9,16 @@ import { initInfoModals } from './modals/info.js';
 import { initLoadJsonModal, initDropZone } from './modals/load-json.js';
 import { initViewSchemaModal } from './modals/schema.js';
 import { initValidationModal } from './modals/validation.js';
-import { initAgentsModal } from './modals/agents.js';
+import { initAgentsPanel } from './modals/agents.js';
 import { initGenerateFromWebsiteModal } from './modals/generate-from-website.js';
 import { initDsOpsPanel, notifyDsOpsResult } from './dsOps.js';
 import { initSandbox } from './sandbox.js';
 
 // ── Product-level section navigation ─────────────────────────────────────
-// Manages top-level sections: Workspace, Design System Ops, Agent Sandbox, About.
+// Manages top-level sections: Workspace, Design System Ops, Agents, MCP, System Diagram, About.
 // Each section is a full-page view; only one is visible at a time.
 // ─────────────────────────────────────────────────────────────────────────
-const SECTION_IDS = ['section-workspace', 'section-ds-ops', 'section-agent-sandbox', 'section-about'];
+const SECTION_IDS = ['section-workspace', 'section-ds-ops', 'section-agent-sandbox', 'section-mcp', 'section-diagram', 'section-about'];
 
 function switchSection(sectionId) {
   SECTION_IDS.forEach(id => {
@@ -37,6 +37,8 @@ window.switchSection = switchSection;
 window.switchToWorkspace = () => switchSection('section-workspace');
 window.switchToDsOps = () => switchSection('section-ds-ops');
 window.switchToAgentSandbox = () => switchSection('section-agent-sandbox');
+window.switchToMcp = () => switchSection('section-mcp');
+window.switchToDiagram = () => switchSection('section-diagram');
 window.switchToAbout = () => switchSection('section-about');
 
 // Expose DS Ops result notifier globally so modal modules can call it after ingest.
@@ -50,6 +52,9 @@ function initProductNav() {
   // Inline navigation links within content sections
   const sandboxGotoWorkspace = document.getElementById('sandbox-goto-workspace');
   if (sandboxGotoWorkspace) sandboxGotoWorkspace.addEventListener('click', () => switchSection('section-workspace'));
+
+  const mcpGotoWorkspace = document.getElementById('mcp-goto-workspace');
+  if (mcpGotoWorkspace) mcpGotoWorkspace.addEventListener('click', () => switchSection('section-workspace'));
 
   const aboutGotoWorkspace = document.getElementById('about-goto-workspace');
   if (aboutGotoWorkspace) aboutGotoWorkspace.addEventListener('click', () => switchSection('section-workspace'));
@@ -90,7 +95,7 @@ initInfoModals();
 initDropZone();
 initLoadJsonModal();
 initViewSchemaModal();
-initAgentsModal();
+initAgentsPanel();
 initValidationModal();
 initGenerateFromWebsiteModal();
 initRightTabs();

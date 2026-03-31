@@ -43,35 +43,6 @@
 }
 .topbar-btn:hover { color: var(--text); border-color: var(--text-muted); }
 
-.topbar-model-wrap {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.topbar-model-label {
-  font-size: 11px;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: .5px;
-}
-.topbar-model-select {
-  font-size: 12px;
-  font-weight: 500;
-  padding: 5px 8px;
-  background: var(--bg-input);
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  min-width: 180px;
-  max-width: 270px;
-  width: 270px;
-}
-.topbar-model-select:hover,
-.topbar-model-select:focus {
-  color: var(--text);
-  border-color: var(--text-muted);
-}
-
 .topbar-btn-download {
   color: var(--green) !important;
   border-color: rgba(63,185,80,.4) !important;
@@ -147,26 +118,18 @@
 
 
 /* ── Responsive topbar ── */
-@media (max-width: 1024px) {
-  .topbar-model-select { width: 200px; min-width: 140px; }
-}
-
 @media (max-width: 900px) {
-  .topbar-model-label { display: none; }
-  .topbar-model-select { width: 160px; min-width: 120px; }
   .topbar-btn { font-size: 11px; padding: 4px 9px; }
 }
 
 @media (max-width: 700px) {
   .topbar { gap: 6px; padding: 8px 12px; }
   .topbar-title { font-size: 14px; }
-  .topbar-model-wrap { order: 10; width: 100%; }
-  .topbar-model-select { width: 100%; max-width: 100%; }
   .topbar-spacer { display: none; }
   .topbar-btn { font-size: 11px; padding: 4px 8px; }
 }
 
 @media (max-width: 480px) {
-  /* Move secondary buttons below the model-select row instead of hiding them */
+  /* Move secondary buttons below the main row instead of hiding them */
   .topbar-btn-hide-xs { order: 11; }
 }

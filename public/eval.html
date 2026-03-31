@@ -48,6 +48,14 @@
       <span class="eval-nav-icon">💬</span>
       <span>Prompt Lab</span>
     </button>
+    <button class="eval-nav-btn" data-section="comparison" title="Select a predefined test, run it, and inspect the live tool trace and check results">
+      <span class="eval-nav-icon">🔍</span>
+      <span>Comparison</span>
+    </button>
+    <button class="eval-nav-btn" data-section="batch" title="Run the full suite with agent-grouped results and a progress bar">
+      <span class="eval-nav-icon">📦</span>
+      <span>Batch</span>
+    </button>
     <button class="eval-nav-btn" data-section="playground" title="Build and run chained agent sequences">
       <span class="eval-nav-icon">🔗</span>
       <span>Playground</span>
@@ -100,6 +108,24 @@
         <span class="eval-section-subtitle">Build and run chained agent sequences — inspect each step in a live timeline</span>
       </div>
       <!-- Populated by eval.js initPlaygroundSection() -->
+    </section>
+
+    <!-- ── 7. Comparison ─────────────────────────────────────────────── -->
+    <section id="eval-section-comparison" class="eval-section" aria-label="Comparison">
+      <div class="eval-section-header">
+        <span class="eval-section-title">Comparison</span>
+        <span class="eval-section-subtitle">Select a predefined test — run it and inspect the live tool trace alongside check results</span>
+      </div>
+      <!-- Populated by eval.js initComparisonSection() -->
+    </section>
+
+    <!-- ── 8. Batch ───────────────────────────────────────────────────── -->
+    <section id="eval-section-batch" class="eval-section" aria-label="Batch">
+      <div class="eval-section-header">
+        <span class="eval-section-title">Batch</span>
+        <span class="eval-section-subtitle">Run the full suite — agent-grouped results, progress bar, and exportable summary</span>
+      </div>
+      <!-- Populated by eval.js initBatchSection() -->
     </section>
 
     <!-- ── 5. Agents ─────────────────────────────────────────────────── -->

@@ -146,6 +146,78 @@ export function initAgentsPanel() {
         details.forEach((d) => { d.open = anyClosed; });
       });
     });
+
+    container.querySelectorAll('[data-action="edit-agent"]').forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        const agentKey = e.currentTarget.getAttribute("data-agent");
+        const card = container.querySelector(`.lobby-card[data-agent-key="${agentKey}"]`);
+        if (!card) return;
+        card.open = true;
+        const panel = card.querySelector(`[data-edit-panel="${agentKey}"]`);
+        if (panel) panel.classList.toggle("lobby-edit-panel--open");
+      });
+    });
+
+    container.querySelectorAll('[data-action="save-agent"]').forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const agentKey = e.currentTarget.getAttribute("data-agent");
+        ensureSettings();
+        if (!agentKey || !settings.agents[agentKey]) return;
+        const card = container.querySelector(`.lobby-card[data-agent-key="${agentKey}"]`);
+        if (!card) return;
+        const agent = allAgents.find((a) => String(a.key) === agentKey);
+
+        const promptEl = card.querySelector(`[data-edit-prompt="${agentKey}"]`);
+        if (promptEl) {
+          const val = promptEl.value.trim();
+          if (val && val !== (agent?.systemPrompt ?? "")) {
+            settings.agents[agentKey].systemPrompt = val;
+          } else {
+            delete settings.agents[agentKey].systemPrompt;
+          }
+        }
+
+        const maxIterEl = card.querySelector(`[data-edit-max-iter="${agentKey}"]`);
+        if (maxIterEl) {
+          const n = parseInt(maxIterEl.value, 10);
+          const defaultMaxIter = agent?.parameters?.maxIterations;
+          if (Number.isInteger(n) && n >= 1 && n !== defaultMaxIter) {
+            settings.agents[agentKey].maxIterations = n;
+          } else {
+            delete settings.agents[agentKey].maxIterations;
+          }
+        }
+
+        const toolCheckboxes = Array.from(card.querySelectorAll(`[data-edit-tool="${agentKey}"]`));
+        if (toolCheckboxes.length > 0) {
+          const enabled = toolCheckboxes.filter((cb) => cb.checked).map((cb) => cb.value);
+          const allToolNames = (agent?.tools ?? []).map((t) => t.name);
+          if (enabled.length === allToolNames.length) {
+            delete settings.agents[agentKey].tools;
+          } else {
+            settings.agents[agentKey].tools = enabled;
+          }
+        }
+
+        saveAgentSettings(settings);
+        renderLobby();
+      });
+    });
+
+    container.querySelectorAll('[data-action="reset-agent"]').forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const agentKey = e.currentTarget.getAttribute("data-agent");
+        ensureSettings();
+        if (!agentKey || !settings.agents[agentKey]) return;
+        delete settings.agents[agentKey].systemPrompt;
+        delete settings.agents[agentKey].maxIterations;
+        delete settings.agents[agentKey].tools;
+        saveAgentSettings(settings);
+        renderLobby();
+      });
+    });
   }
 
   function renderLobby() {
@@ -184,6 +256,9 @@ export function initAgentsPanel() {
       const color = ROLE_COLORS[i] ?? "accent";
       const agentKey = String(agent.key || "unified");
       const cfg = getAgentSetting(agentKey);
+      const agentOverrides = settings.agents[agentKey] || {};
+      const hasOverrides = !!(agentOverrides.systemPrompt || agentOverrides.maxIterations !== undefined || (Array.isArray(agentOverrides.tools) && agentOverrides.tools.length > 0));
+      const enabledToolNames = Array.isArray(agentOverrides.tools) && agentOverrides.tools.length > 0 ? new Set(agentOverrides.tools) : null;
       const paramsHtml = Object.entries(agent.parameters).map(([k, v]) =>
         `<div class="lobby-param-row"><span class="lobby-param-key">${escapeHtml(k)}</span><span class="lobby-param-val">${escapeHtml(String(v))}</span></div>`
       ).join("");
@@ -194,16 +269,37 @@ export function initAgentsPanel() {
         ? agent.expectedOutput
         : "Final assistant response text (often JSON-parsed by runtime).";
       const displayModel = settings.useGlobalModel ? settings.global.model : cfg.model;
+      const editPromptVal = agentOverrides.systemPrompt ?? agent.systemPrompt;
+      const editMaxIter = agentOverrides.maxIterations ?? agent.parameters.maxIterations ?? 5;
+      const toolCheckItems = (agent.tools || []).map((t) => {
+        const checked = !enabledToolNames || enabledToolNames.has(t.name) ? " checked" : "";
+        return `<label class="lobby-tool-check"><input type="checkbox" data-edit-tool="${escapeHtml(agentKey)}" value="${escapeHtml(t.name)}"${checked}><span>${escapeHtml(t.name)}</span></label>`;
+      }).join("");
       return `
-      <details class="lobby-card" data-color="${color}">
+      <details class="lobby-card" data-color="${color}" data-agent-key="${escapeHtml(agentKey)}">
         <summary class="lobby-card-summary">
           <div class="lobby-card-header">
             <div class="lobby-card-name">${escapeHtml(agent.name)}</div>
+            ${hasOverrides ? '<span class="lobby-card-override-badge" title="Custom configuration active"></span>' : ""}
+            <button class="lobby-card-gear${hasOverrides ? " lobby-card-gear--active" : ""}" data-action="edit-agent" data-agent="${escapeHtml(agentKey)}" title="Configure agent" type="button">⚙</button>
             <div class="lobby-card-model">${escapeHtml(displayModel)}</div>
           </div>
           <div class="lobby-card-desc">${escapeHtml(agent.description)}</div>
         </summary>
         <div class="lobby-card-body">
+          <div class="lobby-edit-panel" data-edit-panel="${escapeHtml(agentKey)}">
+            <div class="lobby-edit-header">
+              <span class="lobby-edit-title">Configuration overrides</span>
+              <div class="lobby-edit-actions">
+                <button class="lobby-btn-save" data-action="save-agent" data-agent="${escapeHtml(agentKey)}" type="button">Save</button>
+                <button class="lobby-btn-reset" data-action="reset-agent" data-agent="${escapeHtml(agentKey)}" type="button">Reset to defaults</button>
+              </div>
+            </div>
+            <label class="lobby-control">Max Iterations<input data-edit-max-iter="${escapeHtml(agentKey)}" class="lobby-input" type="number" min="1" max="10" value="${escapeHtml(String(editMaxIter))}" /></label>
+            <label class="lobby-control">System Instructions<textarea data-edit-prompt="${escapeHtml(agentKey)}" class="lobby-input lobby-prompt-textarea" rows="8">${escapeHtml(editPromptVal)}</textarea></label>
+            ${agent.tools && agent.tools.length > 0 ? `<div class="lobby-control"><span>Tools (${agent.tools.length} available — uncheck to disable)</span><div class="lobby-tools-checklist">${toolCheckItems}</div></div>` : ""}
+          </div>
+
           <div class="lobby-controls-grid lobby-controls-grid-agent">
             <label class="lobby-control">Model${modelSelectHtml(`data-agent-model="${escapeHtml(agentKey)}"`, cfg.model, settings.useGlobalModel)}</label>
             <label class="lobby-control">Temperature<input data-agent-temp="${escapeHtml(agentKey)}" class="lobby-input" type="number" step="0.1" min="0" max="2" value="${escapeHtml(String(cfg.temperature))}" ${settings.useGlobalModel ? "disabled" : ""} /></label>

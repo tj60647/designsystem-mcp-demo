@@ -12,7 +12,7 @@ const NODE_TYPES = {
   'user-input':   { fill: '#1d4ed8', stroke: '#1e40af', text: '#ffffff', legendLabel: 'User Input' },
   'api':          { fill: '#334155', stroke: '#1e293b', text: '#cbd5e1', legendLabel: 'API Endpoint' },
   'orchestrator': { fill: '#7c3aed', stroke: '#6d28d9', text: '#ffffff', legendLabel: 'Orchestrator' },
-  'reader':       { fill: '#2f81f7', stroke: '#1a6ee5', text: '#ffffff', legendLabel: 'DS Reader' },
+  'reader':       { fill: '#2f81f7', stroke: '#1a6ee5', text: '#ffffff', legendLabel: 'Design System Reader' },
   'builder':      { fill: '#d97706', stroke: '#b45309', text: '#ffffff', legendLabel: 'Component Builder' },
   'style-guide':  { fill: '#be185d', stroke: '#9d174d', text: '#ffffff', legendLabel: 'Style Guide' },
   'generator':    { fill: '#16a34a', stroke: '#15803d', text: '#ffffff', legendLabel: 'System Generator' },
@@ -23,133 +23,131 @@ const NODE_TYPES = {
 const NODES = [
   {
     id: 'userInput', label: 'User Input', sublabel: 'Your prompt',
-    type: 'user-input', cx: 80, cy: 270, w: 120, h: 44,
-    description: 'The chat message typed by the user. Every request starts here. The full conversation history is included in the POST body so the AI has context from previous turns.',
+    type: 'user-input', cx: 80, cy: 228, w: 120, h: 44,
+    description: 'The chat message you type. Every request starts here. The full conversation history travels with it so the AI remembers what was said earlier in the chat.',
   },
   {
     id: 'chatApi', label: 'Chat API', sublabel: 'POST /api/chat',
-    type: 'api', cx: 260, cy: 270, w: 135, h: 44,
-    description: 'Receives the full message history, loads per-agent model and temperature settings, and hands off the latest user message to the Orchestrator for intent classification.',
+    type: 'api', cx: 260, cy: 228, w: 135, h: 44,
+    description: 'The server endpoint that receives your message. It loads the right AI model settings and passes the conversation to the Orchestrator, which decides which specialist should handle it.',
   },
   {
     id: 'orchestrator', label: 'Orchestrator', sublabel: 'classify intent · 1 LLM call',
-    type: 'orchestrator', cx: 460, cy: 270, w: 160, h: 52,
-    description: 'Classifies the user\'s intent in exactly one LLM call using the delegate_to_agent() tool. Routes to one of four specialist agents — Reader, Builder, Style Guide, or Generator — based on what the user is asking. Never answers the user directly.',
+    type: 'orchestrator', cx: 460, cy: 228, w: 160, h: 52,
+    description: 'A lightweight AI "traffic director" that reads your message and decides which specialist should handle it — in exactly one AI call. It only has one tool: delegate_to_agent(), which routes to Reader, Builder, Style Guide, or Generator. It never answers questions itself and has no access to design system data.',
   },
   {
-    id: 'reader', label: 'DS Reader', sublabel: 'READER · up to 5 iters',
-    type: 'reader', cx: 680, cy: 120, w: 158, h: 44,
-    description: 'Answers questions about tokens, components, themes, icons, layout, and accessibility using read-only MCP tools. Calls up to 5 MCP tools per turn before producing a final structured response.',
+    id: 'reader', label: 'DS Reader', sublabel: 'READER · up to 5 tool calls',
+    type: 'reader', cx: 680, cy: 100, w: 158, h: 44,
+    description: '"DS" = Design System. The Design System Reader answers questions about tokens, components, themes, icons, layout, and accessibility. It has access to 25 read-only MCP tools and can call up to 5 of them per turn before writing its final answer.',
   },
   {
-    id: 'builder', label: 'Component Builder', sublabel: 'BUILDER · up to 6 iters',
-    type: 'builder', cx: 680, cy: 225, w: 158, h: 44,
-    description: 'Generates grounded HTML/CSS component code using exact design system tokens. Validates props and token values via MCP tools before emitting code. Produces JSON with a message and preview HTML. Up to 6 MCP tool iterations.',
+    id: 'builder', label: 'Component Builder', sublabel: 'BUILDER · up to 6 tool calls',
+    type: 'builder', cx: 680, cy: 185, w: 158, h: 44,
+    description: 'Generates HTML/CSS component code grounded in real design system tokens. It has access to 14 MCP tools covering components, tokens, validation, and accessibility — and can make up to 6 tool calls to look up and verify values before producing the final code.',
   },
   {
-    id: 'styleGuide', label: 'Style Guide', sublabel: 'STYLE-GUIDE · up to 5 iters',
-    type: 'style-guide', cx: 680, cy: 330, w: 158, h: 44,
-    description: 'Explains design principles, color usage rules, typography guidelines, and composition patterns. Uses MCP tools to ground answers in live style guide content and actual token values. Up to 5 iterations.',
+    id: 'styleGuide', label: 'Style Guide', sublabel: 'STYLE-GUIDE · up to 4 tool calls',
+    type: 'style-guide', cx: 680, cy: 270, w: 158, h: 44,
+    description: 'Explains design principles, color usage rules, typography guidelines, and composition patterns. Has access to 4 focused MCP tools (style guide content, token lookup, and contrast checking) and can make up to 4 tool calls per turn.',
   },
   {
-    id: 'generator', label: 'System Generator', sublabel: 'GENERATOR · up to 8 iters',
-    type: 'generator', cx: 680, cy: 435, w: 158, h: 44,
-    description: 'Gathers brand requirements through conversation then calls the generate_design_system MCP tool to produce a complete design system (tokens, components, themes, icons). The most iteration-heavy agent — up to 8 MCP tool calls.',
+    id: 'generator', label: 'System Generator', sublabel: 'GENERATOR · up to 8 tool calls',
+    type: 'generator', cx: 680, cy: 355, w: 158, h: 44,
+    description: 'Gathers brand requirements through a short conversation, then calls the generate_design_system MCP tool to produce a complete design system (tokens, components, themes, icons). It has access to 1 MCP tool and may use up to 8 tool calls to gather inputs, generate, and confirm the result — the highest budget of any specialist.',
   },
   {
-    id: 'mcpTools', label: 'MCP Tool Calls', sublabel: '28 tools · per-agent subset',
-    type: 'mcp', cx: 905, cy: 277, w: 158, h: 44, background: true,
-    description: 'The live MCP server — called by whichever specialist is active. Each specialist has a curated subset of the 28 available tools. The specialist calls a tool, gets structured live data back, and decides whether to call more tools or produce a final answer. This ↺ agentic loop is what makes responses grounded in real design system data rather than guesses.',
+    id: 'mcpTools', label: 'MCP Tool Calls', sublabel: '28 tools · per-specialist subset',
+    type: 'mcp', cx: 905, cy: 228, w: 158, h: 44, background: true,
+    description: 'The live MCP (Model Context Protocol) server — a standardised way for AI models to call external tools. Only the active specialist can call it, and each specialist has a different curated subset of the 28 available tools (Reader: 25 read-only tools; Builder: 14 build/validate tools; Style Guide: 4 tools; Generator: 1 tool). The specialist calls a tool, gets real design system data back, then decides whether to call more tools or write its final answer. This ↺ agentic loop is what grounds responses in real data rather than guesses.',
   },
   {
-    id: 'response', label: 'Response', sublabel: 'message + preview HTML',
-    type: 'output', cx: 1115, cy: 270, w: 130, h: 52,
-    description: 'The parsed final response from the specialist agent. Contains a message string (rendered as a markdown chat bubble) and an optional preview field (rendered as live HTML in the Live Preview iframe on the Workspace tab).',
+    id: 'response', label: 'Response', sublabel: 'message + preview + metadata',
+    type: 'output', cx: 1115, cy: 228, w: 130, h: 52,
+    description: 'The final structured response from the specialist. It contains three parts: a message (shown as a chat bubble, supports markdown), an optional preview (raw HTML rendered live in the Preview pane on the Workspace tab), and optional metadata notes (machine-readable fields like agent name and intent, used internally).',
   },
 ];
 
-// Edges: { from, to, label, dashed, path }
-// Path coords calculated from node cx/cy/w/h above.
 const EDGES = [
   // Main flow — solid arrows
   {
     from: 'userInput', to: 'chatApi',
     label: 'chat message',
-    path: 'M 140,270 H 192',
+    path: 'M 140,228 H 192',
   },
   {
     from: 'chatApi', to: 'orchestrator',
     label: 'messages[ ]',
-    path: 'M 327,270 H 379',
+    path: 'M 327,228 H 379',
   },
   {
     from: 'orchestrator', to: 'reader',
     label: 'delegate',
-    path: 'M 540,258 C 570,258 570,120 601,120',
+    path: 'M 540,216 C 570,216 570,100 601,100',
   },
   {
     from: 'orchestrator', to: 'builder',
     label: '',
-    path: 'M 540,263 C 570,263 570,225 601,225',
+    path: 'M 540,221 C 570,221 570,185 601,185',
   },
   {
     from: 'orchestrator', to: 'styleGuide',
     label: '',
-    path: 'M 540,277 C 570,277 570,330 601,330',
+    path: 'M 540,235 C 570,235 570,270 601,270',
   },
   {
     from: 'orchestrator', to: 'generator',
     label: '',
-    path: 'M 540,282 C 570,282 570,435 601,435',
+    path: 'M 540,240 C 570,240 570,355 601,355',
   },
   // MCP tool calls — dashed (specialist → MCP)
   {
     from: 'reader', to: 'mcpTools',
     label: 'tool calls',
-    path: 'M 759,120 C 830,120 826,265 826,265',
+    path: 'M 759,100 C 820,100 826,222 826,222',
     dashed: true,
   },
   {
     from: 'builder', to: 'mcpTools',
     label: '',
-    path: 'M 759,225 C 830,225 826,270 826,270',
+    path: 'M 759,185 C 820,185 826,226 826,226',
     dashed: true,
   },
   {
     from: 'styleGuide', to: 'mcpTools',
     label: '',
-    path: 'M 759,330 C 830,330 826,282 826,282',
+    path: 'M 759,270 C 820,270 826,232 826,232',
     dashed: true,
   },
   {
     from: 'generator', to: 'mcpTools',
     label: '',
-    path: 'M 759,435 C 830,435 826,288 826,288',
+    path: 'M 759,355 C 820,355 826,236 826,236',
     dashed: true,
   },
   // Specialist → response — dashed (final answer)
   {
     from: 'reader', to: 'response',
     label: 'response',
-    path: 'M 759,108 C 950,108 950,256 1050,256',
+    path: 'M 759,92 C 950,92 950,218 1050,218',
     dashed: true,
   },
   {
     from: 'builder', to: 'response',
     label: '',
-    path: 'M 759,213 C 950,213 950,262 1050,262',
+    path: 'M 759,177 C 950,177 950,222 1050,222',
     dashed: true,
   },
   {
     from: 'styleGuide', to: 'response',
     label: '',
-    path: 'M 759,342 C 950,342 950,276 1050,276',
+    path: 'M 759,278 C 950,278 950,234 1050,234',
     dashed: true,
   },
   {
     from: 'generator', to: 'response',
     label: '',
-    path: 'M 759,447 C 950,447 950,282 1050,282',
+    path: 'M 759,363 C 950,363 950,238 1050,238',
     dashed: true,
   },
 ];
@@ -167,7 +165,7 @@ const DIVIDERS = [170, 358, 558, 782, 1008];
 
 // SVG dimensions
 const SVG_W = 1240;
-const SVG_H = 500;
+const SVG_H = 410;
 
 // ── SVG helpers ─────────────────────────────────────────────────────────────
 
@@ -343,7 +341,7 @@ function buildDiagramSvg() {
 
   // ── Agentic loop annotation ──
   const loopText = svgEl('text', {
-    x: 906, y: 338,
+    x: 906, y: 266,
     'text-anchor': 'middle',
     fill: '#0d9488',
     'font-size': 9.5,

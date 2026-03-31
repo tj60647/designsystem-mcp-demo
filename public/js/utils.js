@@ -115,9 +115,20 @@ function coerceNumber(value, fallback) {
 
 function makeAgentSampling(seed) {
   const src = seed && typeof seed === "object" ? seed : {};
-  return {
+  const result = {
     temperature: coerceNumber(src.temperature, DEFAULT_SAMPLING.temperature),
   };
+  if (typeof src.systemPrompt === "string" && src.systemPrompt.trim()) {
+    result.systemPrompt = src.systemPrompt;
+  }
+  if (typeof src.maxIterations === "number" && src.maxIterations >= 1) {
+    result.maxIterations = Math.trunc(src.maxIterations);
+  }
+  if (Array.isArray(src.tools)) {
+    const tools = src.tools.filter((t) => typeof t === "string");
+    if (tools.length > 0) result.tools = tools;
+  }
+  return result;
 }
 
 export function createDefaultAgentSettings(defaultModel) {

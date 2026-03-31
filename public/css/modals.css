@@ -242,9 +242,19 @@
 }
 .lobby-card-summary::-webkit-details-marker { display: none; }
 .lobby-card-summary:hover { background: rgba(255,255,255,.03); }
-.lobby-card-header { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.lobby-card-header { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .lobby-card-name {
   font-size: 14px; font-weight: 700; color: var(--card-color, var(--text));
+}
+.lobby-card-gear {
+  background: none; border: 1px solid transparent; border-radius: var(--radius-sm);
+  color: var(--text-dim); cursor: pointer; font-size: 12px; padding: 2px 5px;
+  line-height: 1; flex-shrink: 0;
+}
+.lobby-card-gear:hover { color: var(--text); border-color: var(--border-soft); background: var(--bg-input); }
+.lobby-card-gear--active { color: var(--accent); border-color: var(--accent); }
+.lobby-card-override-badge {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0;
 }
 .lobby-card-model {
   font-size: 10.5px; color: var(--text-dim);
@@ -296,6 +306,44 @@
 .lobby-prompt-pre {
   max-height: 22vh; font-size: 10.5px;
 }
+/* ── Per-agent configuration edit panel ── */
+.lobby-edit-panel {
+  display: none; flex-direction: column; gap: 10px;
+  padding: 12px; background: var(--bg-input);
+  border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+  margin-bottom: 2px;
+}
+.lobby-edit-panel--open { display: flex; }
+.lobby-edit-header {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.lobby-edit-title {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .4px; color: var(--text-dim); flex: 1;
+}
+.lobby-edit-actions { display: flex; gap: 6px; }
+.lobby-btn-save, .lobby-btn-reset {
+  font-size: 10.5px; border-radius: var(--radius-sm); padding: 4px 10px;
+  cursor: pointer; border: 1px solid var(--border-soft);
+  background: var(--bg); color: var(--text-muted);
+}
+.lobby-btn-save:hover { color: var(--text); border-color: var(--border); }
+.lobby-btn-reset:hover { color: var(--red, #f85149); border-color: var(--red, #f85149); }
+.lobby-prompt-textarea {
+  font-family: "SFMono-Regular", Consolas, monospace; font-size: 10.5px;
+  resize: vertical; min-height: 120px;
+}
+.lobby-tools-checklist {
+  display: flex; flex-direction: column; gap: 3px;
+  max-height: 160px; overflow-y: auto;
+  background: var(--bg); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); padding: 6px 8px; margin-top: 4px;
+}
+.lobby-tool-check {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--text-muted); cursor: pointer;
+}
+.lobby-tool-check:hover { color: var(--text); }
 .agents-tools-list { display: flex; flex-direction: column; gap: 6px; }
 .agents-tool-card {
   background: var(--bg-input); border: 1px solid var(--border-soft);

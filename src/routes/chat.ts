@@ -113,6 +113,13 @@ function toNumber(value: unknown, fallback: number): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
+/** Hard ceiling on client-supplied maxIterations to prevent runaway loops. */
+const MAX_ALLOWED_ITERATIONS = 10;
+/** Hard ceiling on client-supplied systemPrompt length (chars) to prevent token-cost abuse. */
+const MAX_SYSTEM_PROMPT_LEN = 8_000;
+/** Hard ceiling on client-supplied tools array length before allowlist filtering. */
+const MAX_TOOLS_OVERRIDE_LEN = 50;
+
 function normalizeAgentSettings(
   payload: AgentSettingsPayload | undefined,
   defaultModel: string,
@@ -123,12 +130,14 @@ function normalizeAgentSettings(
       temperature: toNumber(src?.temperature, 0),
     };
     if (typeof src?.systemPrompt === "string" && src.systemPrompt.trim()) {
-      entry.systemPrompt = src.systemPrompt.trim();
+      entry.systemPrompt = src.systemPrompt.trim().slice(0, MAX_SYSTEM_PROMPT_LEN);
     }
-    if (typeof src?.maxIterations === "number" && Number.isInteger(src.maxIterations) && src.maxIterations >= 1) {
+    if (typeof src?.maxIterations === "number" && Number.isInteger(src.maxIterations)
+        && src.maxIterations >= 1 && src.maxIterations <= MAX_ALLOWED_ITERATIONS) {
       entry.maxIterations = src.maxIterations;
     }
-    if (Array.isArray(src?.tools) && src.tools.length > 0 && src.tools.every((t) => typeof t === "string")) {
+    if (Array.isArray(src?.tools) && src.tools.length > 0 && src.tools.length <= MAX_TOOLS_OVERRIDE_LEN
+        && src.tools.every((t) => typeof t === "string")) {
       entry.tools = src.tools as string[];
     }
     return entry;

@@ -1,16 +1,33 @@
 import { escapeHtml, loadAgentSettings, saveAgentSettings } from '../utils.js';
 
-export function initAgentsModal() {
-  const overlay    = document.getElementById("agents-modal");
-  const modalBody  = document.getElementById("agents-modal-body");
-  const closeBtn  = document.getElementById("agents-modal-close");
-  const cancelBtn = document.getElementById("agents-modal-cancel");
-  const openBtn   = document.getElementById("view-agents-btn");
+const MODEL_OPTIONS = [
+  "openai/gpt-oss-20b:nitro",
+  "anthropic/claude-sonnet-4.6",
+  "anthropic/claude-3.7-sonnet",
+  "openai/gpt-4.1",
+  "google/gemini-2.5-pro",
+];
 
-  let allAgents = [];
-  let modelMeta = { model: "", modelSource: "" };
-  let selectedModel = "";
-  let settings = null;
+function modelSelectHtml(dataAttr, currentValue, disabled = false) {
+  const opts = MODEL_OPTIONS.map(m => {
+    const selected = m === currentValue ? " selected" : "";
+    return `<option value="${escapeHtml(m)}"${selected}>${escapeHtml(m)}</option>`;
+  });
+  // If the stored value isn't in the list, add it as a custom option
+  if (!MODEL_OPTIONS.includes(currentValue)) {
+    opts.unshift(`<option value="${escapeHtml(currentValue)}" selected>${escapeHtml(currentValue)}</option>`);
+  }
+  return `<select ${dataAttr} class="lobby-input"${disabled ? " disabled" : ""}>${opts.join("")}</select>`;
+}
+
+export function initAgentsPanel() {
+  const container = document.getElementById("agents-panel-body");
+  const navBtn    = document.querySelector('[data-section="section-agent-sandbox"]');
+  if (!container) return;
+
+  let allAgents   = [];
+  let modelMeta   = { model: "", modelSource: "" };
+  let settings    = null;
   let lobbyFilter = "";
   let lobbyDensity = "detailed";
   const LOBBY_DENSITY_KEY = "designsystem-mcp-demo.lobby-density";
@@ -39,10 +56,7 @@ export function initAgentsModal() {
 
   function ensureSettings() {
     if (!settings) {
-      settings = loadAgentSettings(selectedModel || modelMeta.model || "openai/gpt-oss-20b:nitro");
-    }
-    if (selectedModel) {
-      settings.global.model = selectedModel;
+      settings = loadAgentSettings();
     }
   }
 
@@ -52,7 +66,7 @@ export function initAgentsModal() {
   }
 
   function bindLobbyControls() {
-    const densityButtons = modalBody.querySelectorAll('[data-role="density-toggle"]');
+    const densityButtons = container.querySelectorAll('[data-role="density-toggle"]');
     densityButtons.forEach((btn) => {
       btn.addEventListener("click", (e) => {
         const next = String(e.currentTarget.getAttribute("data-density") || "detailed");
@@ -63,7 +77,7 @@ export function initAgentsModal() {
       });
     });
 
-    const filterInput = modalBody.querySelector('[data-role="agent-filter"]');
+    const filterInput = container.querySelector('[data-role="agent-filter"]');
     if (filterInput) {
       filterInput.addEventListener("input", (e) => {
         lobbyFilter = String(e.target.value || "");
@@ -71,7 +85,7 @@ export function initAgentsModal() {
       });
     }
 
-    const globalToggle = modalBody.querySelector('[data-role="use-global-model"]');
+    const globalToggle = container.querySelector('[data-role="use-global-model"]');
     if (globalToggle) {
       globalToggle.addEventListener("change", (e) => {
         ensureSettings();
@@ -81,17 +95,26 @@ export function initAgentsModal() {
       });
     }
 
-    modalBody.querySelectorAll('[data-setting="global-temp"]').forEach((el) => {
+    container.querySelectorAll('[data-setting="global-model"]').forEach((el) => {
+      el.addEventListener("change", (e) => {
+        ensureSettings();
+        const v = String(e.target.value || "").trim();
+        if (!v) return;
+        settings.global.model = v;
+        saveAgentSettings(settings);
+      });
+    });
+
+    container.querySelectorAll('[data-setting="global-temp"]').forEach((el) => {
       el.addEventListener("change", (e) => {
         ensureSettings();
         const n = Number(e.target.value);
         settings.global.temperature = Number.isFinite(n) ? n : 0;
         saveAgentSettings(settings);
-        renderLobby();
       });
     });
 
-    modalBody.querySelectorAll('[data-agent-model]').forEach((el) => {
+    container.querySelectorAll('[data-agent-model]').forEach((el) => {
       el.addEventListener("change", (e) => {
         ensureSettings();
         const key = e.target.getAttribute("data-agent-model");
@@ -99,11 +122,10 @@ export function initAgentsModal() {
         if (!key || !v || !settings.agents[key]) return;
         settings.agents[key].model = v;
         saveAgentSettings(settings);
-        renderLobby();
       });
     });
 
-    modalBody.querySelectorAll('[data-agent-temp]').forEach((el) => {
+    container.querySelectorAll('[data-agent-temp]').forEach((el) => {
       el.addEventListener("change", (e) => {
         ensureSettings();
         const key = e.target.getAttribute("data-agent-temp");
@@ -111,11 +133,10 @@ export function initAgentsModal() {
         if (!key || !settings.agents[key]) return;
         settings.agents[key].temperature = Number.isFinite(n) ? n : 0;
         saveAgentSettings(settings);
-        renderLobby();
       });
     });
 
-    modalBody.querySelectorAll('[data-action="toggle-tools"]').forEach((btn) => {
+    container.querySelectorAll('[data-action="toggle-tools"]').forEach((btn) => {
       btn.addEventListener("click", (e) => {
         const card = e.target.closest(".lobby-card");
         if (!card) return;
@@ -146,18 +167,15 @@ export function initAgentsModal() {
       return haystack.includes(q);
     });
 
-    const globalSettings = modelMeta.model
-      ? `<div class="lobby-global-settings">
-          <div class="lobby-global-title">Global Model</div>
-          <div class="lobby-controls-grid">
-            <label class="lobby-check"><input type="checkbox" data-role="use-global-model" ${settings.useGlobalModel ? "checked" : ""}> Use global model for all agents</label>
-            <label class="lobby-control">Model (from top bar)<input class="lobby-input" value="${escapeHtml(selectedModel || settings.global.model)}" disabled /></label>
-            <label class="lobby-control">Temperature<input data-setting="global-temp" class="lobby-input" type="number" step="0.1" min="0" max="2" value="${escapeHtml(String(settings.global.temperature))}" /></label>
-          </div>
-          <div class="lobby-global-row"><span class="lobby-global-key">model</span><span class="lobby-global-val">${escapeHtml(modelMeta.model)}</span></div>
-          <div class="lobby-global-row"><span class="lobby-global-key">source</span><span class="lobby-global-val">${escapeHtml(modelMeta.modelSource || "unknown")}</span></div>
-        </div>`
-      : "";
+    const globalSettings = `<div class="lobby-global-settings">
+      <div class="lobby-global-title">Model Settings</div>
+      <div class="lobby-controls-grid">
+        <label class="lobby-check"><input type="checkbox" data-role="use-global-model" ${settings.useGlobalModel ? "checked" : ""}> Use same model for all agents</label>
+        <label class="lobby-control">Default model${modelSelectHtml('data-setting="global-model"', settings.global.model, !settings.useGlobalModel)}</label>
+        <label class="lobby-control">Temperature<input data-setting="global-temp" class="lobby-input" type="number" step="0.1" min="0" max="2" value="${escapeHtml(String(settings.global.temperature))}" ${!settings.useGlobalModel ? "disabled" : ""} /></label>
+      </div>
+      ${modelMeta.model ? `<div class="lobby-global-row"><span class="lobby-global-key">server default</span><span class="lobby-global-val">${escapeHtml(modelMeta.model)}</span></div>` : ""}
+    </div>`;
 
     const legend = `<div class="lobby-legend"><div class="lobby-global-title">Agent Legend</div><div class="lobby-legend-row">${legendItems}</div><div class="lobby-toolbar"><label class="lobby-control lobby-filter">Filter<input data-role="agent-filter" class="lobby-input" value="${escapeHtml(lobbyFilter)}" placeholder="Search agents or tools" /></label><div class="lobby-density-switch" role="group" aria-label="Lobby density"><button type="button" class="lobby-density-btn ${lobbyDensity === "compact" ? "active" : ""}" data-role="density-toggle" data-density="compact">Compact</button><button type="button" class="lobby-density-btn ${lobbyDensity === "detailed" ? "active" : ""}" data-role="density-toggle" data-density="detailed">Detailed</button></div></div></div>`;
 
@@ -182,7 +200,7 @@ export function initAgentsModal() {
         </div>
 
         <div class="lobby-controls-grid lobby-controls-grid-agent">
-          <label class="lobby-control">Model<input data-agent-model="${escapeHtml(agentKey)}" class="lobby-input" value="${escapeHtml(cfg.model)}" ${settings.useGlobalModel ? "disabled" : ""} /></label>
+          <label class="lobby-control">Model${modelSelectHtml(`data-agent-model="${escapeHtml(agentKey)}"`, cfg.model, settings.useGlobalModel)}</label>
           <label class="lobby-control">Temperature<input data-agent-temp="${escapeHtml(agentKey)}" class="lobby-input" type="number" step="0.1" min="0" max="2" value="${escapeHtml(String(cfg.temperature))}" ${settings.useGlobalModel ? "disabled" : ""} /></label>
           <button class="lobby-tools-toggle" data-action="toggle-tools" type="button">Toggle Tools</button>
         </div>
@@ -204,34 +222,23 @@ export function initAgentsModal() {
       </div>`;
     }).join("");
 
-    modalBody.innerHTML = `<div class="lobby-list ${lobbyDensity === "compact" ? "lobby-list-compact" : ""}">${legend}${globalSettings}${cards || '<div class="agents-loading">No agents match this filter.</div>'}</div>`;
+    container.innerHTML = `<div class="lobby-list ${lobbyDensity === "compact" ? "lobby-list-compact" : ""}">${legend}${globalSettings}${cards || '<div class="agents-loading">No agents match this filter.</div>'}</div>`;
     bindLobbyControls();
   }
 
-  // ── Tab switching ──────────────────────────────────────────────────────
-  // (No tabs in the modal; the System Diagram is now a top-level section.)
-
-  // ── Open / close ───────────────────────────────────────────────────────
-  async function openModal() {
-    modalBody.innerHTML = '<div class="agents-loading">Loading agent info…</div>';
-    overlay.classList.add("open");
+  // ── Load panel ─────────────────────────────────────────────────────────
+  async function loadPanel() {
+    container.innerHTML = '<div class="agents-loading">Loading agent info…</div>';
     try {
       try {
         const storedDensity = localStorage.getItem(LOBBY_DENSITY_KEY);
         if (storedDensity === "compact" || storedDensity === "detailed") {
           lobbyDensity = storedDensity;
         }
-      } catch {
-        // Ignore storage failures.
-      }
+      } catch { /* ignore */ }
 
-      const modelSelect = document.getElementById("model-select");
-      selectedModel = modelSelect && "value" in modelSelect ? String(modelSelect.value || "").trim() : "";
-      settings = loadAgentSettings(selectedModel || modelMeta.model || "openai/gpt-oss-20b:nitro");
-      const url = selectedModel
-        ? `/api/agent-info?model=${encodeURIComponent(selectedModel)}`
-        : "/api/agent-info";
-      const res = await fetch(url);
+      settings = loadAgentSettings();
+      const res = await fetch("/api/agent-info");
       if (!res.ok) throw new Error("HTTP " + res.status);
       const data = await res.json();
       allAgents = data.agents ?? [];
@@ -241,17 +248,12 @@ export function initAgentsModal() {
       };
       renderLobby();
     } catch (err) {
-      modalBody.innerHTML = `<div class="agents-loading">Could not load agent info: ${escapeHtml(err.message)}</div>`;
+      container.innerHTML = `<div class="agents-loading">Could not load agent info: ${escapeHtml(err.message)}</div>`;
     }
   }
 
-  function closeModal() { overlay.classList.remove("open"); }
-
-  openBtn.addEventListener("click", openModal);
-  closeBtn.addEventListener("click", closeModal);
-  cancelBtn.addEventListener("click", closeModal);
-  overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && overlay.classList.contains("open")) closeModal();
-  });
+  // Lazy load on first visit, reload on each subsequent visit
+  if (navBtn) {
+    navBtn.addEventListener("click", loadPanel);
+  }
 }

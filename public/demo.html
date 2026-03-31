@@ -23,16 +23,6 @@
   <span class="topbar-title">Design System AI</span>
   <span class="mcp-badge">MCP</span>
   <div class="topbar-spacer"></div>
-  <div class="topbar-model-wrap">
-    <label class="topbar-model-label" for="model-select">Model</label>
-    <select class="topbar-model-select" id="model-select" title="Select the OpenRouter model for this chat session">
-      <option value="openai/gpt-oss-20b:nitro">openai/gpt-oss-20b:nitro</option>
-      <option value="anthropic/claude-sonnet-4.6">anthropic/claude-sonnet-4.6</option>
-      <option value="anthropic/claude-3.7-sonnet">anthropic/claude-3.7-sonnet</option>
-      <option value="openai/gpt-4.1">openai/gpt-4.1</option>
-      <option value="google/gemini-2.5-pro">google/gemini-2.5-pro</option>
-    </select>
-  </div>
   <button class="topbar-btn topbar-btn-download" id="download-ds-btn" title="Download the AI-generated design system as JSON" style="display:none">⬇ Download Design System JSON</button>
   <button class="topbar-btn" id="mcp-info-btn" title="How to connect to the MCP server">MCP server</button>
 </header>
@@ -53,7 +43,6 @@
   <button id="load-json-btn" tabindex="-1">Load JSON</button>
   <button id="gen-from-web-btn" tabindex="-1">Generate from Website</button>
   <button id="view-schema-btn" tabindex="-1">View Schema</button>
-  <button id="view-agents-btn" tabindex="-1">View Agents</button>
   <button id="reset-btn" tabindex="-1">Reset</button>
 </div>
 
@@ -142,22 +131,6 @@
     <div class="modal-actions">
       <button class="btn-secondary" id="schema-modal-cancel">Close</button>
       <button class="btn-primary" id="schema-modal-download">⬇ Download .json</button>
-    </div>
-  </div>
-</div>
-
-<!-- View Agents modal -->
-<div class="modal-overlay" id="agents-modal" role="dialog" aria-modal="true" aria-labelledby="agents-modal-title">
-  <div class="modal agents-modal">
-    <div class="modal-header">
-      <span class="modal-title" id="agents-modal-title">Agent Lobby</span>
-      <button class="modal-close" id="agents-modal-close" aria-label="Close">✕</button>
-    </div>
-    <div class="agents-modal-body" id="agents-modal-body">
-      <div class="agents-loading">Loading agent info…</div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-secondary" id="agents-modal-cancel">Close</button>
     </div>
   </div>
 </div>
@@ -429,41 +402,14 @@
 <!-- Agent Sandbox section -->
 <div id="section-agent-sandbox" class="app-section">
   <div class="sandbox-body">
-
     <div class="ds-ops-header">
       <h1 class="ds-ops-title">Agents</h1>
-      <p class="ds-ops-subtitle">Understand how the AI agents behave — inspect their roles, tool access, and decision-making. Built for transparency, not engineering metrics.</p>
+      <p class="ds-ops-subtitle">Inspect each agent's role, MCP tools, model settings, and system instructions.</p>
     </div>
-
-    <div class="sandbox-content">
-
-      <!-- Meet the Agents (Workstream C) — loaded dynamically by sandbox.js -->
-      <div class="sandbox-agents-section">
-        <div class="sandbox-section-header">
-          <h2 class="sandbox-section-title">Meet the Agents</h2>
-          <button class="ds-ops-btn ds-ops-btn-secondary" id="sandbox-view-full-agents-btn">Full agent config ↗</button>
-        </div>
-        <p class="sandbox-section-desc">This demo uses a multi-agent architecture. Each message is routed by an Orchestrator to the appropriate specialist agent. Agents call MCP tools to look up real design system data before responding.</p>
-        <div id="sandbox-agent-cards" class="sandbox-agent-cards" aria-live="polite">
-          <div class="sandbox-agent-cards-loading">Loading agent information…</div>
-        </div>
-      </div>
-
-      <!-- Coming soon: scenario execution & trace -->
-      <div class="sandbox-coming-soon">
-        <div class="sandbox-coming-soon-icon">⬡</div>
-        <h3>Scenario execution &amp; tool-call trace — coming soon</h3>
-        <p>The Agent Sandbox will let you run scenarios and inspect live agent behavior in user-centered terms.</p>
-        <ul class="sandbox-feature-list">
-          <li><strong>Scenario execution</strong> — run predefined or custom prompts and see exactly how each agent responds</li>
-          <li><strong>Tool-call trace transparency</strong> — step through every MCP tool call with inputs, outputs, and timing</li>
-          <li><strong>Confidence &amp; uncertainty signals</strong> — see where the agent is certain vs. where it is guessing</li>
-        </ul>
-        <p class="sandbox-use-workspace">In the meantime, the <strong>MCP Tools</strong> panel in <button class="sandbox-link-btn" id="sandbox-goto-workspace">Workspace</button> shows live tool calls for every chat message you send.</p>
-      </div>
-
-    </div><!-- /.sandbox-content -->
-  </div><!-- /.sandbox-body -->
+    <div id="agents-panel-body" class="agents-panel-body">
+      <div class="agents-loading">Loading agent info…</div>
+    </div>
+  </div>
 </div><!-- /#section-agent-sandbox -->
 
 <!-- MCP section -->

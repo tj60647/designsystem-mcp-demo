@@ -151,27 +151,6 @@
 .validation-list.recs li     { background: rgba(210,153,34,.08); color: var(--orange); border-left: 3px solid var(--orange); }
 
 
-/* ── Agents modal (lobby) ── */
-.agents-modal { width: 800px; max-height: calc(100vh - 60px); }
-.modal-header { align-items: center; gap: 12px; }
-.agents-lobby-tabs {
-  display: flex; gap: 2px; margin-left: auto;
-  background: var(--bg-input); border: 1px solid var(--border-soft);
-  border-radius: var(--radius-sm); padding: 2px;
-}
-.agents-lobby-tab {
-  font-size: 11.5px; font-weight: 500; padding: 4px 12px;
-  color: var(--text-muted); cursor: pointer; border: none;
-  background: none; border-radius: calc(var(--radius-sm) - 1px);
-  transition: color .15s, background .15s; white-space: nowrap;
-}
-.agents-lobby-tab:hover { color: var(--text); }
-.agents-lobby-tab.active { background: var(--bg-panel); color: var(--text); }
-.agents-modal-body {
-  flex: 1; overflow-y: auto; min-height: 200px; max-height: 62vh;
-}
-.agents-loading { padding: 16px; font-size: 12px; color: var(--text-dim); }
-
 /* ── Lobby list ── */
 .lobby-list {
   display: flex; flex-direction: column;
@@ -598,8 +577,6 @@
 @media (max-width: 600px) {
   .modal { padding: 16px; }
   .modal-header { flex-wrap: wrap; gap: 8px; }
-  .agents-lobby-tabs { margin-left: 0; width: 100%; }
-  .agents-modal { width: calc(100vw - 32px); }
   .schema-modal { width: calc(100vw - 32px); }
   .lobby-controls-grid,
   .lobby-controls-grid-agent { grid-template-columns: 1fr; }

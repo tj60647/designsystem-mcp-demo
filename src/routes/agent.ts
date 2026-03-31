@@ -44,7 +44,7 @@ router.get("/api/agent-info", (req, res) => {
         parameters: {
           maxIterations: 1,
           toolChoice: "required",
-          temperature: 0,
+          temperature: 0,   // deterministic: design system queries should return consistent, grounded answers
           endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
         },
         systemPrompt: ORCHESTRATOR_SYSTEM_PROMPT,

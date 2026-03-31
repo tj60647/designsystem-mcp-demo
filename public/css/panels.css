@@ -863,25 +863,6 @@
   flex-direction: column;
   gap: 20px;
 }
-/* ── Agent sub-tabs (Agent Lobby | Scenario Runner) ── */
-.agent-subtabs {
-  display: flex; gap: 0;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.agent-subtab {
-  font-size: 13px; font-weight: 500;
-  padding: 9px 16px;
-  color: var(--text-muted);
-  cursor: pointer;
-  border: none; background: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  transition: color .15s, border-color .15s;
-  white-space: nowrap;
-}
-.agent-subtab:hover { color: var(--text); }
-.agent-subtab.active { color: var(--accent); border-bottom-color: var(--accent); }
 .agents-panel-body {
   flex: 1;
 }

@@ -95,6 +95,12 @@ type AgentRuntimeKey = "orchestrator" | SpecialistName | "unified";
 type AgentRuntimeSettings = {
   model: string;
   temperature: number;
+  /** Client-supplied system prompt override. Falls back to SPECIALIST_CONFIGS default when absent. */
+  systemPrompt?: string;
+  /** Client-supplied max-iterations override. Falls back to SPECIALIST_CONFIGS default when absent. */
+  maxIterations?: number;
+  /** Client-supplied list of enabled tool names. Falls back to the full specialist tool set when absent. */
+  tools?: string[];
 };
 type AgentSettingsPayload = {
   useGlobalModel?: unknown;
@@ -111,10 +117,22 @@ function normalizeAgentSettings(
   payload: AgentSettingsPayload | undefined,
   defaultModel: string,
 ): { useGlobalModel: boolean; global: AgentRuntimeSettings; agents: Record<AgentRuntimeKey, AgentRuntimeSettings> } {
-  const makeEntry = (src: Partial<AgentRuntimeSettings> | undefined): AgentRuntimeSettings => ({
-    model: typeof src?.model === "string" && src.model.trim() ? src.model.trim() : defaultModel,
-    temperature: toNumber(src?.temperature, 0),
-  });
+  const makeEntry = (src: Partial<AgentRuntimeSettings> | undefined): AgentRuntimeSettings => {
+    const entry: AgentRuntimeSettings = {
+      model: typeof src?.model === "string" && src.model.trim() ? src.model.trim() : defaultModel,
+      temperature: toNumber(src?.temperature, 0),
+    };
+    if (typeof src?.systemPrompt === "string" && src.systemPrompt.trim()) {
+      entry.systemPrompt = src.systemPrompt.trim();
+    }
+    if (typeof src?.maxIterations === "number" && Number.isInteger(src.maxIterations) && src.maxIterations >= 1) {
+      entry.maxIterations = src.maxIterations;
+    }
+    if (Array.isArray(src?.tools) && src.tools.length > 0 && src.tools.every((t) => typeof t === "string")) {
+      entry.tools = src.tools as string[];
+    }
+    return entry;
+  };
 
   const global = makeEntry(payload?.global);
   const agents = {
@@ -379,6 +397,14 @@ router.post("/chat", async (req, res) => {
     agentTools     = SPECIALIST_CONFIGS[prev].tools;
     MAX_ITERATIONS = SPECIALIST_CONFIGS[prev].maxIterations;
     activeRuntime  = getAgentRuntime(prev);
+    // Apply any client-supplied overrides for this specialist
+    if (activeRuntime.systemPrompt) systemPrompt = activeRuntime.systemPrompt;
+    if (activeRuntime.maxIterations !== undefined) MAX_ITERATIONS = activeRuntime.maxIterations;
+    if (activeRuntime.tools && activeRuntime.tools.length > 0) {
+      const allowed = new Set(activeRuntime.tools);
+      const filtered = SPECIALIST_CONFIGS[prev].tools.filter((t) => allowed.has(t.function.name)) as unknown as AnyTool[];
+      if (filtered.length > 0) agentTools = filtered;
+    }
     console.log(`[chat:orchestrator] reusing previousAgent="${prev}" (skip re-route)`);
   } else {
     try {
@@ -426,6 +452,14 @@ router.post("/chat", async (req, res) => {
             agentTools     = SPECIALIST_CONFIGS[agent].tools;
             MAX_ITERATIONS = SPECIALIST_CONFIGS[agent].maxIterations;
             activeRuntime  = getAgentRuntime(agent);
+            // Apply any client-supplied overrides for this specialist
+            if (activeRuntime.systemPrompt) systemPrompt = activeRuntime.systemPrompt;
+            if (activeRuntime.maxIterations !== undefined) MAX_ITERATIONS = activeRuntime.maxIterations;
+            if (activeRuntime.tools && activeRuntime.tools.length > 0) {
+              const allowed = new Set(activeRuntime.tools);
+              const filtered = SPECIALIST_CONFIGS[agent].tools.filter((t) => allowed.has(t.function.name)) as unknown as AnyTool[];
+              if (filtered.length > 0) agentTools = filtered;
+            }
             console.log(`[chat:orchestrator] routed to "${agent}" — ${delegateArgs.reason ?? ""}`);
             sendAgentRouted(agent, delegateArgs.reason ?? "");
           }

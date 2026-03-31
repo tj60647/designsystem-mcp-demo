@@ -437,7 +437,7 @@ describe("MCP tool correctness", () => {
       containerMaxWidth: Record<string, { $value: string }>;
     };
     assert.equal(
-      parsed.containerMaxWidth.xl?.["$value"],
+      parsed.containerMaxWidth.xl?.$value,
       "1280px",
       "xl container max-width should be 1280px"
     );

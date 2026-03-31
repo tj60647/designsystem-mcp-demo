@@ -90,12 +90,12 @@ function validateAgainstSchema(
     function checkLeaves(obj: unknown, path: string) {
       if (obj === null || typeof obj !== "object" || Array.isArray(obj)) return;
       const o = obj as Record<string, unknown>;
-      const isLeaf = "value" in o || "type" in o;
+      const isLeaf = "$value" in o || "$type" in o;
       if (isLeaf) {
-        if (!("value" in o)) errors.push(`Token at "${path}" is missing required property "value".`);
-        if (!("type" in o))  errors.push(`Token at "${path}" is missing required property "type".`);
-        if ("value" in o && typeof o.value !== "string") errors.push(`Token at "${path}".value must be a string.`);
-        if ("type"  in o && typeof o.type  !== "string") errors.push(`Token at "${path}".type must be a string.`);
+        if (!("$value" in o)) errors.push(`Token at "${path}" is missing required property "$value".`);
+        if (!("$type" in o))  errors.push(`Token at "${path}" is missing required property "$type".`);
+        if ("$value" in o && typeof o.$value !== "string") errors.push(`Token at "${path}".$value must be a string.`);
+        if ("$type"  in o && typeof o.$type  !== "string") errors.push(`Token at "${path}".$type must be a string.`);
       } else {
         for (const k of Object.keys(o)) checkLeaves(o[k], `${path}.${k}`);
       }

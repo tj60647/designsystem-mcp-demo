@@ -861,7 +861,7 @@
   padding: 32px 40px;
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 20px;
 }
 .agents-panel-body {
   flex: 1;

@@ -13,12 +13,13 @@ import { initAgentsPanel } from './modals/agents.js';
 import { initGenerateFromWebsiteModal } from './modals/generate-from-website.js';
 import { initDsOpsPanel, notifyDsOpsResult } from './dsOps.js';
 import { initSandbox } from './sandbox.js';
+import { initDiagram } from './diagram.js';
 
 // ── Product-level section navigation ─────────────────────────────────────
 // Manages top-level sections: Workspace, Design System Ops, Agents, MCP, System Diagram, About.
 // Each section is a full-page view; only one is visible at a time.
 // ─────────────────────────────────────────────────────────────────────────
-const SECTION_IDS = ['section-workspace', 'section-ds-ops', 'section-agent-sandbox', 'section-mcp', 'section-diagram', 'section-about'];
+const SECTION_IDS = ['section-workspace', 'section-ds-ops', 'section-agent-sandbox', 'section-scenarios-evals', 'section-mcp', 'section-diagram', 'section-about'];
 
 function switchSection(sectionId) {
   SECTION_IDS.forEach(id => {
@@ -37,6 +38,7 @@ window.switchSection = switchSection;
 window.switchToWorkspace = () => switchSection('section-workspace');
 window.switchToDsOps = () => switchSection('section-ds-ops');
 window.switchToAgentSandbox = () => switchSection('section-agent-sandbox');
+window.switchToScenariosEvals = () => switchSection('section-scenarios-evals');
 window.switchToMcp = () => switchSection('section-mcp');
 window.switchToDiagram = () => switchSection('section-diagram');
 window.switchToAbout = () => switchSection('section-about');
@@ -67,21 +69,20 @@ function initProductNav() {
 // The payload is optional and lets callers scope refreshes to affected UI panels.
 window.notifyDataReloaded = (payload = {}) => {
   const type = payload?.type;
-  const loaded = Array.isArray(payload?.loaded) ? payload.loaded : [];
 
-  const includesLoaded = (section) => loaded.includes(section);
-
-  // Explorer depends on components only.
+  // Explorer depends on components.  Always refresh on full design-system
+  // imports so any loaded components are visible without a manual refresh.
   const shouldRefreshExplorer =
     type === "components" ||
-    (type === "design-system" && includesLoaded("components")) ||
+    type === "design-system" ||
     !type;
 
   // Gallery depends on components (cards) and tokens (preview styling).
+  // Always refresh on full design-system imports for the same reason.
   const shouldRefreshGallery =
     type === "components" ||
     type === "tokens" ||
-    (type === "design-system" && (includesLoaded("components") || includesLoaded("tokens"))) ||
+    type === "design-system" ||
     !type;
 
   if (shouldRefreshExplorer && isExplorerLoaded()) resetAndReloadExplorer();
@@ -102,6 +103,7 @@ initRightTabs();
 initProductNav();
 initDsOpsPanel();
 initSandbox();
+initDiagram();
 
 // Wire DS Ops card buttons to hidden trigger buttons (attached by modal modules)
 const dsOpsLoadJsonBtn = document.getElementById('ds-ops-load-json-btn');

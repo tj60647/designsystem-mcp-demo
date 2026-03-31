@@ -44,7 +44,7 @@ router.get("/api/agent-info", (req, res) => {
         parameters: {
           maxIterations: 1,
           toolChoice: "required",
-          temperature: "provider default",
+          temperature: 0,   // deterministic: design system queries should return consistent, grounded answers
           endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
         },
         systemPrompt: ORCHESTRATOR_SYSTEM_PROMPT,
@@ -66,7 +66,7 @@ router.get("/api/agent-info", (req, res) => {
         parameters: {
           maxIterations: SPECIALIST_CONFIGS.reader.maxIterations,
           toolChoice: "auto",
-          temperature: "provider default",
+          temperature: 0,
           endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
         },
         systemPrompt: SPECIALIST_CONFIGS.reader.systemPrompt,
@@ -86,7 +86,7 @@ router.get("/api/agent-info", (req, res) => {
         parameters: {
           maxIterations: SPECIALIST_CONFIGS.builder.maxIterations,
           toolChoice: "auto",
-          temperature: "provider default",
+          temperature: 0,
           endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
         },
         systemPrompt: SPECIALIST_CONFIGS.builder.systemPrompt,
@@ -106,7 +106,7 @@ router.get("/api/agent-info", (req, res) => {
         parameters: {
           maxIterations: SPECIALIST_CONFIGS.generator.maxIterations,
           toolChoice: "auto",
-          temperature: "provider default",
+          temperature: 0,
           generateDesignSystemTemperature: 0.4,
           generateDesignSystemMaxTokens: 8000,
           endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
@@ -128,7 +128,7 @@ router.get("/api/agent-info", (req, res) => {
         parameters: {
           maxIterations: SPECIALIST_CONFIGS["style-guide"].maxIterations,
           toolChoice: "auto",
-          temperature: "provider default",
+          temperature: 0,
           endpoint: "POST https://openrouter.ai/api/v1/chat/completions",
         },
         systemPrompt: SPECIALIST_CONFIGS["style-guide"].systemPrompt,

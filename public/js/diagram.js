@@ -140,30 +140,27 @@ const EDGES = [
     path: 'M 759,355 H 826',
     dashed: true, bidir: true,
   },
-  // MCP → response — dashed (grounded final answer fans into output)
+  // Specialist → response — solid arrows (specialist composes the final answer;
+  // paths route below the MCP column to avoid visual confusion with tool calls)
   {
-    from: 'readerMcp', to: 'response',
+    from: 'reader', to: 'response',
     label: 'response',
-    path: 'M 984,100 C 1020,100 1020,214 1050,214',
-    dashed: true,
+    path: 'M 759,100 H 795 V 395 H 1010 C 1010,395 1010,214 1050,214',
   },
   {
-    from: 'builderMcp', to: 'response',
+    from: 'builder', to: 'response',
     label: '',
-    path: 'M 984,185 C 1020,185 1020,220 1050,220',
-    dashed: true,
+    path: 'M 759,185 H 795 V 395 H 1010 C 1010,395 1010,220 1050,220',
   },
   {
-    from: 'styleGuideMcp', to: 'response',
+    from: 'styleGuide', to: 'response',
     label: '',
-    path: 'M 984,270 C 1020,270 1020,232 1050,232',
-    dashed: true,
+    path: 'M 759,270 H 795 V 395 H 1010 C 1010,395 1010,228 1050,228',
   },
   {
-    from: 'generatorMcp', to: 'response',
+    from: 'generator', to: 'response',
     label: '',
-    path: 'M 984,355 C 1020,355 1020,242 1050,242',
-    dashed: true,
+    path: 'M 759,355 H 795 V 395 H 1010 C 1010,395 1010,234 1050,234',
   },
 ];
 
@@ -180,7 +177,7 @@ const DIVIDERS = [170, 358, 558, 782, 1008];
 
 // SVG dimensions
 const SVG_W = 1240;
-const SVG_H = 410;
+const SVG_H = 420;
 
 // ── SVG helpers ─────────────────────────────────────────────────────────────
 

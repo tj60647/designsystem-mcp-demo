@@ -34,11 +34,8 @@ function resolveTokenValue(tokens, ref, visited = new Set()) {
   const node = getTokNode(tokens, tokenPath);
   if (node == null) return null;
   if (typeof node === "string") return node;
-  if (node && typeof node === "object") {
-    if (typeof node.resolvedValue === "string" && node.resolvedValue.trim()) return node.resolvedValue;
-    if (typeof node.value === "string") {
-      return resolveTokenValue(tokens, node.value, visited) || node.value;
-    }
+  if (node && typeof node === "object" && typeof node.$value === "string") {
+    return resolveTokenValue(tokens, node.$value, visited) || node.$value;
   }
   return null;
 }

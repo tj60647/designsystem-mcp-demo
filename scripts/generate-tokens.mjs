@@ -8,8 +8,8 @@
  *   - Reads all variable collections from figma-export.json
  *   - Converts slash-delimited variable names to dot-path token keys
  *   - Maps Figma value types: COLOR → hex string, FLOAT → "Npx", STRING → string
- *   - Resolves $alias references and stores them as both the alias reference
- *     string and a resolvedValue (the concrete primitive value)
+ *   - Resolves $alias references and stores them as alias reference strings
+ *     (e.g. {color.neutral.0}); resolved values are computed at the tool layer
  *   - Picks the Light mode (or Default if no Light mode exists) as canonical value
  *
  * Usage:
@@ -110,18 +110,6 @@ for (const [collectionName, collection] of Object.entries(figmaExport.variables.
 // ---------------------------------------------------------------------------
 // Step 2: Resolve an alias chain to its concrete primitive value
 // ---------------------------------------------------------------------------
-function resolveAlias(aliasPath, depth = 0) {
-  if (depth > 20) return null; // guard circular
-  const entry = allVariables[aliasPath];
-  if (!entry) return null;
-
-  const { modeValue, figmaType } = entry;
-  if (modeValue && typeof modeValue === "object" && "$alias" in modeValue) {
-    return resolveAlias(modeValue["$alias"], depth + 1);
-  }
-  return primitiveToTokenValue(modeValue, figmaType);
-}
-
 // ---------------------------------------------------------------------------
 // Step 3: Convert each variable to a token entry
 // ---------------------------------------------------------------------------
@@ -152,22 +140,20 @@ for (const [varName, { figmaType, modeValue, description }] of Object.entries(al
   let tokenEntry;
 
   if (modeValue && typeof modeValue === "object" && "$alias" in modeValue) {
-    // Alias token: value is a reference string, resolvedValue is the concrete value
-    const aliasRef      = slashToDot(modeValue["$alias"]);
-    const resolvedValue = resolveAlias(modeValue["$alias"]);
+    // Alias token: $value is a reference string; resolved values are computed at the tool layer
+    const aliasRef = slashToDot(modeValue["$alias"]);
     tokenEntry = {
-      value:         `{${aliasRef}}`,
-      type:          tokenType,
-      resolvedValue,
-      ...(description ? { description } : {}),
+      $value:      `{${aliasRef}}`,
+      $type:       tokenType,
+      ...(description ? { $description: description } : {}),
     };
   } else {
     // Primitive token
     const value = primitiveToTokenValue(modeValue, figmaType);
     tokenEntry = {
-      value,
-      type: tokenType,
-      ...(description ? { description } : {}),
+      $value: value,
+      $type:  tokenType,
+      ...(description ? { $description: description } : {}),
     };
   }
 

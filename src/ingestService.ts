@@ -121,10 +121,10 @@ function canonicalCheck(section: DataType, data: Record<string, unknown>): Inges
     function checkLeaves(obj: unknown, path: string): void {
       if (!obj || typeof obj !== "object" || Array.isArray(obj)) return;
       const o = obj as Record<string, unknown>;
-      const isLeaf = "value" in o;
+      const isLeaf = "$value" in o;
       if (isLeaf) {
-        if (!("type" in o))  errors.push({ code: "TOKEN_MISSING_TYPE",  section, message: `Token at "${path}" missing "type".`,  severity: "error" });
-        if (typeof o.value !== "string") errors.push({ code: "TOKEN_VALUE_NOT_STRING", section, message: `Token at "${path}".value must be a string.`, severity: "error" });
+        if (!("$type" in o))  errors.push({ code: "TOKEN_MISSING_TYPE",  section, message: `Token at "${path}" missing "$type".`,  severity: "error" });
+        if (typeof o.$value !== "string") errors.push({ code: "TOKEN_VALUE_NOT_STRING", section, message: `Token at "${path}".$value must be a string.`, severity: "error" });
       } else {
         for (const k of Object.keys(o)) checkLeaves(o[k], `${path}.${k}`);
       }
@@ -280,7 +280,7 @@ function evaluateReadiness(sections: Record<string, Record<string, unknown>>): R
   function countLeaves(obj: unknown): number {
     if (!obj || typeof obj !== "object" || Array.isArray(obj)) return 0;
     const o = obj as Record<string, unknown>;
-    if ("value" in o) return 1;
+    if ("$value" in o) return 1;
     return Object.values(o).reduce((acc: number, v) => acc + countLeaves(v), 0);
   }
   const totalTokens = Object.values(tokens).reduce((acc: number, v) => acc + countLeaves(v), 0);

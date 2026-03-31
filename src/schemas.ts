@@ -11,12 +11,11 @@
 
 const TOKEN_ENTRY_SCHEMA = {
   type: "object",
-  required: ["value", "type"],
+  required: ["$value", "$type"],
   properties: {
-    value:         { type: "string", description: "The raw token value, e.g. '#2563eb' or '16px'." },
-    type:          { type: "string", description: "Token type, e.g. 'color', 'dimension', 'fontFamily'." },
-    description:   { type: "string", description: "Human-readable description of the token's intent." },
-    resolvedValue: { type: "string", description: "Optional resolved alias value." },
+    $value:       { type: "string", description: "The raw token value, e.g. '#2563eb' or '16px'. May be an alias reference like '{color.primary.600}'." },
+    $type:        { type: "string", description: "Token type, e.g. 'color', 'dimension', 'fontFamily'. Follows the W3C Design Token Community Group spec." },
+    $description: { type: "string", description: "Human-readable description of the token's intent." },
   },
   additionalProperties: false,
 };

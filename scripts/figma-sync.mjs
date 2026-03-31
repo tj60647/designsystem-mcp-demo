@@ -149,9 +149,9 @@ function transformFigmaVariables(apiResponse) {
     const value       = resolveValue(modeValue, variable.resolvedType);
 
     flat[path] = {
-      value,
-      type: tokenType(variable.resolvedType, collection?.name),
-      ...(variable.description ? { description: variable.description } : {}),
+      $value: value,
+      $type: tokenType(variable.resolvedType, collection?.name),
+      ...(variable.description ? { $description: variable.description } : {}),
     };
   }
 

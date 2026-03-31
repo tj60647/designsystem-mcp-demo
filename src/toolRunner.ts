@@ -16,9 +16,9 @@ import { recordToolCall } from "./metrics.js";
 
 // ── Data ──────────────────────────────────────────────────────────────────
 interface TokenEntry {
-  value: string;
-  type: string;
-  description?: string;
+  $value: string;
+  $type: string;
+  $description?: string;
 }
 type TokenNode = TokenEntry | Record<string, unknown>;
 interface TokensData {
@@ -75,8 +75,8 @@ function flattenTokenValues(obj: Record<string, unknown>, prefix = ""): Record<s
   const result: Record<string, string> = {};
   for (const [key, val] of Object.entries(obj)) {
     const fp = prefix ? `${prefix}.${key}` : key;
-    if (val !== null && typeof val === "object" && "value" in (val as object)) {
-      result[fp] = (val as TokenEntry).value;
+    if (val !== null && typeof val === "object" && "$value" in (val as object)) {
+      result[fp] = (val as TokenEntry).$value;
     } else if (val !== null && typeof val === "object") {
       Object.assign(result, flattenTokenValues(val as Record<string, unknown>, fp));
     }
@@ -90,9 +90,9 @@ function flattenAllTokens(
   const result: Record<string, { value: string; type: string; description?: string }> = {};
   for (const [key, val] of Object.entries(obj)) {
     const fp = prefix ? `${prefix}.${key}` : key;
-    if (val !== null && typeof val === "object" && "value" in (val as object)) {
+    if (val !== null && typeof val === "object" && "$value" in (val as object)) {
       const e = val as TokenEntry;
-      result[fp] = { value: e.value, type: e.type, ...(e.description ? { description: e.description } : {}) };
+      result[fp] = { value: e.$value, type: e.$type, ...(e.$description ? { description: e.$description } : {}) };
     } else if (val !== null && typeof val === "object") {
       Object.assign(result, flattenAllTokens(val as Record<string, unknown>, fp));
     }
@@ -480,8 +480,8 @@ export async function runMcpTool(name: string, args: Record<string, unknown>): P
         "24": "96px - very large page-level spacing.",
       };
       const scale = Object.entries(spacingTokens).map(([key, entry]) => ({
-        token: `spacing.${key}`, value: entry.value, type: entry.type,
-        usage: semanticHints[key] ?? `spacing.${key} - ${entry.value}`,
+        token: `spacing.${key}`, value: entry.$value, type: entry.$type,
+        usage: semanticHints[key] ?? `spacing.${key} - ${entry.$value}`,
       }));
       return JSON.stringify({ spacingScale: scale }, null, 2);
     }

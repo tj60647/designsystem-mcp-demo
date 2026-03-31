@@ -256,7 +256,7 @@ export function initAgentsPanel() {
       const agentKey = String(agent.key || "unified");
       const cfg = getAgentSetting(agentKey);
       const agentOverrides = settings.agents[agentKey] || {};
-      const hasOverrides = !!(agentOverrides.systemPrompt || agentOverrides.maxIterations !== undefined || agentOverrides.tools);
+      const hasOverrides = !!(agentOverrides.systemPrompt || agentOverrides.maxIterations !== undefined || (Array.isArray(agentOverrides.tools) && agentOverrides.tools.length > 0));
       const enabledToolNames = agentOverrides.tools ? new Set(agentOverrides.tools) : null;
       const paramsHtml = Object.entries(agent.parameters).map(([k, v]) =>
         `<div class="lobby-param-row"><span class="lobby-param-key">${escapeHtml(k)}</span><span class="lobby-param-val">${escapeHtml(String(v))}</span></div>`
@@ -296,7 +296,7 @@ export function initAgentsPanel() {
             </div>
             <label class="lobby-control">Max Iterations<input data-edit-max-iter="${escapeHtml(agentKey)}" class="lobby-input" type="number" min="1" max="30" value="${escapeHtml(String(editMaxIter))}" /></label>
             <label class="lobby-control">System Instructions<textarea data-edit-prompt="${escapeHtml(agentKey)}" class="lobby-input lobby-prompt-textarea" rows="8">${escapeHtml(editPromptVal)}</textarea></label>
-            ${agent.tools.length > 0 ? `<div class="lobby-control"><span>Tools (${agent.tools.length} available — uncheck to disable)</span><div class="lobby-tools-checklist">${toolCheckItems}</div></div>` : ""}
+            ${agent.tools && agent.tools.length > 0 ? `<div class="lobby-control"><span>Tools (${agent.tools.length} available — uncheck to disable)</span><div class="lobby-tools-checklist">${toolCheckItems}</div></div>` : ""}
           </div>
 
           <div class="lobby-controls-grid lobby-controls-grid-agent">

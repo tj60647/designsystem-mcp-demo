@@ -41,7 +41,10 @@ export function initAgentsPanel() {
       const required = (t.parameters && t.parameters.required) || [];
       const hasParams = params.length > 0;
       const paramChips = hasParams
-        ? params.map(p => `<span class="agents-param-chip"${required.includes(p) ? ' data-required="true"' : ""}>${escapeHtml(p)}${required.includes(p) ? "<sup>*</sup>" : ""}</span>`).join("")
+        ? params.map(p => {
+            const isRequired = required.includes(p);
+            return `<span class="agents-param-chip"${isRequired ? ' data-required="true"' : ""}>${escapeHtml(p)}${isRequired ? "<sup>*</sup>" : ""}</span>`;
+          }).join("")
         : "";
       const paramHtml = hasParams
         ? `<div class="agents-param-chips">${paramChips}</div><div class="agents-param-legend">* required parameter</div>`
@@ -190,13 +193,13 @@ export function initAgentsPanel() {
       const expectedOutput = typeof agent.expectedOutput === "string" && agent.expectedOutput.trim().length > 0
         ? agent.expectedOutput
         : "Final assistant response text (often JSON-parsed by runtime).";
-      const effectiveModel = settings.useGlobalModel ? settings.global.model : cfg.model;
+      const displayModel = settings.useGlobalModel ? settings.global.model : cfg.model;
       return `
       <details class="lobby-card" data-color="${color}">
         <summary class="lobby-card-summary">
           <div class="lobby-card-header">
             <div class="lobby-card-name">${escapeHtml(agent.name)}</div>
-            <div class="lobby-card-model">${escapeHtml(effectiveModel)}</div>
+            <div class="lobby-card-model">${escapeHtml(displayModel)}</div>
           </div>
           <div class="lobby-card-desc">${escapeHtml(agent.description)}</div>
         </summary>

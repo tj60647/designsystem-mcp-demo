@@ -21,7 +21,7 @@ OUTPUT RULES:
 2. The JSON must have exactly these four top-level keys: "tokens", "components", "themes", "icons".
 3. Do not truncate or abbreviate — generate the full content for every section.
 
-TOKENS structure (all leaf nodes must be {"value":"...","type":"...","description":"..."}):
+TOKENS structure (all leaf nodes must be {"$value":"...","$type":"...","$description":"..."}):
   color:
     primary: 50,100,200,300,400,500,600,700,800,900 scale (hex values)
     secondary: 50,100,300,500,600,700,900 scale

@@ -31,7 +31,7 @@
 import express from "express";
 import { runMcpTool } from "../toolRunner.js";
 import { generateDesignSystem } from "../generator.js";
-import { setData, type DataType } from "../dataStore.js";
+import { ingest } from "../ingestService.js";
 import {
   OPENROUTER_TOOLS,
   CHAT_SYSTEM_PROMPT,
@@ -44,7 +44,6 @@ import { recordRequest, recordCacheHit, recordRouting } from "../metrics.js";
 
 const router = express.Router();
 
-const VALID_TYPES: DataType[] = ["tokens", "components", "themes", "icons"];
 const ALLOWED_MESSAGE_ROLES = new Set(["user", "assistant"]);
 
 // ── Response cache ────────────────────────────────────────────────────────────
@@ -659,28 +658,35 @@ router.post("/chat", async (req, res) => {
               );
               clearInterval(heartbeat);
 
-              const loadedSections: string[] = [];
-              for (const section of VALID_TYPES) {
-                if (result.data[section] !== undefined) {
-                  setData(section, result.data[section]);
-                  loadedSections.push(section);
-                }
-              }
+              const ingestResult = await ingest(
+                "chat:generate_design_system",
+                "design-system",
+                result.data as Record<string, unknown>,
+              );
+              const loadedSections = ingestResult.loaded;
 
               // A new design system was loaded — previous cached responses
               // about tokens/components/etc. are now stale.
               clearResponseCache();
 
-              generatedDesignSystemData = result.data;
+              // Only include generatedDesignSystem and fire gallery refresh if
+              // at least one section was successfully ingested.
+              if (loadedSections.length > 0) {
+                generatedDesignSystemData = result.data;
+              }
 
+              const ingestErrors = ingestResult.errors.map((e) => e.message);
               toolResult = JSON.stringify({
-                success: true,
-                message:        "Design system generated and loaded successfully.",
+                success:        loadedSections.length > 0,
+                message:        loadedSections.length > 0
+                  ? "Design system generated and loaded successfully."
+                  : "Design system generation succeeded but no sections could be loaded.",
                 sectionsLoaded: loadedSections,
                 componentCount: Object.keys((result.data.components ?? {}) as object).length,
                 themeCount:     Object.keys((result.data.themes    ?? {}) as object).length,
                 iconCount:      Object.keys((result.data.icons     ?? {}) as object).length,
                 warnings:       result.warnings,
+                ...(ingestErrors.length > 0 ? { errors: ingestErrors } : {}),
               });
             } catch (genErr) {
               clearInterval(heartbeat);

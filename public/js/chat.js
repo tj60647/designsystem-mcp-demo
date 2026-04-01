@@ -356,7 +356,12 @@ async function handleSend() {
 
           // Remember which specialist handled this turn so the server can skip
           // re-routing on the immediately following message.
-          if (!agentForThisTurn && event.routedAgent && event.routedAgent !== "unified") {
+          // Special case: keep routing to the generator across all its clarifying
+          // exchanges until the design system is actually generated, since the
+          // generator typically asks 2-4 questions before calling the tool.
+          if (event.routedAgent === "generator" && !event.generatedDesignSystem) {
+            lastRoutedAgent = "generator";
+          } else if (!agentForThisTurn && event.routedAgent && event.routedAgent !== "unified") {
             lastRoutedAgent = event.routedAgent;
           }
 

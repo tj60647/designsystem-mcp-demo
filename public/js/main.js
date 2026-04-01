@@ -4,7 +4,7 @@ import { initComponentExplorer } from './explorer.js';
 import { initGallery } from './gallery.js';
 import { initRightTabs } from './tabs.js';
 import { isExplorerLoaded, resetAndReloadExplorer } from './explorer.js';
-import { isGalleryLoaded, resetAndReloadGallery } from './gallery.js';
+import { resetAndReloadGallery } from './gallery.js';
 import { initInfoModals } from './modals/info.js';
 import { initLoadJsonModal, initDropZone } from './modals/load-json.js';
 import { initViewSchemaModal } from './modals/schema.js';

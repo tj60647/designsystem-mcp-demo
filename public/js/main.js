@@ -1,10 +1,10 @@
-import { initChat } from './chat.js';
+import { initChat, scrollToBottom as scrollChatToBottom } from './chat.js';
 import { initPreview } from './preview.js';
 import { initComponentExplorer } from './explorer.js';
 import { initGallery } from './gallery.js';
 import { initRightTabs } from './tabs.js';
 import { isExplorerLoaded, resetAndReloadExplorer } from './explorer.js';
-import { isGalleryLoaded, resetAndReloadGallery } from './gallery.js';
+import { resetAndReloadGallery } from './gallery.js';
 import { initInfoModals } from './modals/info.js';
 import { initLoadJsonModal, initDropZone } from './modals/load-json.js';
 import { initViewSchemaModal } from './modals/schema.js';
@@ -31,6 +31,9 @@ function switchSection(sectionId) {
     btn.classList.toggle('active', active);
     btn.setAttribute('aria-selected', String(active));
   });
+  // Scroll chat to bottom when returning to workspace so any messages that
+  // arrived while viewing another section are immediately visible.
+  if (sectionId === 'section-workspace') scrollChatToBottom();
 }
 
 // Expose globally so modals and other modules can switch sections.
@@ -86,7 +89,9 @@ window.notifyDataReloaded = (payload = {}) => {
     !type;
 
   if (shouldRefreshExplorer && isExplorerLoaded()) resetAndReloadExplorer();
-  if (shouldRefreshGallery && isGalleryLoaded())  resetAndReloadGallery();
+  // Always reload gallery when relevant data changes so it shows fresh content
+  // the next time the user opens the tab, even if the tab was never visited.
+  if (shouldRefreshGallery) resetAndReloadGallery();
 };
 
 // Boot

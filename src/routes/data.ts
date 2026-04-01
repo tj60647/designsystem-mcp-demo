@@ -196,6 +196,19 @@ function validateAgainstSchema(
   return { valid: errors.length === 0, errors, recommendations };
 }
 
+// ── GET /api/data/design-system ───────────────────────────────────────────
+// Returns all active data types combined into a single design-system object.
+// Used by the Design System Manager download button.
+// Must be defined before /data/:type so Express matches it first.
+// ─────────────────────────────────────────────────────────────────────────
+router.get("/data/design-system", (_req, res) => {
+  const result: Partial<Record<DataType, unknown>> = {};
+  for (const type of VALID_TYPES) {
+    result[type] = getData(type);
+  }
+  res.json(result);
+});
+
 // ── GET /api/data/:type ───────────────────────────────────────────────────
 // Returns the currently active data for the given type as JSON.
 // Used by the Component Explorer UI to read live design system data.

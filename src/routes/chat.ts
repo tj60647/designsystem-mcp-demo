@@ -286,6 +286,8 @@ router.post("/chat", async (req, res) => {
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
+  // Prevent Nginx / Heroku routing mesh from buffering the stream.
+  res.setHeader("X-Accel-Buffering", "no");
   res.flushHeaders();
 
   recordRequest();
@@ -481,10 +483,12 @@ router.post("/chat", async (req, res) => {
           sendProgress(`Selected model unavailable for routing. Using fallback model (${fallbackModel}).`);
           console.warn(`[chat:orchestrator] non-ok response 402 (${orchErr}). Falling back to unified agent with model="${fallbackModel}"`);
         } else {
+          sendProgress("Routing unavailable — continuing in general mode.");
           console.warn(`[chat:orchestrator] non-ok response ${orchResponse.status} (${orchErr}), falling back to unified agent`);
         }
       }
     } catch (err) {
+      sendProgress("Routing unavailable — continuing in general mode.");
       console.warn("[chat:orchestrator] routing failed, falling back to unified agent:", String(err));
     }
   }
@@ -506,7 +510,7 @@ router.post("/chat", async (req, res) => {
     for (let i = 0; i < MAX_ITERATIONS; i++) {
       console.log(`[chat] iteration=${i} model=${activeRuntime.model} messages=${loopMessages.length}`);
 
-      sendProgress("Thinking…");
+      sendProgress(i === 0 ? "Thinking…" : `Thinking (step ${i + 1})…`);
 
       const orResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
@@ -617,7 +621,7 @@ router.post("/chat", async (req, res) => {
           console.log(`[chat:tool] calling ${toolName}`, JSON.stringify(toolArgs));
 
           if (toolName === "generate_design_system") {
-            sendProgress("Generating design system — this may take a moment…");
+            sendProgress("Generating design system — this may take a few minutes…");
           } else {
             sendProgress(`Calling \`${toolName}\`…`);
           }
@@ -630,9 +634,30 @@ router.post("/chat", async (req, res) => {
           // the request AbortController and the result is included in the
           // SSE "done" payload for the UI to display.
           if (toolName === "generate_design_system") {
+            // Send periodic keep-alive progress events so the SSE connection
+            // stays alive and the user sees that work is still in progress.
+            const HEARTBEAT_MESSAGES = [
+              "Still generating…",
+              "Crafting tokens and color scales…",
+              "Building component definitions…",
+              "Defining themes and icons…",
+            ];
+            let heartbeatCount = 0;
+            const heartbeat = setInterval(() => {
+              sendProgress(HEARTBEAT_MESSAGES[heartbeatCount % HEARTBEAT_MESSAGES.length]);
+              heartbeatCount++;
+            }, 15_000);
+
             try {
               const description = (toolArgs.description as string) ?? "";
-              const result = await generateDesignSystem(description, apiKey, activeRuntime.model, chatAbort.signal);
+              const result = await generateDesignSystem(
+                description,
+                apiKey,
+                activeRuntime.model,
+                chatAbort.signal,
+                (msg) => sendProgress(msg),
+              );
+              clearInterval(heartbeat);
 
               const loadedSections: string[] = [];
               for (const section of VALID_TYPES) {
@@ -658,6 +683,7 @@ router.post("/chat", async (req, res) => {
                 warnings:       result.warnings,
               });
             } catch (genErr) {
+              clearInterval(heartbeat);
               clearTimeout(chatTimer);
               endWithError(`Design system generation failed: ${String(genErr)}`);
               return;

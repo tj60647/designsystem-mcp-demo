@@ -160,6 +160,8 @@ function validateGeneratedData(data: Record<string, unknown>): {
  * @param description  Free-text description of the brand, aesthetic, and colors.
  * @param apiKey       OpenRouter API key.
  * @param model        OpenRouter model identifier.
+ * @param signal       Optional AbortSignal to cancel the request.
+ * @param onProgress   Optional callback invoked with status messages as generation progresses.
  * @returns            { data, warnings } on success; throws on repeated failure.
  */
 export async function generateDesignSystem(
@@ -167,6 +169,7 @@ export async function generateDesignSystem(
   apiKey: string,
   model: string,
   signal?: AbortSignal,
+  onProgress?: (message: string) => void,
 ): Promise<GeneratedDesignSystem> {
   const MAX_RETRIES = 3;
   let lastErrors: string[] = [];
@@ -176,6 +179,9 @@ export async function generateDesignSystem(
     if (signal?.aborted) {
       throw new Error("Generation aborted: request timed out.");
     }
+
+    const attemptLabel = MAX_RETRIES > 1 ? ` (attempt ${attempt + 1} of ${MAX_RETRIES})` : "";
+    onProgress?.(`Generating design system${attemptLabel}…`);
 
     const retryContext = attempt > 0
       ? `\n\nYour previous attempt failed validation. Fix these errors:\n${lastErrors.map(e => `- ${e}`).join("\n")}\n\nThen regenerate the complete JSON.`
@@ -207,6 +213,13 @@ export async function generateDesignSystem(
 
     if (!response.ok) {
       const errText = await response.text();
+      // Retry transient server/rate-limit errors instead of failing immediately.
+      if ((response.status === 429 || response.status >= 500) && attempt < MAX_RETRIES - 1) {
+        const backoffMs = 2_000 * Math.pow(2, attempt);
+        onProgress?.(`API error (${response.status}) — retrying in ${backoffMs / 1_000}s…`);
+        await new Promise<void>((resolve) => setTimeout(resolve, backoffMs));
+        continue;
+      }
       throw new Error(`OpenRouter API error (${response.status}): ${errText}`);
     }
 
@@ -235,6 +248,9 @@ export async function generateDesignSystem(
       // rather than returning nothing if all retries exhaust.
       if (!lastPartial || Object.keys(parsed).length > Object.keys(lastPartial).length) {
         lastPartial = parsed;
+      }
+      if (attempt < MAX_RETRIES - 1) {
+        onProgress?.(`Validation found ${errors.length} error${errors.length !== 1 ? "s" : ""} — retrying with corrections…`);
       }
       continue;
     }

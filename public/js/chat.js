@@ -37,6 +37,15 @@ export function initChat() {
   sendBtn.addEventListener("click", handleSend);
   downloadDsBtn.addEventListener("click", downloadGeneratedDesignSystem);
 
+  const chipsSectionEl = document.getElementById("chips-section");
+  const chipsToggleEl  = document.getElementById("chips-toggle");
+  if (chipsSectionEl && chipsToggleEl) {
+    chipsToggleEl.addEventListener("click", () => {
+      const collapsed = chipsSectionEl.classList.toggle("collapsed");
+      chipsToggleEl.setAttribute("aria-expanded", String(!collapsed));
+    });
+  }
+
   loadTemplates();
 }
 

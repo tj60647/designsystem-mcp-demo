@@ -286,6 +286,8 @@ router.post("/chat", async (req, res) => {
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
+  // Prevent Nginx / Heroku routing mesh from buffering the stream.
+  res.setHeader("X-Accel-Buffering", "no");
   res.flushHeaders();
 
   recordRequest();
@@ -619,7 +621,7 @@ router.post("/chat", async (req, res) => {
           console.log(`[chat:tool] calling ${toolName}`, JSON.stringify(toolArgs));
 
           if (toolName === "generate_design_system") {
-            sendProgress("Generating design system — this may take a minute…");
+            sendProgress("Generating design system — this may take a few minutes…");
           } else {
             sendProgress(`Calling \`${toolName}\`…`);
           }

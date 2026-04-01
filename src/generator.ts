@@ -215,7 +215,7 @@ export async function generateDesignSystem(
       const errText = await response.text();
       // Retry transient server/rate-limit errors instead of failing immediately.
       if ((response.status === 429 || response.status >= 500) && attempt < MAX_RETRIES - 1) {
-        const backoffMs = 2_000 * (attempt + 1);
+        const backoffMs = 2_000 * Math.pow(2, attempt);
         onProgress?.(`API error (${response.status}) — retrying in ${backoffMs / 1_000}s…`);
         await new Promise<void>((resolve) => setTimeout(resolve, backoffMs));
         continue;

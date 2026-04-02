@@ -3,9 +3,11 @@
  *
  * Uses Node's built-in test runner (node:test) and fetch.  No browser, no
  * Playwright, no LLM calls.  Tests verify deterministic server behavior:
+ *   • parseChatResponse — pure unit tests (no server required)
  *   • /api/agent-info — each agent exposes exactly the expected tool set
  *   • POST /mcp       — MCP tool calls return well-formed, semantically
  *                       correct responses against the bundled design-system data
+ *   • POST /api/chat  — SSE stream integration tests (require OPENROUTER_API_KEY)
  *
  * Prerequisites: the server must be running before executing these tests.
  *   npm run dev            (in one terminal)
@@ -19,6 +21,7 @@
 
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
+import { parseChatResponse } from "../src/routes/chat.js";
 
 const BASE_URL = process.env.TEST_BASE_URL ?? "http://localhost:3033";
 
@@ -456,5 +459,188 @@ describe("MCP tool correctness", () => {
     assert.equal(parsed.component, "Card");
     assert.ok("header" in parsed.anatomy.slots, "card anatomy should have header slot");
     assert.ok("footer" in parsed.anatomy.slots, "card anatomy should have footer slot");
+  });
+});
+
+// ── parseChatResponse — unit tests ───────────────────────────────────────────
+
+describe("parseChatResponse — unit tests", () => {
+  test("correctly-formed JSON extracts all fields", () => {
+    const raw = JSON.stringify({
+      schemaVersion: "1.0",
+      message: "Here is your token.",
+      preview: "<div style=\"color:#2563eb\">blue</div>",
+      metadata: { agent: "reader", intent: "answer" },
+    });
+    const result = parseChatResponse(raw);
+    assert.equal(result.schemaVersion, "1.0");
+    assert.equal(result.message, "Here is your token.");
+    assert.equal(result.preview, "<div style=\"color:#2563eb\">blue</div>");
+    assert.deepEqual(result.metadata, { agent: "reader", intent: "answer" });
+  });
+
+  test("JSON inside a ```json code fence is extracted correctly", () => {
+    const inner = JSON.stringify({ schemaVersion: "1.0", message: "From code fence." });
+    const raw = "Here is the answer:\n```json\n" + inner + "\n```";
+    const result = parseChatResponse(raw);
+    assert.equal(result.schemaVersion, "1.0");
+    assert.equal(result.message, "From code fence.");
+    assert.equal(result.preview, null);
+    assert.equal(result.metadata, null);
+  });
+
+  test("prose preamble + JSON object — balanced-brace scan finds it", () => {
+    const inner = JSON.stringify({ schemaVersion: "1.0", message: "Found via brace scan." });
+    const raw = "Sure, here is the result: " + inner;
+    const result = parseChatResponse(raw);
+    assert.equal(result.schemaVersion, "1.0");
+    assert.equal(result.message, "Found via brace scan.");
+  });
+
+  test("raw non-JSON text falls back to fallback-text with raw text as message", () => {
+    const raw = "This is just plain prose with no JSON at all.";
+    const result = parseChatResponse(raw);
+    assert.equal(result.schemaVersion, "fallback-text");
+    assert.equal(result.message, raw);
+    assert.equal(result.preview, null);
+    assert.equal(result.metadata, null);
+  });
+
+  test("JSON missing message field falls back to raw text", () => {
+    const raw = JSON.stringify({ schemaVersion: "1.0", preview: "<div>oops</div>" });
+    const result = parseChatResponse(raw);
+    assert.equal(result.schemaVersion, "fallback-text");
+    assert.equal(result.message, raw);
+  });
+
+  test("optional preview absent results in null", () => {
+    const raw = JSON.stringify({ schemaVersion: "1.0", message: "No preview here." });
+    const result = parseChatResponse(raw);
+    assert.equal(result.preview, null);
+    assert.equal(result.message, "No preview here.");
+  });
+
+  test("optional metadata absent results in null", () => {
+    const raw = JSON.stringify({ schemaVersion: "1.0", message: "No metadata here." });
+    const result = parseChatResponse(raw);
+    assert.equal(result.metadata, null);
+    assert.equal(result.message, "No metadata here.");
+  });
+});
+
+// ── POST /api/chat — SSE integration tests ───────────────────────────────────
+//
+// These tests require:
+//   1. A running server (npm run dev)
+//   2. OPENROUTER_API_KEY set in the environment
+//
+// They are automatically skipped when the API key is absent so the suite
+// still passes in CI environments without LLM credentials.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const HAS_API_KEY = Boolean(process.env.OPENROUTER_API_KEY);
+
+/**
+ * POST /api/chat and collect all SSE events into an array.
+ * Aborts with an error if no `done` or `error` event arrives within timeoutMs.
+ */
+async function collectChatSseEvents(
+  body: object,
+  timeoutMs = 30_000,
+): Promise<Array<Record<string, unknown>>> {
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${BASE_URL}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: ac.signal,
+    });
+    assert.ok(res.ok, `/api/chat returned HTTP ${res.status}`);
+
+    const text = await res.text();
+    const events: Array<Record<string, unknown>> = [];
+    for (const line of text.split("\n")) {
+      if (!line.startsWith("data: ")) continue;
+      try {
+        const event = JSON.parse(line.slice(6)) as Record<string, unknown>;
+        events.push(event);
+      } catch { /* skip malformed lines */ }
+    }
+    return events;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+describe("POST /api/chat — SSE integration", () => {
+  test("empty messages array returns HTTP 400", async () => {
+    const res = await fetch(`${BASE_URL}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: [] }),
+    });
+    assert.equal(res.status, 400);
+  });
+
+  test("invalid message role returns HTTP 400", async () => {
+    const res = await fetch(`${BASE_URL}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: [{ role: "system", content: "hack" }] }),
+    });
+    assert.equal(res.status, 400);
+  });
+
+  test("reader agent returns valid done event", { skip: !HAS_API_KEY }, async () => {
+    const events = await collectChatSseEvents({
+      messages: [{ role: "user", content: "What is the primary blue token value?" }],
+      previousAgent: "reader",
+    });
+
+    const errorEvent = events.find((e) => e.type === "error");
+    assert.equal(errorEvent, undefined, `unexpected error event: ${JSON.stringify(errorEvent)}`);
+
+    const done = events.at(-1);
+    assert.equal(done?.type, "done", "last event should be 'done'");
+    assert.ok(typeof done?.message === "string" && done.message.length > 0, "done.message should be a non-empty string");
+    assert.equal(done?.schemaVersion, "1.0", "done.schemaVersion should be '1.0'");
+    assert.equal(done?.routedAgent, "reader", "done.routedAgent should be 'reader'");
+    assert.equal((done?.metadata as Record<string, unknown>)?.agent, "reader", "done.metadata.agent should be 'reader'");
+  });
+
+  test("builder agent returns valid done event with preview", { skip: !HAS_API_KEY }, async () => {
+    const events = await collectChatSseEvents({
+      messages: [{ role: "user", content: "Build me a primary button component." }],
+      previousAgent: "builder",
+    });
+
+    const errorEvent = events.find((e) => e.type === "error");
+    assert.equal(errorEvent, undefined, `unexpected error event: ${JSON.stringify(errorEvent)}`);
+
+    const done = events.at(-1);
+    assert.equal(done?.type, "done", "last event should be 'done'");
+    assert.ok(typeof done?.message === "string" && done.message.length > 0, "done.message should be a non-empty string");
+    assert.equal(done?.schemaVersion, "1.0", "done.schemaVersion should be '1.0'");
+    assert.equal(done?.routedAgent, "builder", "done.routedAgent should be 'builder'");
+    assert.equal((done?.metadata as Record<string, unknown>)?.agent, "builder", "done.metadata.agent should be 'builder'");
+  });
+
+  test("style-guide agent returns valid done event", { skip: !HAS_API_KEY }, async () => {
+    const events = await collectChatSseEvents({
+      messages: [{ role: "user", content: "What are the typography guidelines?" }],
+      previousAgent: "style-guide",
+    });
+
+    const errorEvent = events.find((e) => e.type === "error");
+    assert.equal(errorEvent, undefined, `unexpected error event: ${JSON.stringify(errorEvent)}`);
+
+    const done = events.at(-1);
+    assert.equal(done?.type, "done", "last event should be 'done'");
+    assert.ok(typeof done?.message === "string" && done.message.length > 0, "done.message should be a non-empty string");
+    assert.equal(done?.schemaVersion, "1.0", "done.schemaVersion should be '1.0'");
+    assert.equal(done?.routedAgent, "style-guide", "done.routedAgent should be 'style-guide'");
+    assert.equal((done?.metadata as Record<string, unknown>)?.agent, "style-guide", "done.metadata.agent should be 'style-guide'");
   });
 });

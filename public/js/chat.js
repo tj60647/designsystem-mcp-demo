@@ -4,6 +4,14 @@ import { updateLivePreview } from './preview.js';
 // ── Constants ────────────────────────────────────────────────────────────────
 const DEFAULT_CHAT_MODEL = "openai/gpt-oss-20b:nitro";
 
+const AGENT_LABELS = {
+  orchestrator: "Orchestrator",
+  reader: "Design System Reader",
+  builder: "Component Builder",
+  generator: "System Generator",
+  "style-guide": "Style Guide",
+};
+
 // ── Local state ──────────────────────────────────────────────────────────────
 const conversationHistory = [];
 let isLoading = false;
@@ -187,12 +195,18 @@ async function handleSend() {
       return traceEl;
     }
 
-    function addTraceAgentRouted(agent, reason) {
+    function addTraceAgentRouted(agent, reason, model) {
       const trace = getOrCreateTrace();
       const row = document.createElement("div");
       row.className = "trace-item trace-routed";
-      const agentLabel = { orchestrator: "Orchestrator", reader: "Design System Reader", builder: "Component Builder", generator: "System Generator", "style-guide": "Style Guide" }[agent] ?? agent;
+      const agentLabel = AGENT_LABELS[agent] ?? agent;
       row.innerHTML = `<span class="trace-agent-name">${escapeHtml(agentLabel)}</span>`;
+      if (model) {
+        const modelBadge = document.createElement("span");
+        modelBadge.className = "trace-model-hint";
+        modelBadge.textContent = model;
+        row.appendChild(modelBadge);
+      }
       if (reason) {
         const tip = document.createElement("span");
         tip.className = "trace-reason";
@@ -338,7 +352,7 @@ async function handleSend() {
           updateLiveFeedback();
           scrollToBottom();
         } else if (event.type === "agent_routed") {
-          addTraceAgentRouted(event.agent, event.reason);
+          addTraceAgentRouted(event.agent, event.reason, event.model);
         } else if (event.type === "tool_call") {
           addTraceToolCall(event.callId, event.tool, event.args);
         } else if (event.type === "tool_result") {
@@ -372,6 +386,26 @@ async function handleSend() {
             badge.textContent = "cached";
             badge.title = "This response was served from cache — the same question was answered earlier.";
             msgEl.querySelector(".msg-bubble").appendChild(badge);
+          }
+
+          if (event.model || (event.routedAgent && event.routedAgent !== "unified")) {
+            const meta = document.createElement("div");
+            meta.className = "msg-model-meta";
+            const agentLabel = event.routedAgent ? AGENT_LABELS[event.routedAgent] : null;
+            if (agentLabel) {
+              const agentTag = document.createElement("span");
+              agentTag.className = "msg-agent-tag";
+              agentTag.textContent = agentLabel;
+              meta.appendChild(agentTag);
+            }
+            if (event.model) {
+              const modelTag = document.createElement("span");
+              modelTag.className = "msg-model-tag";
+              modelTag.textContent = event.model;
+              modelTag.title = event.model;
+              meta.appendChild(modelTag);
+            }
+            msgEl.appendChild(meta);
           }
 
           updateLivePreview(preview, toolsUsed, event.model, preview ? message : null, event.usage || null);

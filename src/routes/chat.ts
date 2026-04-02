@@ -296,8 +296,8 @@ router.post("/chat", async (req, res) => {
   const endWithDone     = (payload: object) => { sendEvent({ type: "done", ...payload }); res.end(); };
   const endWithError    = (error: string)   => { sendEvent({ type: "error", error }); res.end(); };
   /** Emitted once after the orchestrator picks a specialist. */
-  const sendAgentRouted = (agent: string, reason: string) =>
-    sendEvent({ type: "agent_routed", agent, reason });
+  const sendAgentRouted = (agent: string, reason: string, model: string) =>
+    sendEvent({ type: "agent_routed", agent, reason, model });
   /** Emitted just before each MCP tool is called — client renders this live. */
   const sendToolCall    = (callId: string, tool: string, args: Record<string, unknown>) =>
     sendEvent({ type: "tool_call", callId, tool, args });
@@ -471,7 +471,7 @@ router.post("/chat", async (req, res) => {
               if (filtered.length > 0) agentTools = filtered;
             }
             console.log(`[chat:orchestrator] routed to "${agent}" — ${delegateArgs.reason ?? ""}`);
-            sendAgentRouted(agent, delegateArgs.reason ?? "");
+            sendAgentRouted(agent, delegateArgs.reason ?? "", activeRuntime.model);
           }
         }
       } else {

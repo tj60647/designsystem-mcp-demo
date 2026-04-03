@@ -540,6 +540,28 @@ describe("parseChatResponse — unit tests", () => {
 
 const HAS_API_KEY = Boolean(process.env.OPENROUTER_API_KEY);
 
+function assertValidDoneEvent(
+  events: Array<Record<string, unknown>>,
+  expectedAgent: string,
+): void {
+  const errorEvent = events.find((e) => e.type === "error");
+  assert.equal(errorEvent, undefined, `unexpected error event: ${JSON.stringify(errorEvent)}`);
+
+  const done = events.at(-1);
+  assert.equal(done?.type, "done", "last event should be 'done'");
+  assert.ok(
+    typeof done?.message === "string" && done.message.length > 0,
+    "done.message should be a non-empty string",
+  );
+  assert.equal(done?.schemaVersion, "1.0", "done.schemaVersion should be '1.0'");
+  assert.equal(done?.routedAgent, expectedAgent, `done.routedAgent should be '${expectedAgent}'`);
+  assert.equal(
+    (done?.metadata as Record<string, unknown>)?.agent,
+    expectedAgent,
+    `done.metadata.agent should be '${expectedAgent}'`,
+  );
+}
+
 /**
  * POST /api/chat and collect all SSE events into an array.
  * Aborts with an error if no `done` or `error` event arrives within timeoutMs.
@@ -598,16 +620,7 @@ describe("POST /api/chat — SSE integration", () => {
       messages: [{ role: "user", content: "What is the primary blue token value?" }],
       previousAgent: "reader",
     });
-
-    const errorEvent = events.find((e) => e.type === "error");
-    assert.equal(errorEvent, undefined, `unexpected error event: ${JSON.stringify(errorEvent)}`);
-
-    const done = events.at(-1);
-    assert.equal(done?.type, "done", "last event should be 'done'");
-    assert.ok(typeof done?.message === "string" && done.message.length > 0, "done.message should be a non-empty string");
-    assert.equal(done?.schemaVersion, "1.0", "done.schemaVersion should be '1.0'");
-    assert.equal(done?.routedAgent, "reader", "done.routedAgent should be 'reader'");
-    assert.equal((done?.metadata as Record<string, unknown>)?.agent, "reader", "done.metadata.agent should be 'reader'");
+    assertValidDoneEvent(events, "reader");
   });
 
   test("builder agent returns valid done event with preview", { skip: !HAS_API_KEY }, async () => {
@@ -615,16 +628,7 @@ describe("POST /api/chat — SSE integration", () => {
       messages: [{ role: "user", content: "Build me a primary button component." }],
       previousAgent: "builder",
     });
-
-    const errorEvent = events.find((e) => e.type === "error");
-    assert.equal(errorEvent, undefined, `unexpected error event: ${JSON.stringify(errorEvent)}`);
-
-    const done = events.at(-1);
-    assert.equal(done?.type, "done", "last event should be 'done'");
-    assert.ok(typeof done?.message === "string" && done.message.length > 0, "done.message should be a non-empty string");
-    assert.equal(done?.schemaVersion, "1.0", "done.schemaVersion should be '1.0'");
-    assert.equal(done?.routedAgent, "builder", "done.routedAgent should be 'builder'");
-    assert.equal((done?.metadata as Record<string, unknown>)?.agent, "builder", "done.metadata.agent should be 'builder'");
+    assertValidDoneEvent(events, "builder");
   });
 
   test("style-guide agent returns valid done event", { skip: !HAS_API_KEY }, async () => {
@@ -632,15 +636,6 @@ describe("POST /api/chat — SSE integration", () => {
       messages: [{ role: "user", content: "What are the typography guidelines?" }],
       previousAgent: "style-guide",
     });
-
-    const errorEvent = events.find((e) => e.type === "error");
-    assert.equal(errorEvent, undefined, `unexpected error event: ${JSON.stringify(errorEvent)}`);
-
-    const done = events.at(-1);
-    assert.equal(done?.type, "done", "last event should be 'done'");
-    assert.ok(typeof done?.message === "string" && done.message.length > 0, "done.message should be a non-empty string");
-    assert.equal(done?.schemaVersion, "1.0", "done.schemaVersion should be '1.0'");
-    assert.equal(done?.routedAgent, "style-guide", "done.routedAgent should be 'style-guide'");
-    assert.equal((done?.metadata as Record<string, unknown>)?.agent, "style-guide", "done.metadata.agent should be 'style-guide'");
+    assertValidDoneEvent(events, "style-guide");
   });
 });

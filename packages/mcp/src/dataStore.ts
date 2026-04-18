@@ -23,7 +23,15 @@ export type DataType = "tokens" | "components" | "themes" | "icons" | "changelog
 
 const DATA_TYPES: DataType[] = ["tokens", "components", "themes", "icons", "changelog", "deprecations", "style-guide"];
 
+const ALLOWED_DATA_FILES = new Set([
+  "tokens.json", "components.json", "themes.json", "icons.json",
+  "changelog.json", "deprecations.json", "style-guide.json",
+]);
+
 function loadJson(filename: string): unknown {
+  if (!ALLOWED_DATA_FILES.has(filename)) {
+    throw new Error(`Disallowed data file: "${filename}"`);
+  }
   return JSON.parse(readFileSync(join(__dirname, "data", filename), "utf-8"));
 }
 

@@ -16,6 +16,7 @@
     "test": "playwright test",
     "test:ui": "playwright test --ui",
     "test:api": "node --import tsx/esm --test tests/api.test.ts",
+    "test:remote": "node --import tsx/esm --test tests/remote-data.test.ts",
     "test:evals": "promptfoo eval --config evals/promptfooconfig.yaml",
     "ws:dev": "turbo dev",
     "ws:build": "turbo build",

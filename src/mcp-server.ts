@@ -125,6 +125,11 @@ interface StyleGuideData {
   colorUsage:          Record<string, unknown>;
   typographyUsage:     Record<string, unknown>;
   compositionPatterns: Record<string, unknown>[];
+  // Optional: a design system's own layout guidance and guideline texts (Markdown).
+  // When present they replace the built-in sample guidance below, so the MCP
+  // describes the loaded system rather than the sample one.
+  layoutGuidance?:     Record<string, unknown>;
+  guidelines?:         Partial<Record<"accessibility" | "layout" | "content" | "motion", string>>;
 }
 
 // ── Utilities ─────────────────────────────────────────────────────────────
@@ -569,7 +574,7 @@ export function createMcpServer(): McpServer {
       return {
         content: [{
           type: "text" as const,
-          text: JSON.stringify({ input: colorValue, compliant: false, matchingTokens: [], message: "This color is not part of the design token system. Replace it with a named token (e.g. color.primary.600) to stay compliant with system standards." }, null, 2),
+          text: JSON.stringify({ input: colorValue, compliant: false, matchingTokens: [], message: "This color is not part of the design token system. Replace it with a named token; suggest_token finds one by what it is for." }, null, 2),
         }],
       };
     }
@@ -1147,10 +1152,13 @@ export function createMcpServer(): McpServer {
         containerMaxWidth: layoutTokens.containerMaxWidth ?? {},
         grid: layoutTokens.grid ?? {},
         zIndex: layoutTokens.zIndex ?? {},
+        // The loaded system's own guidance when its style guide has it; else the sample's.
         guidelines: {
-          pageGutters: { mobile: "16px (spacing.4)", tablet: "24px (spacing.6)", desktop: "32px (spacing.8)" },
-          contentMaxWidths: { prose: "72ch (~680px)", form: "640px", fullWidth: "layout.containerMaxWidth token (1280px default)", dashboard: "1440px" },
-          regionSpacing: { betweenPageSections: "spacing.16 (64px)", betweenCardGroups: "spacing.8 (32px)", betweenFormFields: "spacing.4 (16px)", betweenInlineItems: "spacing.2 (8px)" },
+          ...(styleGuide?.layoutGuidance ?? {
+            pageGutters: { mobile: "16px (spacing.4)", tablet: "24px (spacing.6)", desktop: "32px (spacing.8)" },
+            contentMaxWidths: { prose: "72ch (~680px)", form: "640px", fullWidth: "layout.containerMaxWidth token (1280px default)", dashboard: "1440px" },
+            regionSpacing: { betweenPageSections: "spacing.16 (64px)", betweenCardGroups: "spacing.8 (32px)", betweenFormFields: "spacing.4 (16px)", betweenInlineItems: "spacing.2 (8px)" },
+          }),
           ...(context ? { context } : {}),
         },
       };
@@ -1188,7 +1196,8 @@ export function createMcpServer(): McpServer {
         token: `spacing.${key}`,
         value: entry.$value,
         type:  entry.$type,
-        usage: semanticHints[key] ?? `spacing.${key} - ${entry.$value}`,
+        // A token's own description wins; the hints describe the bundled sample's scale.
+        usage: entry.$description ?? semanticHints[key] ?? `spacing.${key} - ${entry.$value}`,
       }));
       log("info", "tool.invoked", { tool: "get_spacing_scale", params: {}, duration_ms: Date.now() - start, result_size: scale.length });
       return {
@@ -1371,7 +1380,7 @@ export function createMcpServer(): McpServer {
     { description: "Full accessibility guidelines - global rules, testing expectations, tooling.", mimeType: "text/markdown" },
     async (uri) => {
       log("info", "resource.accessed", { uri: uri.href });
-      return { contents: [{ uri: uri.href, mimeType: "text/markdown", text: GUIDELINE_ACCESSIBILITY }] };
+      return { contents: [{ uri: uri.href, mimeType: "text/markdown", text: styleGuide?.guidelines?.accessibility ?? GUIDELINE_ACCESSIBILITY }] };
     }
   );
 
@@ -1381,7 +1390,7 @@ export function createMcpServer(): McpServer {
     { description: "Layout principles - grid system, breakpoints, responsive behavior, spacing philosophy.", mimeType: "text/markdown" },
     async (uri) => {
       log("info", "resource.accessed", { uri: uri.href });
-      return { contents: [{ uri: uri.href, mimeType: "text/markdown", text: GUIDELINE_LAYOUT }] };
+      return { contents: [{ uri: uri.href, mimeType: "text/markdown", text: styleGuide?.guidelines?.layout ?? GUIDELINE_LAYOUT }] };
     }
   );
 
@@ -1391,7 +1400,7 @@ export function createMcpServer(): McpServer {
     { description: "Content guidelines - voice and tone, writing conventions, terminology.", mimeType: "text/markdown" },
     async (uri) => {
       log("info", "resource.accessed", { uri: uri.href });
-      return { contents: [{ uri: uri.href, mimeType: "text/markdown", text: GUIDELINE_CONTENT }] };
+      return { contents: [{ uri: uri.href, mimeType: "text/markdown", text: styleGuide?.guidelines?.content ?? GUIDELINE_CONTENT }] };
     }
   );
 
@@ -1401,7 +1410,7 @@ export function createMcpServer(): McpServer {
     { description: "Motion and animation principles - duration scales, easing curves, transition patterns.", mimeType: "text/markdown" },
     async (uri) => {
       log("info", "resource.accessed", { uri: uri.href });
-      return { contents: [{ uri: uri.href, mimeType: "text/markdown", text: GUIDELINE_MOTION }] };
+      return { contents: [{ uri: uri.href, mimeType: "text/markdown", text: styleGuide?.guidelines?.motion ?? GUIDELINE_MOTION }] };
     }
   );
 

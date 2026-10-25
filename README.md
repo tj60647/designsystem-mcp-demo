@@ -524,6 +524,19 @@ npm run build
 npm start
 ```
 
+### Serving one design system from its own published files
+
+Set `DESIGN_SYSTEM_DATA_URL` to an address that serves the seven data files (`tokens.json`, `components.json`, `themes.json`, `icons.json`, `changelog.json`, `deprecations.json`, `style-guide.json`). The server then:
+
+- fetches all seven from `<url>/<type>.json`, and again once they are older than `DESIGN_SYSTEM_DATA_TTL_SECONDS` (default 60), so a change to the design system reaches the MCP within a minute, with no change here;
+- keeps the last good copy if a refresh fails, and answers 503 rather than serve the bundled sample if it has never fetched;
+- is read-only: `POST /api/data`, `/api/data/reset` and `/api/generate-from-website` answer 403;
+- redirects `/` to `/health`, which reports the data's source and when it was fetched.
+
+A style guide may also carry `layoutGuidance` (used by `get_layout_guidance`) and `guidelines` (`accessibility`, `layout`, `content`, `motion` as Markdown, used by the `design-system://guidelines/*` resources); a spacing token's `$description` becomes its usage hint. Without them, the built-in sample guidance is used.
+
+A Rough Idea's design system is served this way: its build publishes the files at `https://design-system.aroughidea.com/v2/mcp/`, and a second Vercel project from this repo sets `DESIGN_SYSTEM_DATA_URL` to that address. `npm run test:remote` tests the mode.
+
 ---
 
 ## 10. Deployment options

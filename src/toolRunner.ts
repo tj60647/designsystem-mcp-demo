@@ -200,7 +200,7 @@ export async function runMcpTool(name: string, args: Record<string, unknown>): P
       if (matches.length > 0) {
         return JSON.stringify({ input: colorValue, compliant: true, matchingTokens: matches, message: "This color value is a recognized design token. Use the token path instead of the raw value in production code." }, null, 2);
       }
-      return JSON.stringify({ input: colorValue, compliant: false, matchingTokens: [], message: "This color is not part of the design token system. Replace it with a named token (e.g. color.primary.600) to stay compliant." }, null, 2);
+      return JSON.stringify({ input: colorValue, compliant: false, matchingTokens: [], message: "This color is not part of the design token system. Replace it with a named token; suggest_token finds one by what it is for." }, null, 2);
     }
 
     case "get_component_constraints": {

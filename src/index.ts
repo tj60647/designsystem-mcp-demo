@@ -27,6 +27,7 @@ import agentRouter    from "./routes/agent.js";
 import generateRouter from "./routes/generate.js";
 import chatRouter     from "./routes/chat.js";
 import evalRouter     from "./routes/eval.js";
+import { dataSource, ensureFresh, isReadOnly } from "./dataStore.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
@@ -50,7 +51,9 @@ app.get("/demo", (_req, res) => {
 // that need a JSON health check can use GET /health instead.
 // ─────────────────────────────────────────────────────────────────────────
 app.get("/", (_req, res) => {
-  res.redirect("/demo");
+  // A deployment that serves one design system (DESIGN_SYSTEM_DATA_URL) is an
+  // MCP server, not the demo: send visitors to its health and description.
+  res.redirect(isReadOnly() ? "/health" : "/demo");
 });
 
 // ── Eval Lab redirect ─────────────────────────────────────────────────────
@@ -70,6 +73,7 @@ app.get("/health", (_req, res) => {
     mcpEndpoint: "POST /mcp",
     description:
       "A queryable context layer that makes design systems machine-readable and usable by AI.",
+    data: dataSource(),
     primitives: {
       tools: 28,
       resources: "16 URIs",
@@ -135,6 +139,31 @@ app.get("/health", (_req, res) => {
     },
   });
 });
+
+// ── Remote design system data ─────────────────────────────────────────────
+// With DESIGN_SYSTEM_DATA_URL set, every MCP and API request first makes sure
+// the data is fresh (refetched once it is older than the TTL), and the routes
+// that would replace the data are refused: the design system's own build is
+// the only way to change it.
+// ─────────────────────────────────────────────────────────────────────────
+if (isReadOnly()) {
+  const WRITES = new Set(["/api/data", "/api/data/reset", "/api/generate-from-website"]);
+  app.use((req, res, next) => {
+    if (req.method === "POST" && WRITES.has(req.path)) {
+      res.status(403).json({ error: "This design system is read-only: it is served from its own published files." });
+      return;
+    }
+    next();
+  });
+  app.use(["/mcp", "/api"], async (_req, res, next) => {
+    try {
+      await ensureFresh();
+      next();
+    } catch (err) {
+      res.status(503).json({ error: err instanceof Error ? err.message : "Design system data unavailable." });
+    }
+  });
+}
 
 // ── Route mounts ──────────────────────────────────────────────────────────
 app.use(mcpRouter);           // POST /mcp

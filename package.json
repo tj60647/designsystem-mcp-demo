@@ -20,7 +20,8 @@
     "test:evals": "promptfoo eval --config evals/promptfooconfig.yaml",
     "ws:dev": "turbo dev",
     "ws:build": "turbo build",
-    "ws:typecheck": "turbo typecheck"
+    "ws:typecheck": "turbo typecheck",
+    "test:answers": "node --import tsx/esm --test tests/answers.test.ts"
   },
   "engines": {
     "node": ">=20.0.0"

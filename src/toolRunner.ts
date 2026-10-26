@@ -13,6 +13,7 @@
 import { getData } from "./dataStore.js";
 import { DATA_SCHEMAS } from "./schemas.js";
 import { recordToolCall } from "./metrics.js";
+import { componentNotFound, rankTokens, validateUsage, type PlannedComponents } from "./answers.js";
 
 // ── Data ──────────────────────────────────────────────────────────────────
 interface TokenEntry {
@@ -139,6 +140,7 @@ export async function runMcpTool(name: string, args: Record<string, unknown>): P
   const themes       = getData("themes")       as ThemesData;
   const changelog    = getData("changelog")    as ChangelogEntry[];
   const deprecations = getData("deprecations") as DeprecationEntry[];
+  const planned      = (getData("style-guide") as { plannedComponents?: PlannedComponents } | null)?.plannedComponents;
   const styleGuide   = getData("style-guide")  as Record<string, unknown>;
 
   switch (name) {
@@ -177,14 +179,14 @@ export async function runMcpTool(name: string, args: Record<string, unknown>): P
     case "get_component": {
       const key  = (args.componentName as string).toLowerCase().trim();
       const spec = components[key];
-      if (!spec) return `Component "${args.componentName}" not found. Available: ${Object.keys(components).join(", ")}`;
+      if (!spec) return componentNotFound(String(args.componentName), components, planned);
       return JSON.stringify(spec, null, 2);
     }
 
     case "get_component_tokens": {
       const key  = (args.componentName as string).toLowerCase().trim();
       const spec = components[key];
-      if (!spec) return `Component "${args.componentName}" not found. Available: ${Object.keys(components).join(", ")}`;
+      if (!spec) return componentNotFound(String(args.componentName), components, planned);
       const refs = new Set<string>();
       extractTokenRefs(spec.tokens, refs);
       return JSON.stringify({ component: spec.name, tokenReferences: Array.from(refs).sort(), rawTokenDefinitions: spec.tokens }, null, 2);
@@ -206,7 +208,7 @@ export async function runMcpTool(name: string, args: Record<string, unknown>): P
     case "get_component_constraints": {
       const key  = (args.componentName as string).toLowerCase().trim();
       const spec = components[key];
-      if (!spec) return `Component "${args.componentName}" not found. Available: ${Object.keys(components).join(", ")}`;
+      if (!spec) return componentNotFound(String(args.componentName), components, planned);
       return JSON.stringify({ component: spec.name, constraints: spec.constraints ?? [], accessibility: spec.accessibility ?? {} }, null, 2);
     }
 
@@ -214,63 +216,19 @@ export async function runMcpTool(name: string, args: Record<string, unknown>): P
       const key    = (args.componentName as string).toLowerCase().trim();
       const spec   = components[key];
       const config = (args.config ?? {}) as Record<string, unknown>;
-      if (!spec) return `Component "${args.componentName}" not found. Available: ${Object.keys(components).join(", ")}`;
+      if (!spec) return componentNotFound(String(args.componentName), components, planned);
 
-      const violations: Array<{ rule: string; suggestion: string }> = [];
-      if (config.variant !== undefined && spec.variants && !spec.variants.includes(String(config.variant))) {
-        violations.push({
-          rule: `Variant "${config.variant}" is not valid for ${spec.name}. Allowed: ${spec.variants.join(", ")}.`,
-          suggestion: `Change variant to one of: ${spec.variants.join(", ")}.`,
-        });
-      }
-      if (config.size !== undefined && spec.sizes && !spec.sizes.includes(String(config.size))) {
-        violations.push({
-          rule: `Size "${config.size}" is not valid for ${spec.name}. Allowed: ${spec.sizes.join(", ")}.`,
-          suggestion: `Change size to one of: ${spec.sizes.join(", ")}.`,
-        });
-      }
-      if (config.state !== undefined && spec.states && !spec.states.includes(String(config.state))) {
-        violations.push({
-          rule: `State "${config.state}" is not valid for ${spec.name}. Allowed: ${spec.states.join(", ")}.`,
-          suggestion: `Change state to one of: ${spec.states.join(", ")}.`,
-        });
-      }
-      if (spec.props) {
-        const reserved = new Set(["variant", "size", "state"]);
-        for (const propKey of Object.keys(config)) {
-          if (!reserved.has(propKey) && !(propKey in spec.props)) {
-            violations.push({
-              rule: `Unknown prop "${propKey}" - not defined in the ${spec.name} spec.`,
-              suggestion: `Remove "${propKey}" or replace with a valid prop. Valid props: ${Object.keys(spec.props).join(", ")}.`,
-            });
-          }
-        }
-      }
+      const violations = validateUsage(spec, config);
       return JSON.stringify({ component: spec.name, valid: violations.length === 0, violations, checkedProps: Object.keys(config) }, null, 2);
     }
 
     case "suggest_token": {
       const intent      = args.intent as string;
       const category    = args.category as string | undefined;
-      const intentWords = intent.toLowerCase().split(/[\s\-_./]+/).filter(Boolean);
       const source: Record<string, unknown> = category
         ? { [category]: tokens[category as keyof TokensData] }
         : (tokens as unknown as Record<string, unknown>);
-      const flat   = flattenAllTokens(source);
-      const scored = Object.entries(flat).map(([tokenPath, meta]) => {
-        const segs = tokenPath.toLowerCase().split(".");
-        let score  = 0;
-        for (const word of intentWords) {
-          for (const seg of segs) if (seg.includes(word) || word.includes(seg)) score += 2;
-          if (meta.description) {
-            for (const dw of meta.description.toLowerCase().split(/\W+/)) {
-              if (dw && (dw.includes(word) || word.includes(dw))) score += 3;
-            }
-          }
-        }
-        return { tokenPath, value: meta.value, type: meta.type, description: meta.description ?? null, score };
-      });
-      const top5 = scored.filter(r => r.score > 0).sort((a, b) => b.score - a.score).slice(0, 5);
+      const top5 = rankTokens(flattenAllTokens(source), intent);
       if (top5.length === 0) return JSON.stringify({ intent, results: [], message: "No tokens matched. Try different keywords." }, null, 2);
       return JSON.stringify({ intent, results: top5 }, null, 2);
     }
@@ -413,7 +371,7 @@ export async function runMcpTool(name: string, args: Record<string, unknown>): P
     case "get_accessibility_guidance": {
       const key  = (args.componentName as string).toLowerCase().trim();
       const spec = components[key];
-      if (!spec) return `Component "${args.componentName}" not found. Available: ${Object.keys(components).join(", ")}`;
+      if (!spec) return componentNotFound(String(args.componentName), components, planned);
       const a11yConstraints = (spec.constraints ?? []).filter(c =>
         c.toLowerCase().includes("aria") || c.toLowerCase().includes("keyboard") ||
         c.toLowerCase().includes("focus") || c.toLowerCase().includes("wcag") ||
@@ -426,7 +384,7 @@ export async function runMcpTool(name: string, args: Record<string, unknown>): P
     case "get_component_variants": {
       const key  = (args.componentName as string).toLowerCase().trim();
       const spec = components[key];
-      if (!spec) return `Component "${args.componentName}" not found. Available: ${Object.keys(components).join(", ")}`;
+      if (!spec) return componentNotFound(String(args.componentName), components, planned);
       const variants = (spec.variants ?? []).map(v => ({
         variant:  v,
         guidance: spec.variantGuidance?.[v] ?? `No specific guidance defined for variant "${v}".`,
@@ -437,7 +395,7 @@ export async function runMcpTool(name: string, args: Record<string, unknown>): P
     case "get_component_anatomy": {
       const key  = (args.componentName as string).toLowerCase().trim();
       const spec = components[key];
-      if (!spec) return `Component "${args.componentName}" not found. Available: ${Object.keys(components).join(", ")}`;
+      if (!spec) return componentNotFound(String(args.componentName), components, planned);
       if (!spec.anatomy) return JSON.stringify({ component: spec.name, anatomy: null, message: "Anatomy not defined for this component." }, null, 2);
       return JSON.stringify({ component: spec.name, anatomy: spec.anatomy }, null, 2);
     }
@@ -445,7 +403,7 @@ export async function runMcpTool(name: string, args: Record<string, unknown>): P
     case "get_component_relationships": {
       const key  = (args.componentName as string).toLowerCase().trim();
       const spec = components[key];
-      if (!spec) return `Component "${args.componentName}" not found. Available: ${Object.keys(components).join(", ")}`;
+      if (!spec) return componentNotFound(String(args.componentName), components, planned);
       const relationships = spec.relationships
         ?? (spec.relatedComponents ? { parent: null, siblings: [], related: spec.relatedComponents, children: [], composedIn: [] } : null);
       return JSON.stringify({ component: spec.name, relationships }, null, 2);

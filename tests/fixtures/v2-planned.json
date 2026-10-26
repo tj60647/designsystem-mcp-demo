@@ -1,0 +1,953 @@
+{
+  "note": "Not in v2 yet. Do not invent these: say which is planned and for which batch, and build only from v2's existing components until it lands.",
+  "survey": {
+    "date": "2026-10-25",
+    "method": "Read-only: seven agents read every app's source and listed each interface part by kind, with how it is built, how often, its states and its accessibility."
+  },
+  "batches": {
+    "1": "The explorables (rollout phases 2 and 3)",
+    "2": "Agent Design Studio (phase 4)",
+    "3": "The Colloquy (phase 5)",
+    "4": "AI Research, Speculative Journalism and the rest (phases 6 and 7)"
+  },
+  "components": {
+    "field": {
+      "name": "Field",
+      "batch": 1,
+      "what": "A label, its control, a hint and an error, tied together.",
+      "mustGetRight": "The label names the control (for and id); the hint and the error are read with it (aria-describedby); an error sets aria-invalid. The hint and the error share one place under the control, always there and two lines tall (--ds-slot-hint), so an error never moves the form. Nearly every app leaves labels untied.",
+      "usedBy": [
+        "LLM Explorables",
+        "Workshops",
+        "Agent Design Studio",
+        "Colloquy",
+        "Design System MCP demo",
+        "Semantic Scout",
+        "GraphWise",
+        "QR Studio",
+        "ChatPlantUML",
+        "OpticEvade",
+        "Obscura Designer"
+      ],
+      "apps": 11,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-field"
+    },
+    "slider": {
+      "name": "Slider",
+      "batch": 1,
+      "what": "A value on a range, with its number beside it: temperature, top K, a similarity cutoff.",
+      "mustGetRight": "A native range input with a visible label and an <output>; arrow keys step it. Never drawn on a canvas.",
+      "usedBy": [
+        "LLM Explorables",
+        "Agent Design Studio",
+        "Colloquy",
+        "AI Research",
+        "Speculative Journalism",
+        "autoresearch demo",
+        "Platform shell",
+        "DDO demos",
+        "Semantic Scout",
+        "GraphWise",
+        "Timetables",
+        "Semantic Cartographer",
+        "QR Studio",
+        "OpenRouter registry",
+        "OpticEvade",
+        "Obscura Designer"
+      ],
+      "apps": 16,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-slider"
+    },
+    "dialog": {
+      "name": "Dialog",
+      "batch": 1,
+      "what": "A window over the page: information, an editor, or a confirmation before something cannot be undone.",
+      "mustGetRight": "The native <dialog> with showModal(): focus moves in and stays, Escape closes, focus returns. A confirmation is role=\"alertdialog\" and names what will happen. The browser's own alert() or confirm() stands in for one in about a dozen apps.",
+      "usedBy": [
+        "LLM Explorables",
+        "Agent Design Studio",
+        "Colloquy",
+        "AI Research",
+        "Speculative Journalism",
+        "Design System MCP demo",
+        "DDO demos",
+        "Relatio",
+        "ChatPlantUML",
+        "Letterly",
+        "TimeTwin",
+        "OpticEvade",
+        "LingoLink",
+        "Obscura Designer",
+        "MQTT demo"
+      ],
+      "apps": 15,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-dialog"
+    },
+    "tabs": {
+      "name": "Tabs",
+      "batch": 1,
+      "what": "Views of one thing, one shown at a time.",
+      "mustGetRight": "role=\"tablist\", tab and tabpanel; arrow keys move between tabs (roving tabindex), Home and End jump. Most apps' tabs work by click only.",
+      "usedBy": [
+        "LLM Explorables",
+        "Agent Design Studio",
+        "Colloquy",
+        "AI Research",
+        "Speculative Journalism",
+        "autoresearch demo",
+        "Design System MCP demo",
+        "GraphWise",
+        "Timetables",
+        "Semantic Cartographer",
+        "OpenRouter registry",
+        "Letterly",
+        "TimeTwin",
+        "DFN Teams",
+        "Obscura Designer"
+      ],
+      "apps": 15,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-tabs"
+    },
+    "disclosure": {
+      "name": "Disclosure",
+      "batch": 1,
+      "what": "A section that opens and closes: details, options, a report.",
+      "mustGetRight": "Native <details> and <summary>, or a button with aria-expanded. A clickable heading with an arrow is not enough.",
+      "usedBy": [
+        "LLM Explorables",
+        "Agent Design Studio",
+        "Colloquy",
+        "AI Research",
+        "Speculative Journalism",
+        "Platform shell",
+        "Design System MCP demo",
+        "DDO demos",
+        "GraphWise",
+        "Timetables",
+        "Semantic Cartographer",
+        "OpenRouter registry",
+        "ChatPlantUML",
+        "Exhibition Planner",
+        "Letterly",
+        "TimeTwin",
+        "Obscura Designer"
+      ],
+      "apps": 17,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-disclosure"
+    },
+    "notice": {
+      "name": "Notice",
+      "batch": 1,
+      "what": "A message in the page: an error, a warning, a note, a success, with an action when there is one (Try again).",
+      "mustGetRight": "The word says what kind it is; color only repeats it. A new error is announced (role=\"alert\"); other news is role=\"status\". It appears in a place kept for it, or as a toast over the page, so it never pushes the page down.",
+      "usedBy": [
+        "LLM Explorables",
+        "Workshops",
+        "Agent Design Studio",
+        "Colloquy",
+        "AI Research",
+        "Speculative Journalism",
+        "autoresearch demo",
+        "Platform shell",
+        "Design System MCP demo",
+        "DDO demos",
+        "Semantic Scout",
+        "GraphWise",
+        "Timetables",
+        "Semantic Cartographer",
+        "QR Studio",
+        "OpenRouter registry",
+        "ChatPlantUML",
+        "Exhibition Planner",
+        "Letterly",
+        "TimeTwin",
+        "OpticEvade",
+        "LingoLink",
+        "Orbital Chronos",
+        "Obscura Designer",
+        "MQTT demo"
+      ],
+      "apps": 25,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-notice"
+    },
+    "progress": {
+      "name": "Progress",
+      "batch": 1,
+      "what": "Something is happening: a busy ring while the length is unknown, a bar when it is known (n of N).",
+      "mustGetRight": "Words with it (\"Writing…\", \"3 of 12\"); role=\"progressbar\" with values for the bar; announced when it starts and ends; still under prefers-reduced-motion. Its words and ring have their place kept (.ds-hold), so starting and ending move nothing.",
+      "usedBy": [
+        "LLM Explorables",
+        "Agent Design Studio",
+        "Colloquy",
+        "AI Research",
+        "Speculative Journalism",
+        "autoresearch demo",
+        "Platform shell",
+        "Design System MCP demo",
+        "DDO demos",
+        "Semantic Scout",
+        "GraphWise",
+        "Timetables",
+        "Semantic Cartographer",
+        "QR Studio",
+        "OpenRouter registry",
+        "ChatPlantUML",
+        "Exhibition Planner",
+        "Letterly",
+        "TimeTwin",
+        "OpticEvade",
+        "LingoLink"
+      ],
+      "apps": 21,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-progress"
+    },
+    "empty-state": {
+      "name": "Empty state",
+      "batch": 1,
+      "what": "What a place says before it has anything: what will appear, and how to start.",
+      "mustGetRight": "Kept apart from loading and from \"no match\"; offers the next step when there is one.",
+      "usedBy": [
+        "LLM Explorables",
+        "Agent Design Studio",
+        "Colloquy",
+        "AI Research",
+        "Speculative Journalism",
+        "autoresearch demo",
+        "Platform shell",
+        "Design System MCP demo",
+        "DDO demos",
+        "Semantic Scout",
+        "GraphWise",
+        "Timetables",
+        "Semantic Cartographer",
+        "OpenRouter registry",
+        "Relatio",
+        "ChatPlantUML",
+        "Exhibition Planner",
+        "Letterly",
+        "TimeTwin",
+        "LingoLink"
+      ],
+      "apps": 20,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-empty-state"
+    },
+    "tooltip": {
+      "name": "Tooltip",
+      "batch": 1,
+      "what": "A short name or value on hover and focus: an icon button's name, a point on a chart.",
+      "mustGetRight": "Shown on focus as well as hover, dismissed with Escape, never the only place a thing is named. Nearly every app uses the title attribute alone, which a keyboard never sees.",
+      "usedBy": [
+        "LLM Explorables",
+        "Colloquy",
+        "autoresearch demo",
+        "DDO demos",
+        "Semantic Scout",
+        "GraphWise",
+        "Semantic Cartographer",
+        "Letterly",
+        "LingoLink"
+      ],
+      "apps": 9,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-tooltip"
+    },
+    "card": {
+      "name": "Card",
+      "batch": 1,
+      "what": "One item to open or pick: a demo, an agent, a session. A panel groups parts; a card is one thing.",
+      "mustGetRight": "One link or button covers the card, one tab stop; a selected card says so (aria-current or aria-pressed).",
+      "usedBy": [
+        "LLM Explorables",
+        "Agent Design Studio",
+        "Colloquy",
+        "AI Research",
+        "Speculative Journalism",
+        "Platform shell",
+        "Design System MCP demo",
+        "DDO demos",
+        "Semantic Scout",
+        "GraphWise",
+        "Timetables",
+        "QR Studio",
+        "OpenRouter registry",
+        "Relatio",
+        "Exhibition Planner",
+        "Letterly",
+        "TimeTwin",
+        "OpticEvade",
+        "DFN Teams",
+        "LingoLink"
+      ],
+      "apps": 20,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-card"
+    },
+    "code-block": {
+      "name": "Code block",
+      "batch": 1,
+      "what": "Code, a command or a model's raw answer, set in mono.",
+      "mustGetRight": "Wraps or scrolls inside itself, never the page; a scrolling block can be reached by keyboard.",
+      "usedBy": [
+        "LLM Explorables",
+        "Workshops",
+        "Prototyping Toolkit",
+        "Agent Design Studio",
+        "Colloquy",
+        "AI Research",
+        "Speculative Journalism",
+        "Design System MCP demo",
+        "DDO demos",
+        "GraphWise",
+        "Timetables",
+        "QR Studio",
+        "OpenRouter registry",
+        "Letterly",
+        "TimeTwin",
+        "LingoLink",
+        "MQTT demo"
+      ],
+      "apps": 17,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-code-block"
+    },
+    "copy-button": {
+      "name": "Copy button",
+      "batch": 1,
+      "what": "Copies a prompt, a link or a block, and says it did.",
+      "mustGetRight": "\"Copied\" is announced (role=\"status\"), and a failure says what to do instead. \"Copied\" takes the place of \"Copy\" in a .ds-hold, so the button keeps its width.",
+      "usedBy": [
+        "LLM Explorables",
+        "Workshops",
+        "Prototyping Toolkit",
+        "Agent Design Studio",
+        "Colloquy",
+        "AI Research",
+        "Design System MCP demo",
+        "GraphWise",
+        "QR Studio",
+        "ChatPlantUML",
+        "Exhibition Planner",
+        "Letterly",
+        "TimeTwin",
+        "LingoLink",
+        "Obscura Designer"
+      ],
+      "apps": 15,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-copy-button"
+    },
+    "legend": {
+      "name": "Legend",
+      "batch": 1,
+      "what": "The key to a figure's colors, marks and lines.",
+      "mustGetRight": "Each swatch has its words; a legend that also filters is a group of toggle buttons.",
+      "usedBy": [
+        "LLM Explorables",
+        "Colloquy",
+        "AI Research",
+        "Speculative Journalism",
+        "autoresearch demo",
+        "Design System MCP demo",
+        "DDO demos",
+        "GraphWise",
+        "Semantic Cartographer",
+        "Exhibition Planner",
+        "TimeTwin",
+        "OpticEvade",
+        "DFN Teams"
+      ],
+      "apps": 13,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-legend"
+    },
+    "facts": {
+      "name": "Facts",
+      "batch": 1,
+      "what": "Name and value pairs: a run's record, a model's details.",
+      "mustGetRight": "A <dl>, so each value is read with its name.",
+      "usedBy": [
+        "LLM Explorables",
+        "Agent Design Studio",
+        "Colloquy",
+        "Exhibition Planner",
+        "Letterly"
+      ],
+      "apps": 5,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-facts"
+    },
+    "fullscreen-button": {
+      "name": "Full screen button",
+      "batch": 1,
+      "what": "Takes the page in and out of full screen; every page a room might see has one.",
+      "mustGetRight": "Its name says which way it goes; hidden where the browser cannot go full screen.",
+      "usedBy": [
+        "LLM Explorables",
+        "Agent Design Studio",
+        "Colloquy"
+      ],
+      "apps": 3,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-fullscreen-button"
+    },
+    "file-drop": {
+      "name": "File drop",
+      "batch": 1,
+      "what": "Add a file by dropping, pasting or choosing it.",
+      "mustGetRight": "A real button to choose a file, so dropping is never the only way; what was added, or why not, is announced.",
+      "usedBy": [
+        "LLM Explorables",
+        "Agent Design Studio",
+        "Colloquy",
+        "AI Research",
+        "Design System MCP demo",
+        "DDO demos",
+        "Semantic Scout",
+        "GraphWise",
+        "QR Studio",
+        "Relatio",
+        "ChatPlantUML",
+        "TimeTwin",
+        "OpticEvade",
+        "DFN Teams"
+      ],
+      "apps": 14,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-file-drop"
+    },
+    "chat-thread": {
+      "name": "Chat thread",
+      "batch": 1,
+      "what": "Turns between a person and a model, with a composer.",
+      "mustGetRight": "The thread is role=\"log\", so new replies are read; streaming, stopped and failed are said in words; Enter sends and Shift+Enter adds a line.",
+      "usedBy": [
+        "LLM Explorables",
+        "Agent Design Studio",
+        "Colloquy",
+        "AI Research",
+        "Design System MCP demo",
+        "GraphWise",
+        "Timetables",
+        "OpenRouter registry",
+        "ChatPlantUML",
+        "Exhibition Planner",
+        "Letterly",
+        "TimeTwin",
+        "LingoLink"
+      ],
+      "apps": 13,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-chat-thread"
+    },
+    "popover": {
+      "name": "Popover",
+      "batch": 1,
+      "what": "A small panel tied to a button: about this, a filter, a picker.",
+      "mustGetRight": "The native popover attribute: light dismiss and Escape; the button says it is open (aria-expanded).",
+      "usedBy": [
+        "LLM Explorables",
+        "Agent Design Studio",
+        "Colloquy",
+        "DDO demos",
+        "Relatio"
+      ],
+      "apps": 5,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-popover"
+    },
+    "drawer": {
+      "name": "Drawer",
+      "batch": 1,
+      "what": "A panel that slides in from an edge: a phone's navigation, settings, an inspector.",
+      "mustGetRight": "Modal on a phone (focus in, Escape closes, focus returns); a side panel on a wide screen.",
+      "usedBy": [
+        "LLM Explorables",
+        "Workshops",
+        "Agent Design Studio",
+        "Colloquy",
+        "AI Research",
+        "Design System MCP demo",
+        "DDO demos",
+        "GraphWise",
+        "Timetables",
+        "Semantic Cartographer",
+        "OpenRouter registry",
+        "Relatio",
+        "Exhibition Planner",
+        "Letterly",
+        "OpticEvade",
+        "LingoLink"
+      ],
+      "apps": 16,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-drawer"
+    },
+    "checkbox": {
+      "name": "Checkbox",
+      "batch": 2,
+      "what": "An option that is on or off, alone or in a list.",
+      "mustGetRight": "A native checkbox inside its label; a disabled one says why (aria-describedby).",
+      "usedBy": [
+        "LLM Explorables",
+        "Agent Design Studio",
+        "Colloquy",
+        "AI Research",
+        "Platform shell",
+        "Design System MCP demo",
+        "DDO demos",
+        "Semantic Scout",
+        "Timetables",
+        "Semantic Cartographer",
+        "Relatio",
+        "Exhibition Planner"
+      ],
+      "apps": 12,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-checkbox"
+    },
+    "radio": {
+      "name": "Radio buttons",
+      "batch": 2,
+      "what": "One choice from a short list, each with words: a card type, a sort order.",
+      "mustGetRight": "Native radios in a <fieldset> with a <legend>; arrow keys move the choice. A segmented control is for two to four short words.",
+      "usedBy": [
+        "Workshops",
+        "Agent Design Studio",
+        "Colloquy",
+        "AI Research",
+        "DDO demos",
+        "Letterly"
+      ],
+      "apps": 6,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-radio"
+    },
+    "toast": {
+      "name": "Toast",
+      "batch": 2,
+      "what": "Word that something finished somewhere else on the page: saved, added, failed.",
+      "mustGetRight": "role=\"status\" (an error role=\"alert\"); stays long enough to read; never the only record of an error. Six apps have none and use alert() or nothing.",
+      "usedBy": [
+        "Agent Design Studio",
+        "GraphWise",
+        "Timetables",
+        "ChatPlantUML",
+        "Exhibition Planner"
+      ],
+      "apps": 5,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-toast"
+    },
+    "menu": {
+      "name": "Menu",
+      "batch": 2,
+      "what": "Actions behind a button: ⋯, Load ▾, Versions. A <select> is for choosing a value; a menu is for doing something.",
+      "mustGetRight": "role=\"menu\" and menuitem; arrow keys move, Escape closes and returns focus.",
+      "usedBy": [
+        "Workshops",
+        "Agent Design Studio",
+        "Colloquy",
+        "ChatPlantUML"
+      ],
+      "apps": 4,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-menu"
+    },
+    "combobox": {
+      "name": "Combobox",
+      "batch": 2,
+      "what": "A field that suggests as you type: a model, an address.",
+      "mustGetRight": "The ARIA combobox pattern: aria-expanded, a listbox, arrow keys, Enter to pick, Escape to close.",
+      "usedBy": [
+        "Agent Design Studio",
+        "Colloquy",
+        "ChatPlantUML",
+        "OpticEvade"
+      ],
+      "apps": 4,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-combobox"
+    },
+    "search-field": {
+      "name": "Search field",
+      "batch": 2,
+      "what": "A field that filters what is shown, with a clear button.",
+      "mustGetRight": "type=\"search\" with a label (never a placeholder alone); the number of results is announced.",
+      "usedBy": [
+        "LLM Explorables",
+        "Workshops",
+        "Prototyping Toolkit",
+        "Agent Design Studio",
+        "Colloquy",
+        "Speculative Journalism",
+        "autoresearch demo",
+        "Semantic Cartographer",
+        "OpenRouter registry",
+        "Exhibition Planner",
+        "OpticEvade"
+      ],
+      "apps": 11,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-search-field"
+    },
+    "date-field": {
+      "name": "Date and time fields",
+      "batch": 2,
+      "what": "The native date and time inputs, styled as fields.",
+      "mustGetRight": "The browser's own picker; a label and the format in words.",
+      "usedBy": [
+        "LLM Explorables",
+        "Workshops",
+        "Agent Design Studio",
+        "Speculative Journalism",
+        "Timetables",
+        "Relatio",
+        "TimeTwin"
+      ],
+      "apps": 7,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-date-field"
+    },
+    "link-button": {
+      "name": "Link button",
+      "batch": 2,
+      "what": "An action that reads as a link: Clear, Forgot password?",
+      "mustGetRight": "A <button> when it acts, an <a> when it goes somewhere, whatever it looks like.",
+      "usedBy": [
+        "LLM Explorables",
+        "Agent Design Studio",
+        "Colloquy",
+        "AI Research",
+        "autoresearch demo",
+        "Platform shell",
+        "Design System MCP demo",
+        "DDO demos",
+        "Timetables",
+        "QR Studio",
+        "OpenRouter registry",
+        "TimeTwin",
+        "LingoLink"
+      ],
+      "apps": 13,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-link-button"
+    },
+    "count": {
+      "name": "Count",
+      "batch": 2,
+      "what": "A number on a thing: members, results, n of 3 selected.",
+      "mustGetRight": "Read with what it counts (\"12 members\"), not a bare number.",
+      "usedBy": [
+        "LLM Explorables",
+        "Agent Design Studio",
+        "Colloquy",
+        "AI Research",
+        "Speculative Journalism",
+        "Timetables",
+        "Semantic Cartographer",
+        "Exhibition Planner",
+        "Letterly",
+        "OpticEvade",
+        "DFN Teams"
+      ],
+      "apps": 11,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-count"
+    },
+    "list-item": {
+      "name": "Selectable list",
+      "batch": 2,
+      "what": "Rows you pick from: runs, revisions, scanned cards, sessions.",
+      "mustGetRight": "Each row a button or link; the chosen one says so (aria-current or aria-selected); the current item has a rule in the margin, as in the rail.",
+      "usedBy": [
+        "LLM Explorables",
+        "Agent Design Studio",
+        "Colloquy",
+        "Design System MCP demo",
+        "Timetables",
+        "Semantic Cartographer",
+        "Relatio",
+        "ChatPlantUML",
+        "Exhibition Planner",
+        "TimeTwin"
+      ],
+      "apps": 10,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-list-item"
+    },
+    "sortable-table": {
+      "name": "Sortable table",
+      "batch": 2,
+      "what": "A table whose columns sort.",
+      "mustGetRight": "Each sortable header holds a button; aria-sort on the sorted column. In six apps a click on the header is the only way.",
+      "usedBy": [
+        "Agent Design Studio",
+        "Colloquy",
+        "AI Research",
+        "OpenRouter registry",
+        "Relatio",
+        "DFN Teams"
+      ],
+      "apps": 6,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-sortable-table"
+    },
+    "pagination": {
+      "name": "Pagination",
+      "batch": 2,
+      "what": "Previous and next pages of a long list, or Load more.",
+      "mustGetRight": "Names where it goes (\"Page 3 of 9\"); disabled at the ends; a nav with a label.",
+      "usedBy": [
+        "LLM Explorables",
+        "Agent Design Studio",
+        "AI Research",
+        "Speculative Journalism",
+        "OpenRouter registry"
+      ],
+      "apps": 5,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-pagination"
+    },
+    "toolbar": {
+      "name": "Toolbar",
+      "batch": 2,
+      "what": "A row of tools for one area: undo, zoom, export.",
+      "mustGetRight": "role=\"toolbar\" with a label; arrow keys move between its tools.",
+      "usedBy": [
+        "LLM Explorables",
+        "Agent Design Studio",
+        "Colloquy",
+        "AI Research",
+        "Design System MCP demo",
+        "Timetables",
+        "OpenRouter registry",
+        "Relatio",
+        "Letterly",
+        "TimeTwin"
+      ],
+      "apps": 10,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-toolbar"
+    },
+    "avatar": {
+      "name": "Avatar",
+      "batch": 2,
+      "what": "A person's picture or initial beside their name.",
+      "mustGetRight": "Decorative (alt=\"\") when the name is beside it, which it always should be.",
+      "usedBy": [
+        "LLM Explorables",
+        "Agent Design Studio",
+        "Timetables",
+        "Relatio",
+        "ChatPlantUML",
+        "TimeTwin",
+        "DFN Teams"
+      ],
+      "apps": 7,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-avatar"
+    },
+    "stat": {
+      "name": "Stat",
+      "batch": 3,
+      "what": "One number large with its name small: a readout, a total, a pass rate.",
+      "mustGetRight": "The name is read with the number; a changing readout is announced only when asked. A number that updates keeps its width: tabular figures (Archivo's are proportional), and its widest form held.",
+      "usedBy": [
+        "LLM Explorables",
+        "Agent Design Studio",
+        "Colloquy",
+        "AI Research",
+        "Speculative Journalism",
+        "DDO demos",
+        "Semantic Cartographer",
+        "OpenRouter registry",
+        "ChatPlantUML",
+        "Exhibition Planner",
+        "Letterly",
+        "TimeTwin",
+        "Obscura Designer"
+      ],
+      "apps": 13,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-stat"
+    },
+    "number-field": {
+      "name": "Number field",
+      "batch": 3,
+      "what": "A number with its limits and step, and − and + where a pointer helps.",
+      "mustGetRight": "type=\"number\" with min, max and step; the − and + buttons are named.",
+      "usedBy": [
+        "LLM Explorables",
+        "Agent Design Studio",
+        "Colloquy",
+        "AI Research",
+        "Speculative Journalism",
+        "Design System MCP demo",
+        "DDO demos",
+        "Semantic Scout",
+        "Timetables",
+        "Semantic Cartographer",
+        "OpenRouter registry",
+        "ChatPlantUML",
+        "Obscura Designer"
+      ],
+      "apps": 13,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-number-field"
+    },
+    "color-field": {
+      "name": "Color field",
+      "batch": 3,
+      "what": "A color, as a swatch with its value.",
+      "mustGetRight": "The native color input with a label; the value in words beside it.",
+      "usedBy": [
+        "Colloquy",
+        "DDO demos",
+        "Timetables",
+        "QR Studio",
+        "TimeTwin"
+      ],
+      "apps": 5,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-color-field"
+    },
+    "tree-view": {
+      "name": "Tree",
+      "batch": 3,
+      "what": "Nested items that open and close: a scene's nodes, a JSON document.",
+      "mustGetRight": "role=\"tree\" and treeitem with aria-expanded; arrow keys move and open.",
+      "usedBy": [
+        "Colloquy",
+        "Design System MCP demo",
+        "GraphWise"
+      ],
+      "apps": 3,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-tree-view"
+    },
+    "split-pane": {
+      "name": "Split pane",
+      "batch": 3,
+      "what": "Two panes with a divider you drag.",
+      "mustGetRight": "The divider is role=\"separator\", takes focus, and moves with the arrow keys.",
+      "usedBy": [
+        "Colloquy",
+        "Timetables",
+        "ChatPlantUML"
+      ],
+      "apps": 3,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-split-pane"
+    },
+    "drag-handle": {
+      "name": "Drag handle",
+      "batch": 3,
+      "what": "Something you move by dragging: a node, a panel, a block's edge.",
+      "mustGetRight": "Every drag has a keyboard way too (arrow keys, or buttons to move up and down).",
+      "usedBy": [
+        "LLM Explorables",
+        "Colloquy",
+        "Timetables",
+        "Exhibition Planner",
+        "Obscura Designer"
+      ],
+      "apps": 5,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-drag-handle"
+    },
+    "skeleton": {
+      "name": "Skeleton",
+      "batch": 3,
+      "what": "The shape of what is loading, held in place.",
+      "mustGetRight": "aria-busy on the region; the placeholders are hidden from screen readers; still under prefers-reduced-motion.",
+      "usedBy": [
+        "Colloquy",
+        "Speculative Journalism"
+      ],
+      "apps": 2,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-skeleton"
+    },
+    "kbd": {
+      "name": "Keyboard hint",
+      "batch": 3,
+      "what": "A key or shortcut written as keys: Ctrl + Enter.",
+      "mustGetRight": "<kbd> for each key; the shortcut also in the control's description, not only its title.",
+      "usedBy": [
+        "LLM Explorables",
+        "Colloquy",
+        "autoresearch demo",
+        "Timetables",
+        "OpenRouter registry",
+        "Letterly"
+      ],
+      "apps": 6,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-kbd"
+    },
+    "skip-link": {
+      "name": "Skip link",
+      "batch": 3,
+      "what": "Skip to the page, past the top bar; hidden until it has focus.",
+      "mustGetRight": "The first thing on the page; visible on focus.",
+      "usedBy": [
+        "Colloquy"
+      ],
+      "apps": 1,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-skip-link"
+    },
+    "steps": {
+      "name": "Steps",
+      "batch": 4,
+      "what": "Numbered steps, or an agent chain's progress: waiting, running, done, failed.",
+      "mustGetRight": "An ordered list; each step's state in words; the current one marked (aria-current=\"step\").",
+      "usedBy": [
+        "LLM Explorables",
+        "AI Research",
+        "Semantic Cartographer",
+        "QR Studio",
+        "Letterly"
+      ],
+      "apps": 5,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-steps"
+    },
+    "breadcrumb": {
+      "name": "Breadcrumb",
+      "batch": 4,
+      "what": "Where a page sits: Area / Page. The top bar's crumb covers it inside an app.",
+      "mustGetRight": "A nav with a label and an ordered list; the current page aria-current=\"page\"; separators hidden.",
+      "usedBy": [
+        "LLM Explorables",
+        "Colloquy",
+        "Speculative Journalism",
+        "Letterly"
+      ],
+      "apps": 4,
+      "guide": "https://design-system.aroughidea.com/decisions/components-to-build/#plan-breadcrumb"
+    }
+  },
+  "leftToApps": [
+    "Visualizations and their insides: maps, 3D scenes, graphs, charts, the probability field.",
+    "The flow canvas, calendar grids, timelines and floor plans.",
+    "Media transports, camera viewfinders, QR codes and label printing."
+  ],
+  "commonFailures": [
+    {
+      "failure": "Labels not tied to their fields",
+      "where": "nearly every app",
+      "fix": "field"
+    },
+    {
+      "failure": "Titles as the only tooltips, which a keyboard never sees",
+      "where": "nearly every app",
+      "fix": "tooltip"
+    },
+    {
+      "failure": "Status changes nobody announces: errors, busy, copied",
+      "where": "most apps",
+      "fix": "notice"
+    },
+    {
+      "failure": "Pick-one groups that don't say which is chosen",
+      "where": "most apps",
+      "fix": "segmented"
+    },
+    {
+      "failure": "Dialogs without Escape or focus handling, or the browser's alert() and confirm()",
+      "where": "about a dozen apps",
+      "fix": "dialog"
+    },
+    {
+      "failure": "Clickable divs a keyboard can't reach",
+      "where": "about a dozen apps",
+      "fix": "card"
+    },
+    {
+      "failure": "Sections that open and close without saying so",
+      "where": "about ten apps",
+      "fix": "disclosure"
+    },
+    {
+      "failure": "Icon buttons with no name",
+      "where": "about ten apps",
+      "fix": "icon-button"
+    },
+    {
+      "failure": "No focus style, or the outline removed",
+      "where": "about ten apps",
+      "fix": null
+    },
+    {
+      "failure": "Text at 6 to 10 px",
+      "where": "four apps",
+      "fix": null
+    }
+  ]
+}

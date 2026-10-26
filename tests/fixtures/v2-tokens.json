@@ -1,0 +1,580 @@
+{
+  "color": {
+    "bg": {
+      "$value": "#ffffff",
+      "$type": "color",
+      "$description": "The page's ground: paper in light, night in dark. Use var(--ds-bg). Dark: #181b1a."
+    },
+    "surface": {
+      "$value": "#ffffff",
+      "$type": "color",
+      "$description": "Panels and cards; in v2, the same as the page. Use var(--ds-surface). Dark: #181b1a."
+    },
+    "surface-sunk": {
+      "$value": "#f2f4f3",
+      "$type": "color",
+      "$description": "A sunk ground for wells, code and table stripes. Read Text 2 on it, not Text 3. Use var(--ds-surface-sunk). Dark: #232826."
+    },
+    "text": {
+      "$value": "#141716",
+      "$type": "color",
+      "$description": "Text, headings and the interface. Use var(--ds-text). Dark: #e9ecea."
+    },
+    "text-2": {
+      "$value": "#545b58",
+      "$type": "color",
+      "$description": "Captions, notes and quiet labels. Use var(--ds-text-2). Dark: #a9b0ad."
+    },
+    "text-3": {
+      "$value": "#6b726f",
+      "$type": "color",
+      "$description": "Page numbers, placeholders and step numbers. Passes 4.5:1 on paper only. Use var(--ds-text-3). Dark: #7d8582."
+    },
+    "rule": {
+      "$value": "#d5d9d7",
+      "$type": "color",
+      "$description": "Hairlines between parts. Use var(--ds-rule). Dark: #3a403e."
+    },
+    "rule-soft": {
+      "$value": "#eceeed",
+      "$type": "color",
+      "$description": "The faintest hairline: rows of a list or table. Use var(--ds-rule-soft). Dark: #2e3331."
+    },
+    "rule-strong": {
+      "$value": "#141716",
+      "$type": "color",
+      "$description": "The strong rule: above a figure, under a running head or table header. Use var(--ds-rule-strong). Dark: #e9ecea."
+    },
+    "field-border": {
+      "$value": "#b5bbb8",
+      "$type": "color",
+      "$description": "The border of an input, menu or text area. Use var(--ds-field-border). Dark: #7d8582."
+    },
+    "ink": {
+      "$value": "#141716",
+      "$type": "color",
+      "$description": "The one interface accent: primary buttons, selected states, the mark. Use var(--ds-ink). Dark: #e9ecea."
+    },
+    "on-ink": {
+      "$value": "#ffffff",
+      "$type": "color",
+      "$description": "Text and icons on ink. Use var(--ds-on-ink). Dark: #121413."
+    },
+    "hover": {
+      "$value": "#f2f4f3",
+      "$type": "color",
+      "$description": "The ground under a hovered row or control. Use var(--ds-hover). Dark: #232826."
+    },
+    "focus": {
+      "$value": "#141716",
+      "$type": "color",
+      "$description": "The focus ring. Use var(--ds-focus). Dark: #e9ecea."
+    },
+    "ok": {
+      "$value": "#1a7f37",
+      "$type": "color",
+      "$description": "Success and positive status: success text, a passed check. Always with a word such as \"Raw\". Use var(--ds-ok). Dark: #4ac26b."
+    },
+    "warn": {
+      "$value": "#9a4708",
+      "$type": "color",
+      "$description": "Warning and caution status: warning text, a partial result. Always with a word such as \"Templated\". Use var(--ds-warn). Dark: #d9a13b."
+    },
+    "bad": {
+      "$value": "#b42318",
+      "$type": "color",
+      "$description": "Error, danger and failure: error text, error messages, a failed status. Always with a word such as \"Failed\". Use var(--ds-bad). Dark: #f2786d."
+    },
+    "data": {
+      "0": {
+        "$value": "#440154",
+        "$type": "color",
+        "$description": "Use var(--ds-data-0)."
+      },
+      "1": {
+        "$value": "#482878",
+        "$type": "color",
+        "$description": "Use var(--ds-data-1)."
+      },
+      "2": {
+        "$value": "#3e4a89",
+        "$type": "color",
+        "$description": "Use var(--ds-data-2)."
+      },
+      "3": {
+        "$value": "#31688e",
+        "$type": "color",
+        "$description": "Use var(--ds-data-3)."
+      },
+      "4": {
+        "$value": "#26828e",
+        "$type": "color",
+        "$description": "Use var(--ds-data-4)."
+      },
+      "5": {
+        "$value": "#1f9e89",
+        "$type": "color",
+        "$description": "Use var(--ds-data-5)."
+      },
+      "6": {
+        "$value": "#35b779",
+        "$type": "color",
+        "$description": "Use var(--ds-data-6)."
+      },
+      "7": {
+        "$value": "#6ece58",
+        "$type": "color",
+        "$description": "Use var(--ds-data-7)."
+      },
+      "8": {
+        "$value": "#b5de2b",
+        "$type": "color",
+        "$description": "Use var(--ds-data-8)."
+      },
+      "9": {
+        "$value": "#fde725",
+        "$type": "color",
+        "$description": "Use var(--ds-data-9)."
+      }
+    },
+    "data-gray": {
+      "0": {
+        "$value": "#222625",
+        "$type": "color",
+        "$description": "Use var(--ds-data-gray-0)."
+      },
+      "1": {
+        "$value": "#363b39",
+        "$type": "color",
+        "$description": "Use var(--ds-data-gray-1)."
+      },
+      "2": {
+        "$value": "#4a504d",
+        "$type": "color",
+        "$description": "Use var(--ds-data-gray-2)."
+      },
+      "3": {
+        "$value": "#5e6562",
+        "$type": "color",
+        "$description": "Use var(--ds-data-gray-3)."
+      },
+      "4": {
+        "$value": "#717875",
+        "$type": "color",
+        "$description": "Use var(--ds-data-gray-4)."
+      },
+      "5": {
+        "$value": "#878e8b",
+        "$type": "color",
+        "$description": "Use var(--ds-data-gray-5)."
+      },
+      "6": {
+        "$value": "#9da3a0",
+        "$type": "color",
+        "$description": "Use var(--ds-data-gray-6)."
+      },
+      "7": {
+        "$value": "#b4bab7",
+        "$type": "color",
+        "$description": "Use var(--ds-data-gray-7)."
+      },
+      "8": {
+        "$value": "#cbd0ce",
+        "$type": "color",
+        "$description": "Use var(--ds-data-gray-8)."
+      },
+      "9": {
+        "$value": "#e3e5e4",
+        "$type": "color",
+        "$description": "Use var(--ds-data-gray-9)."
+      }
+    },
+    "data-track": {
+      "$value": "#f2f4f3",
+      "$type": "color",
+      "$description": "The empty part of a bar. Use var(--ds-data-track). Dark: #232826."
+    }
+  },
+  "typography": {
+    "fontFamily": {
+      "display": {
+        "$value": "Archivo, \"Helvetica Neue\", Arial, sans-serif",
+        "$type": "fontFamily",
+        "$description": "Archivo: the page's structure, headings and big numbers. Use var(--ds-font-display)."
+      },
+      "text": {
+        "$value": "\"IBM Plex Sans\", \"Helvetica Neue\", Arial, sans-serif",
+        "$type": "fontFamily",
+        "$description": "IBM Plex Sans: the interface and running text. Use var(--ds-font-text)."
+      },
+      "mono": {
+        "$value": "\"IBM Plex Mono\", ui-monospace, \"SF Mono\", Menlo, Consolas, monospace",
+        "$type": "fontFamily",
+        "$description": "IBM Plex Mono: what a model produced, and data. Use var(--ds-font-mono)."
+      },
+      "label": {
+        "$value": "\"IBM Plex Sans\", \"Helvetica Neue\", Arial, sans-serif",
+        "$type": "fontFamily",
+        "$description": "Labels: the text face (IBM Plex Sans). Use var(--ds-font-label)."
+      }
+    },
+    "textCase": {
+      "label": {
+        "$value": "none",
+        "$type": "other",
+        "$description": "Labels' case: none, so labels are written in sentence case. Use var(--ds-case-label)."
+      }
+    },
+    "fontStretch": {
+      "display": {
+        "$value": "88%",
+        "$type": "other",
+        "$description": "Archivo's width for headings. Use var(--ds-display-stretch)."
+      }
+    },
+    "fontWeight": {
+      "regular": {
+        "$value": "400",
+        "$type": "fontWeight",
+        "$description": "Use var(--ds-weight-regular)."
+      },
+      "medium": {
+        "$value": "500",
+        "$type": "fontWeight",
+        "$description": "Use var(--ds-weight-medium)."
+      },
+      "semibold": {
+        "$value": "600",
+        "$type": "fontWeight",
+        "$description": "Use var(--ds-weight-semibold)."
+      },
+      "display": {
+        "$value": "640",
+        "$type": "fontWeight",
+        "$description": "Use var(--ds-weight-display)."
+      }
+    },
+    "fontSize": {
+      "label": {
+        "$value": "13px",
+        "$type": "dimension",
+        "$description": "Labels: metadata, small and gray. Use var(--ds-type-label)."
+      },
+      "caption": {
+        "$value": "12px",
+        "$type": "dimension",
+        "$description": "Captions. Use var(--ds-type-caption)."
+      },
+      "small": {
+        "$value": "13px",
+        "$type": "dimension",
+        "$description": "Notes and small print. Use var(--ds-type-small)."
+      },
+      "ui": {
+        "$value": "14px",
+        "$type": "dimension",
+        "$description": "Controls, tables and cards. Use var(--ds-type-ui)."
+      },
+      "body": {
+        "$value": "16px",
+        "$type": "dimension",
+        "$description": "Running text. Use var(--ds-type-body)."
+      },
+      "lede": {
+        "$value": "20px",
+        "$type": "dimension",
+        "$description": "The opening paragraph. Use var(--ds-type-lede)."
+      },
+      "h3": {
+        "$value": "20px",
+        "$type": "dimension",
+        "$description": "Subheadings. Use var(--ds-type-h3)."
+      },
+      "h2": {
+        "$value": "28px",
+        "$type": "dimension",
+        "$description": "A section's heading; a slide's headline in the slideshow context. Use var(--ds-type-h2)."
+      },
+      "h1": {
+        "$value": "48px",
+        "$type": "dimension",
+        "$description": "A page's title. Use var(--ds-type-h1)."
+      },
+      "chrome": {
+        "$value": "14px",
+        "$type": "dimension",
+        "$description": "Chrome around slides, which keeps its size in the slideshow. Use var(--ds-type-chrome)."
+      },
+      "arrow": {
+        "$value": "28px",
+        "$type": "dimension",
+        "$description": "The presentation bar's arrows. Use var(--ds-type-arrow)."
+      }
+    },
+    "lineHeight": {
+      "tight": {
+        "$value": "1.1",
+        "$type": "number",
+        "$description": "Use var(--ds-leading-tight)."
+      },
+      "ui": {
+        "$value": "1.4",
+        "$type": "number",
+        "$description": "Use var(--ds-leading-ui)."
+      },
+      "body": {
+        "$value": "1.6",
+        "$type": "number",
+        "$description": "Use var(--ds-leading-body)."
+      }
+    },
+    "letterSpacing": {
+      "label": {
+        "$value": "0",
+        "$type": "dimension",
+        "$description": "Letter spacing for labels: none, now they are sentence case. Use var(--ds-tracking-label)."
+      },
+      "wordmark": {
+        "$value": "0.16em",
+        "$type": "dimension",
+        "$description": "The spaced capitals of the full lockup. Use var(--ds-tracking-wordmark)."
+      }
+    },
+    "underlineOffset": {
+      "$value": "0.2em",
+      "$type": "dimension",
+      "$description": "How far a link's underline sits below the text. Use var(--ds-underline-offset)."
+    }
+  },
+  "spacing": {
+    "1": {
+      "$value": "4px",
+      "$type": "dimension",
+      "$description": "The smallest gap: an icon and its label, rows of bars in a figure. Use var(--ds-space-1)."
+    },
+    "2": {
+      "$value": "8px",
+      "$type": "dimension",
+      "$description": "Between a label and its field, and between chips in a row. Use var(--ds-space-2)."
+    },
+    "3": {
+      "$value": "12px",
+      "$type": "dimension",
+      "$description": "Between controls in a row, such as buttons; inside a card. Use var(--ds-space-3)."
+    },
+    "4": {
+      "$value": "16px",
+      "$type": "dimension",
+      "$description": "Between fields in a form and between cards; inside a panel. Use var(--ds-space-4)."
+    },
+    "5": {
+      "$value": "24px",
+      "$type": "dimension",
+      "$description": "Within a section, and the page's sides on a phone. Use var(--ds-space-5)."
+    },
+    "6": {
+      "$value": "32px",
+      "$type": "dimension",
+      "$description": "Between the parts of a centered page. Use var(--ds-space-6)."
+    },
+    "7": {
+      "$value": "48px",
+      "$type": "dimension",
+      "$description": "Use var(--ds-space-7)."
+    },
+    "8": {
+      "$value": "64px",
+      "$type": "dimension",
+      "$description": "Between a page's sections. Use var(--ds-space-8)."
+    },
+    "9": {
+      "$value": "96px",
+      "$type": "dimension",
+      "$description": "Use var(--ds-space-9)."
+    }
+  },
+  "borderRadius": {
+    "read": {
+      "$value": "0",
+      "$type": "dimension",
+      "$description": "Square: anything you read (the top bar, tables, figures). Use var(--ds-radius-read)."
+    },
+    "tag": {
+      "$value": "3px",
+      "$type": "dimension",
+      "$description": "Status tags. Use var(--ds-radius-tag)."
+    },
+    "chip": {
+      "$value": "3px",
+      "$type": "dimension",
+      "$description": "Filter chips. Use var(--ds-radius-chip)."
+    },
+    "act": {
+      "$value": "5px",
+      "$type": "dimension",
+      "$description": "What you act on: buttons, inputs, menus, segmented controls. Use var(--ds-radius-act)."
+    },
+    "panel": {
+      "$value": "8px",
+      "$type": "dimension",
+      "$description": "Panels and cards. Use var(--ds-radius-panel)."
+    },
+    "switch": {
+      "$value": "5px",
+      "$type": "dimension",
+      "$description": "The on/off switch. Use var(--ds-radius-switch)."
+    },
+    "knob": {
+      "$value": "4px",
+      "$type": "dimension",
+      "$description": "The switch's knob. Use var(--ds-radius-knob)."
+    },
+    "note": {
+      "$value": "999px",
+      "$type": "dimension",
+      "$description": "Round: numbered notes on a drawing. Use var(--ds-radius-note)."
+    }
+  },
+  "size": {
+    "line": {
+      "$value": "1px",
+      "$type": "dimension",
+      "$description": "A hairline. Use var(--ds-line)."
+    },
+    "line-strong": {
+      "$value": "2px",
+      "$type": "dimension",
+      "$description": "A strong rule; the current-item marker. Use var(--ds-line-strong)."
+    },
+    "focus-width": {
+      "$value": "2px",
+      "$type": "dimension",
+      "$description": "The focus ring's width. Use var(--ds-focus-width)."
+    },
+    "focus-offset": {
+      "$value": "2px",
+      "$type": "dimension",
+      "$description": "The focus ring's gap from the control. Use var(--ds-focus-offset)."
+    },
+    "control-height": {
+      "$value": "40px",
+      "$type": "dimension",
+      "$description": "Buttons and fields. Use var(--ds-control-height)."
+    },
+    "control-height-sm": {
+      "$value": "32px",
+      "$type": "dimension",
+      "$description": "Small controls and icon buttons. Use var(--ds-control-height-sm)."
+    },
+    "touch": {
+      "$value": "44px",
+      "$type": "dimension",
+      "$description": "The smallest touch target on a phone. Use var(--ds-touch)."
+    },
+    "topbar-height": {
+      "$value": "56px",
+      "$type": "dimension",
+      "$description": "The top bar. Use var(--ds-topbar-height)."
+    },
+    "lockup-mark": {
+      "$value": "96px",
+      "$type": "dimension",
+      "$description": "The mark in the full lockup. Use var(--ds-lockup-mark)."
+    },
+    "lockup-mark-sm": {
+      "$value": "64px",
+      "$type": "dimension",
+      "$description": "The mark in the full lockup on a phone. Use var(--ds-lockup-mark-sm)."
+    },
+    "slot-status": {
+      "$value": "1lh",
+      "$type": "dimension",
+      "$description": "The place kept for a status line, one line tall, there before it has anything to say: min-height: var(--ds-slot-status). Use var(--ds-slot-status)."
+    },
+    "slot-hint": {
+      "$value": "2lh",
+      "$type": "dimension",
+      "$description": "The place kept under a control for its hint or its error, two lines tall, so an error never moves the form: min-height: var(--ds-slot-hint). Use var(--ds-slot-hint)."
+    },
+    "slot-caption": {
+      "$value": "2lh",
+      "$type": "dimension",
+      "$description": "The place kept for a caption that may wrap, two lines tall: the presentation bar's caption on a phone. Use var(--ds-slot-caption)."
+    }
+  },
+  "layout": {
+    "containerMaxWidth": {
+      "measure": {
+        "$value": "688px",
+        "$type": "dimension",
+        "$description": "The reading column. Use var(--ds-measure)."
+      },
+      "content": {
+        "$value": "1280px",
+        "$type": "dimension",
+        "$description": "Content, and a slide's width. Use var(--ds-content)."
+      },
+      "full": {
+        "$value": "1440px",
+        "$type": "dimension",
+        "$description": "The widest a page goes. Use var(--ds-full)."
+      }
+    },
+    "grid": {
+      "slide-margin": {
+        "$value": "72px",
+        "$type": "dimension",
+        "$description": "A slide's side margin. Use var(--ds-slide-margin)."
+      },
+      "columns": {
+        "$value": "12",
+        "$type": "number",
+        "$description": "Grid columns on screens and slides. Use var(--ds-columns)."
+      },
+      "gutter": {
+        "$value": "24px",
+        "$type": "dimension",
+        "$description": "The gap between grid columns. Use var(--ds-gutter)."
+      },
+      "margin": {
+        "$value": "32px",
+        "$type": "dimension",
+        "$description": "The page's side margin on a screen. Use var(--ds-margin)."
+      }
+    },
+    "zIndex": {
+      "float": {
+        "$value": "10",
+        "$type": "number",
+        "$description": "Things that float over the page. Use var(--ds-layer-float)."
+      },
+      "present": {
+        "$value": "20",
+        "$type": "number",
+        "$description": "The slides, over the page. Use var(--ds-layer-present)."
+      },
+      "present-bar": {
+        "$value": "30",
+        "$type": "number",
+        "$description": "The presentation bar, over the slides. Use var(--ds-layer-present-bar)."
+      }
+    },
+    "breakpoints": {
+      "oneColumn": {
+        "$value": "639px",
+        "$type": "dimension",
+        "$description": "At this width and below: one column, the top bar's areas on a row of their own, every grid span full width. In CSS: @media (width <= 639px); a variable cannot go in a media query."
+      },
+      "rail": {
+        "$value": "960px",
+        "$type": "dimension",
+        "$description": "From this width: the list of an area's pages appears on the left. In CSS: @media (width >= 960px); a variable cannot go in a media query."
+      },
+      "toc": {
+        "$value": "1280px",
+        "$type": "dimension",
+        "$description": "From this width: \"On this page\" appears on the right. In CSS: @media (width >= 1280px); a variable cannot go in a media query."
+      }
+    }
+  }
+}

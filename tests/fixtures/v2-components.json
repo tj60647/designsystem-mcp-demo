@@ -1,0 +1,1543 @@
+{
+  "button": {
+    "name": "Button",
+    "description": "An action. Fill shows how important it is: one ink-filled main action per view, the next outlined, the rest plain.",
+    "example": "<button class=\"ds-button ds-button--primary\" type=\"button\">Start</button>\n<button class=\"ds-button\" type=\"button\">Reset</button>\n<button class=\"ds-button ds-button--ghost\" type=\"button\">Cancel</button>\n<button class=\"ds-button\" type=\"button\" disabled>Stop</button>",
+    "variants": [
+      "default",
+      "primary",
+      "ghost"
+    ],
+    "variantGuidance": {
+      "primary": "class=\"ds-button ds-button--primary\": the one main action in a view, ink-filled.",
+      "default": "class=\"ds-button\": the next action, outlined.",
+      "ghost": "class=\"ds-button ds-button--ghost\": everything else, plain."
+    },
+    "states": [
+      "default",
+      "hover",
+      "focus-visible",
+      "disabled"
+    ],
+    "props": {
+      "class": {
+        "type": "string",
+        "values": [
+          "ds-button",
+          "ds-button ds-button--primary",
+          "ds-button ds-button--ghost"
+        ]
+      },
+      "disabled": {
+        "type": "boolean"
+      }
+    },
+    "tokens": {
+      "height": "{size.control-height}",
+      "radius": "{borderRadius.act}",
+      "font": "{typography.fontFamily.text}",
+      "fontSize": "{typography.fontSize.ui}",
+      "background": "{color.bg}",
+      "background-primary": "{color.ink}",
+      "text-primary": "{color.on-ink}",
+      "border": "{color.ink}",
+      "focus": "{color.focus}"
+    },
+    "constraints": [
+      "One primary button per view.",
+      "The label is a verb for what it does: Start, Reset, Send. Sentence case.",
+      "40 px tall (--ds-control-height); 44 px targets on a phone (--ds-touch).",
+      "Corners signal function: this is something you act on, so it takes --ds-radius-act.",
+      "Never color a button by status; colors are for status and data only.",
+      "A label that changes (Start and Stop, Copy and Copied) holds every label in a .ds-hold, so the button keeps one width and nothing beside it moves."
+    ],
+    "accessibility": {
+      "element": "<button type=\"button\">",
+      "keyboard": [
+        "Enter",
+        "Space"
+      ],
+      "focusVisible": "The 2 px ink focus ring with a 2 px offset.",
+      "disabled": "Use the disabled attribute; the button reads as disabled without a color change alone."
+    },
+    "anatomy": {
+      "root": "<button class=\"ds-button\">",
+      "slots": {
+        "label": "Text, a verb."
+      },
+      "validChildren": [
+        "text",
+        "an inline SVG icon before the text"
+      ],
+      "compositionNotes": "Put buttons in a row with --ds-space-3 between them; the primary first."
+    },
+    "relationships": {
+      "parent": null,
+      "siblings": [
+        "icon-button",
+        "segmented"
+      ],
+      "related": [
+        "chip"
+      ],
+      "children": [],
+      "composedIn": [
+        "panel",
+        "form rows",
+        "the presentation bar"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/#button"
+  },
+  "icon-button": {
+    "name": "Icon button",
+    "description": "A small square action shown as an icon alone: home, full screen, present, the light and dark switch.",
+    "example": "<a class=\"ds-icon-button\" href=\"/\" aria-label=\"Home\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 11 12 4l9 7\"/><path d=\"M5 10v10h14V10\"/></svg></a>\n<button class=\"ds-icon-button\" type=\"button\" aria-label=\"Full screen\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5\"/></svg></button>",
+    "variants": [
+      "default",
+      "pressed"
+    ],
+    "states": [
+      "default",
+      "hover",
+      "focus-visible",
+      "pressed"
+    ],
+    "props": {
+      "class": {
+        "type": "string",
+        "values": [
+          "ds-icon-button"
+        ]
+      },
+      "aria-label": {
+        "type": "string",
+        "required": true
+      },
+      "aria-pressed": {
+        "type": "boolean",
+        "description": "For a toggle."
+      }
+    },
+    "tokens": {
+      "size": "{size.control-height-sm}",
+      "radius": "{borderRadius.act}",
+      "border": "{color.field-border}",
+      "border-hover": "{color.ink}",
+      "background": "{color.bg}",
+      "background-pressed": "{color.ink}",
+      "icon": "{color.text}"
+    },
+    "constraints": [
+      "Always an aria-label naming the action.",
+      "The icon is 16 px, drawn in the current text color.",
+      "Square, 32 px (--ds-control-height-sm).",
+      "Corners signal function: this is something you act on, so it takes --ds-radius-act."
+    ],
+    "accessibility": {
+      "element": "<button type=\"button\"> or <a> for a link",
+      "ariaRequired": [
+        "aria-label"
+      ],
+      "keyboard": [
+        "Enter",
+        "Space"
+      ]
+    },
+    "anatomy": {
+      "root": "<button class=\"ds-icon-button\" aria-label=\"…\">",
+      "slots": {
+        "icon": "One inline SVG, 16 px, stroke or fill currentColor, aria-hidden."
+      },
+      "validChildren": [
+        "svg"
+      ],
+      "compositionNotes": "In the top bar they sit in .ds-tools, at the right."
+    },
+    "relationships": {
+      "parent": "topbar",
+      "siblings": [
+        "button"
+      ],
+      "related": [
+        "theme-toggle",
+        "present-bar"
+      ],
+      "children": [],
+      "composedIn": [
+        "topbar",
+        "present-bar"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/#icon-button"
+  },
+  "theme-toggle": {
+    "name": "Light and dark button",
+    "description": "One icon button that shows the theme it switches to: a moon in light, a sun in dark. Kept as ds.theme; with nothing kept, the system's setting rules.",
+    "example": "<button class=\"ds-icon-button\" type=\"button\" data-ds-theme-toggle aria-label=\"Switch to dark\" title=\"Switch to dark\">\n  <span data-ds-icon=\"moon\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z\"/></svg></span>\n  <span data-ds-icon=\"sun\" hidden><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4\"/></svg></span>\n</button>",
+    "states": [
+      "light",
+      "dark"
+    ],
+    "props": {
+      "data-ds-theme-toggle": {
+        "type": "boolean",
+        "required": true
+      }
+    },
+    "tokens": {
+      "size": "{size.control-height-sm}",
+      "radius": "{borderRadius.act}"
+    },
+    "constraints": [
+      "Load /v2/theme.js.",
+      "Put the head script from the top of theme.js in <head>, so a kept choice applies before the page paints.",
+      "Never a labeled switch: TJ chose the icon to save space."
+    ],
+    "accessibility": {
+      "element": "<button class=\"ds-icon-button\" data-ds-theme-toggle>",
+      "ariaRequired": [
+        "aria-label, which theme.js keeps as \"Switch to dark\" or \"Switch to light\""
+      ]
+    },
+    "anatomy": {
+      "root": "<button class=\"ds-icon-button\" type=\"button\" data-ds-theme-toggle aria-label=\"Switch to dark\">",
+      "slots": {
+        "moon": "<span data-ds-icon=\"moon\"><svg …></span>",
+        "sun": "<span data-ds-icon=\"sun\" hidden><svg …></span>"
+      },
+      "validChildren": [
+        "the two spans"
+      ],
+      "compositionNotes": "Last in the top bar's tools."
+    },
+    "relationships": {
+      "parent": "topbar",
+      "siblings": [
+        "icon-button"
+      ],
+      "related": [],
+      "children": [],
+      "composedIn": [
+        "topbar"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/frame/#theme-toggle"
+  },
+  "input": {
+    "name": "Input",
+    "description": "A one-line text field. A box means you can type here.",
+    "example": "<label class=\"ds-label\" for=\"ex-search\">Search</label>\n<input class=\"ds-input\" id=\"ex-search\" type=\"text\" placeholder=\"Model or vocabulary\">\n<label class=\"ds-label\" for=\"ex-token-id\">Token id</label>\n<input class=\"ds-input ds-input--mono\" id=\"ex-token-id\" type=\"text\" inputmode=\"numeric\" value=\"1820\">",
+    "variants": [
+      "default",
+      "mono"
+    ],
+    "variantGuidance": {
+      "mono": "class=\"ds-input ds-input--mono\": for what a model reads or writes, such as a prompt or a token id."
+    },
+    "states": [
+      "default",
+      "focus-visible",
+      "disabled"
+    ],
+    "props": {
+      "class": {
+        "type": "string",
+        "values": [
+          "ds-input",
+          "ds-input ds-input--mono"
+        ]
+      }
+    },
+    "tokens": {
+      "height": "{size.control-height}",
+      "radius": "{borderRadius.act}",
+      "border": "{color.field-border}",
+      "background": "{color.bg}",
+      "text": "{color.text}",
+      "focus": "{color.focus}"
+    },
+    "constraints": [
+      "Every field has a visible label (a .ds-label or text), not a placeholder alone.",
+      "Only inputs and menus are boxes; read-only content never is.",
+      "Corners signal function: this is something you act on, so it takes --ds-radius-act."
+    ],
+    "accessibility": {
+      "element": "<input>",
+      "ariaRequired": [
+        "a <label for> naming it"
+      ],
+      "keyboard": [
+        "standard text editing"
+      ]
+    },
+    "anatomy": {
+      "root": "<input class=\"ds-input\">",
+      "slots": {},
+      "validChildren": [],
+      "compositionNotes": "Label above the field, --ds-space-2 between them."
+    },
+    "relationships": {
+      "parent": null,
+      "siblings": [
+        "textarea",
+        "select"
+      ],
+      "related": [
+        "label"
+      ],
+      "children": [],
+      "composedIn": [
+        "forms",
+        "panel"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/#input"
+  },
+  "textarea": {
+    "name": "Text area",
+    "description": "A multi-line text field.",
+    "example": "<label class=\"ds-label\" for=\"ex-prompt\">Prompt</label>\n<textarea class=\"ds-textarea ds-textarea--mono\" id=\"ex-prompt\" rows=\"3\">Once upon a time,</textarea>",
+    "variants": [
+      "default",
+      "mono"
+    ],
+    "states": [
+      "default",
+      "focus-visible",
+      "disabled"
+    ],
+    "props": {
+      "class": {
+        "type": "string",
+        "values": [
+          "ds-textarea",
+          "ds-textarea ds-textarea--mono"
+        ]
+      }
+    },
+    "tokens": {
+      "radius": "{borderRadius.act}",
+      "border": "{color.field-border}",
+      "background": "{color.bg}",
+      "text": "{color.text}"
+    },
+    "constraints": [
+      "Use the mono variant for a prompt or anything a model reads.",
+      "Corners signal function: this is something you act on, so it takes --ds-radius-act."
+    ],
+    "accessibility": {
+      "element": "<textarea>",
+      "ariaRequired": [
+        "a <label for>"
+      ]
+    },
+    "anatomy": {
+      "root": "<textarea class=\"ds-textarea\">",
+      "slots": {},
+      "validChildren": [],
+      "compositionNotes": "As for input."
+    },
+    "relationships": {
+      "parent": null,
+      "siblings": [
+        "input",
+        "select"
+      ],
+      "related": [],
+      "children": [],
+      "composedIn": [
+        "forms"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/#textarea"
+  },
+  "select": {
+    "name": "Menu",
+    "description": "A choice from a list, marked ▾.",
+    "example": "<label class=\"ds-label\" for=\"ex-model\">Model</label>\n<div class=\"ds-select-wrap\">\n  <select class=\"ds-select\" id=\"ex-model\">\n    <option>Llama 3.1 8B Instruct</option>\n    <option>GPT-OSS 120B</option>\n  </select>\n</div>",
+    "states": [
+      "default",
+      "focus-visible",
+      "disabled"
+    ],
+    "props": {
+      "class": {
+        "type": "string",
+        "values": [
+          "ds-select"
+        ]
+      }
+    },
+    "tokens": {
+      "height": "{size.control-height}",
+      "radius": "{borderRadius.act}",
+      "border": "{color.field-border}"
+    },
+    "constraints": [
+      "Wrap it in .ds-select-wrap, which draws the ▾.",
+      "Corners signal function: this is something you act on, so it takes --ds-radius-act."
+    ],
+    "accessibility": {
+      "element": "<select>",
+      "ariaRequired": [
+        "a <label for>"
+      ]
+    },
+    "anatomy": {
+      "root": "<div class=\"ds-select-wrap\"><select class=\"ds-select\">…</select></div>",
+      "slots": {
+        "options": "<option>"
+      },
+      "validChildren": [
+        "option"
+      ],
+      "compositionNotes": "A menu's value then ▾."
+    },
+    "relationships": {
+      "parent": null,
+      "siblings": [
+        "input",
+        "segmented"
+      ],
+      "related": [
+        "segmented"
+      ],
+      "children": [],
+      "composedIn": [
+        "forms",
+        "model rows"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/#select"
+  },
+  "segmented": {
+    "name": "Segmented control",
+    "description": "One of a few choices, all in view, such as List | Field.",
+    "example": "<div class=\"ds-segmented\" role=\"group\" aria-label=\"Display\">\n  <button type=\"button\" aria-pressed=\"true\">List</button>\n  <button type=\"button\" aria-pressed=\"false\">Field</button>\n</div>",
+    "states": [
+      "default",
+      "pressed"
+    ],
+    "props": {
+      "class": {
+        "type": "string",
+        "values": [
+          "ds-segmented"
+        ]
+      }
+    },
+    "tokens": {
+      "radius": "{borderRadius.act}",
+      "border": "{color.ink}",
+      "background-pressed": "{color.ink}",
+      "text-pressed": "{color.on-ink}",
+      "fontSize": "{typography.fontSize.small}"
+    },
+    "constraints": [
+      "Two to four short choices; more goes in a menu.",
+      "The chosen one has aria-pressed=\"true\".",
+      "Corners signal function: this is something you act on, so it takes --ds-radius-act."
+    ],
+    "accessibility": {
+      "element": "<div class=\"ds-segmented\" role=\"group\"> of <button aria-pressed>",
+      "ariaRequired": [
+        "a group label (aria-label or aria-labelledby)",
+        "aria-pressed on each button"
+      ]
+    },
+    "anatomy": {
+      "root": "<div class=\"ds-segmented\" role=\"group\">",
+      "slots": {
+        "option": "<button type=\"button\" aria-pressed>"
+      },
+      "validChildren": [
+        "button"
+      ],
+      "compositionNotes": ""
+    },
+    "relationships": {
+      "parent": null,
+      "siblings": [
+        "select"
+      ],
+      "related": [
+        "chip"
+      ],
+      "children": [
+        "button"
+      ],
+      "composedIn": [
+        "tool rows"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/#segmented"
+  },
+  "tag": {
+    "name": "Tag",
+    "description": "A status you read: Raw, Templated, Failed. A word or two in a hairline frame.",
+    "example": "<span class=\"ds-tag\">Vendored</span>\n<span class=\"ds-tag ds-tag--ok\">Raw</span>\n<span class=\"ds-tag ds-tag--warn\">Templated</span>\n<span class=\"ds-tag ds-tag--bad\">Failed</span>",
+    "variants": [
+      "default",
+      "ok",
+      "warn",
+      "bad"
+    ],
+    "states": [
+      "default"
+    ],
+    "props": {
+      "class": {
+        "type": "string",
+        "values": [
+          "ds-tag",
+          "ds-tag ds-tag--ok",
+          "ds-tag ds-tag--warn",
+          "ds-tag ds-tag--bad"
+        ]
+      }
+    },
+    "tokens": {
+      "radius": "{borderRadius.tag}",
+      "ok": "{color.ok}",
+      "warn": "{color.warn}",
+      "bad": "{color.bad}",
+      "font": "{typography.fontFamily.label}",
+      "fontSize": "{typography.fontSize.label}"
+    },
+    "constraints": [
+      "The word carries the meaning; the color only repeats it. Never color alone.",
+      "A tag is read, never clicked; a clickable filter is a chip.",
+      "A tag whose word changes (Idle, Running) holds every word in a .ds-hold, so it keeps one width."
+    ],
+    "accessibility": {
+      "element": "<span class=\"ds-tag\">",
+      "notes": "Its text is the status; no aria needed."
+    },
+    "anatomy": {
+      "root": "<span class=\"ds-tag ds-tag--ok\">Raw</span>",
+      "slots": {
+        "word": "One or two words."
+      },
+      "validChildren": [
+        "text"
+      ],
+      "compositionNotes": ""
+    },
+    "relationships": {
+      "parent": null,
+      "siblings": [
+        "chip"
+      ],
+      "related": [
+        "table"
+      ],
+      "children": [],
+      "composedIn": [
+        "table cells",
+        "card headers"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/reading/#tag"
+  },
+  "chip": {
+    "name": "Chip",
+    "description": "A filter you turn on and off.",
+    "example": "<button class=\"ds-chip\" type=\"button\" aria-pressed=\"true\">Raw only</button>\n<button class=\"ds-chip\" type=\"button\" aria-pressed=\"false\">Vendored tokenizer</button>",
+    "states": [
+      "off",
+      "on"
+    ],
+    "props": {
+      "class": {
+        "type": "string",
+        "values": [
+          "ds-chip"
+        ]
+      },
+      "aria-pressed": {
+        "type": "boolean",
+        "required": true
+      }
+    },
+    "tokens": {
+      "radius": "{borderRadius.chip}",
+      "border": "{color.field-border}",
+      "background-on": "{color.ink}",
+      "text-on": "{color.on-ink}"
+    },
+    "constraints": [
+      "A chip acts; a tag reads.",
+      "Pressed is ink; its weight and size never change, so a row of chips holds still.",
+      "Corners signal function: this is something you act on, so it takes --ds-radius-act."
+    ],
+    "accessibility": {
+      "element": "<button class=\"ds-chip\" aria-pressed>",
+      "keyboard": [
+        "Enter",
+        "Space"
+      ]
+    },
+    "anatomy": {
+      "root": "<button class=\"ds-chip\" type=\"button\" aria-pressed=\"false\">",
+      "slots": {
+        "label": "The filter."
+      },
+      "validChildren": [
+        "text"
+      ],
+      "compositionNotes": "A row of chips with --ds-space-2 between."
+    },
+    "relationships": {
+      "parent": null,
+      "siblings": [
+        "tag"
+      ],
+      "related": [
+        "segmented"
+      ],
+      "children": [],
+      "composedIn": [
+        "filter rows"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/#chip"
+  },
+  "switch": {
+    "name": "Switch",
+    "description": "An on/off setting that takes effect at once.",
+    "example": "<button class=\"ds-switch\" type=\"button\" role=\"switch\" aria-checked=\"true\" aria-labelledby=\"ex-switch-label\"></button>\n<span id=\"ex-switch-label\">Color by token</span>",
+    "states": [
+      "off",
+      "on"
+    ],
+    "props": {
+      "role": {
+        "type": "string",
+        "values": [
+          "switch"
+        ]
+      },
+      "aria-checked": {
+        "type": "boolean",
+        "required": true
+      }
+    },
+    "tokens": {
+      "radius": "{borderRadius.switch}",
+      "knob": "{borderRadius.knob}",
+      "background-on": "{color.ink}"
+    },
+    "constraints": [
+      "Label it with visible text (aria-labelledby).",
+      "Not for light and dark, which is the icon button."
+    ],
+    "accessibility": {
+      "element": "<button class=\"ds-switch\" role=\"switch\" aria-checked>",
+      "ariaRequired": [
+        "aria-checked",
+        "aria-labelledby or aria-label"
+      ],
+      "keyboard": [
+        "Space",
+        "Enter"
+      ]
+    },
+    "anatomy": {
+      "root": "<button class=\"ds-switch\" type=\"button\" role=\"switch\" aria-checked=\"false\">",
+      "slots": {
+        "knob": "::before"
+      },
+      "validChildren": [],
+      "compositionNotes": "The switch, then its label."
+    },
+    "relationships": {
+      "parent": null,
+      "siblings": [
+        "chip"
+      ],
+      "related": [],
+      "children": [],
+      "composedIn": [
+        "settings rows"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/#switch"
+  },
+  "hold": {
+    "name": "Held place",
+    "description": "One place for things that take turns: a button's labels, a tag's words, a Retry button that comes and goes. It is as wide and as tall as the largest thing in it, shown or hidden, so a change moves nothing around it.",
+    "example": "<button class=\"ds-button\" type=\"button\">\n  <span class=\"ds-hold\"><span>Copy</span><span hidden>Copied</span></span>\n</button>\n<span class=\"ds-tag\"><span class=\"ds-hold\"><span>Idle</span><span hidden>Running</span></span></span>",
+    "variants": [
+      "default",
+      "end"
+    ],
+    "variantGuidance": {
+      "default": "class=\"ds-hold\": the shown form starts at the left (centered in a button, a chip or a tag).",
+      "end": "class=\"ds-hold ds-hold--end\": for a number, which ends where its widest form would, so its last figure stays put."
+    },
+    "states": [
+      "default"
+    ],
+    "props": {
+      "class": {
+        "type": "string",
+        "values": [
+          "ds-hold",
+          "ds-hold ds-hold--end"
+        ]
+      }
+    },
+    "tokens": {},
+    "constraints": [
+      "Show one child and hide the rest with the hidden attribute: inside a .ds-hold, a hidden child keeps its space.",
+      "Never hide with opacity: 0, which leaves a thing focusable and read aloud.",
+      "For text whose length is not known ahead (an error, a status), keep a place of whole lines instead: min-height: var(--ds-slot-hint) or var(--ds-slot-status)."
+    ],
+    "accessibility": {
+      "element": "<span class=\"ds-hold\">",
+      "notes": "A hidden child is out of the accessibility tree and the tab order, so only the shown one is read, as the button's or the tag's name."
+    },
+    "anatomy": {
+      "root": "<span class=\"ds-hold\">",
+      "slots": {
+        "forms": "Each form the place can take, one shown and the rest hidden."
+      },
+      "validChildren": [
+        "span",
+        "button",
+        "svg"
+      ],
+      "compositionNotes": "In a button, a chip or a tag the shown form is centered; elsewhere it starts at the left."
+    },
+    "relationships": {
+      "parent": null,
+      "siblings": [],
+      "related": [
+        "button",
+        "tag",
+        "chip"
+      ],
+      "children": [],
+      "composedIn": [
+        "button",
+        "tag",
+        "chip"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/#hold"
+  },
+  "panel": {
+    "name": "Panel",
+    "description": "A group of related parts on the page: a hairline on the page's ground.",
+    "example": "<div class=\"ds-panel\">\n  <h3>Llama 3.1 8B Instruct <span class=\"ds-tag ds-tag--ok\">Raw</span></h3>\n  <p>Novita · meta-llama-128k · the top 20 candidates</p>\n</div>",
+    "states": [
+      "default"
+    ],
+    "props": {
+      "class": {
+        "type": "string",
+        "values": [
+          "ds-panel"
+        ]
+      }
+    },
+    "tokens": {
+      "radius": "{borderRadius.panel}",
+      "border": "{color.rule}",
+      "background": "{color.surface}"
+    },
+    "constraints": [
+      "Flat: no shadow and no fill. One shadow is for things that float, and panels do not.",
+      "No blur or glass."
+    ],
+    "accessibility": {
+      "notes": "A panel is layout; give it a heading if it is a region."
+    },
+    "anatomy": {
+      "root": "<div class=\"ds-panel\">",
+      "slots": {
+        "header": "An optional title and a tag.",
+        "body": "Anything."
+      },
+      "validChildren": [
+        "any"
+      ],
+      "compositionNotes": "Panels in a grid with --ds-space-4 between."
+    },
+    "relationships": {
+      "parent": null,
+      "siblings": [
+        "figure"
+      ],
+      "related": [],
+      "children": [],
+      "composedIn": [
+        "grids"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/reading/#panel"
+  },
+  "figure": {
+    "name": "Figure",
+    "description": "A captioned figure: a head with a number and a name, the content, a caption.",
+    "example": "<figure class=\"ds-figure\">\n  <div class=\"ds-figure-head ds-label\"><span>Fig. 1.1 · One step of the loop</span><span>Llama 3.1 8B Instruct · temperature 0</span></div>\n  <div class=\"ds-bar-row\"><span>␣in</span><span class=\"ds-bar\"><span style=\"width: 47.02%; background: var(--ds-data-8)\"></span></span><span>47.02%</span></div>\n  <div class=\"ds-bar-row\"><span>␣there</span><span class=\"ds-bar\"><span style=\"width: 23.64%; background: var(--ds-data-7)\"></span></span><span>23.64%</span></div>\n  <div class=\"ds-bar-row\"><span>␣I</span><span class=\"ds-bar\"><span style=\"width: 7.68%; background: var(--ds-data-6)\"></span></span><span>7.68%</span></div>\n  <figcaption class=\"ds-caption\">The likeliest next tokens after “Once upon a time,” at temperature 0. Color shows probability; each bar keeps its number.</figcaption>\n</figure>",
+    "states": [
+      "default"
+    ],
+    "props": {
+      "class": {
+        "type": "string",
+        "values": [
+          "ds-figure"
+        ]
+      }
+    },
+    "tokens": {
+      "rule": "{color.rule-strong}",
+      "label": "{typography.fontSize.label}",
+      "caption": "{typography.fontSize.caption}",
+      "captionColor": "{color.text-2}"
+    },
+    "constraints": [
+      "Every figure has a caption.",
+      "Head: \"Fig. 1.1 · One step of the loop\" in a .ds-figure-head label.",
+      "Corners signal function: this is something you read, so it stays square (--ds-radius-read)."
+    ],
+    "accessibility": {
+      "element": "<figure> with <figcaption class=\"ds-caption\">"
+    },
+    "anatomy": {
+      "root": "<figure class=\"ds-figure\">",
+      "slots": {
+        "head": "<div class=\"ds-figure-head ds-label\">",
+        "content": "the figure",
+        "caption": "<figcaption class=\"ds-caption\">"
+      },
+      "validChildren": [
+        "div",
+        "svg",
+        "img",
+        "table",
+        "figcaption"
+      ],
+      "compositionNotes": ""
+    },
+    "relationships": {
+      "parent": null,
+      "siblings": [
+        "table"
+      ],
+      "related": [
+        "bar"
+      ],
+      "children": [
+        "bar"
+      ],
+      "composedIn": [
+        "pages",
+        "slides"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/reading/#figure"
+  },
+  "bar": {
+    "name": "Bar",
+    "description": "A horizontal bar for a value, its number always beside it. In a row (.ds-bar-row): what it measures, the bar, the number, a hairline below.",
+    "example": "<div class=\"ds-bar-row\">\n  <span>␣when</span>\n  <span class=\"ds-bar\"><span style=\"width: 1.94%; background: var(--ds-data-6)\"></span></span>\n  <span>1.94%</span>\n</div>",
+    "states": [
+      "default"
+    ],
+    "props": {
+      "class": {
+        "type": "string",
+        "values": [
+          "ds-bar",
+          "ds-bar-row"
+        ]
+      }
+    },
+    "tokens": {
+      "track": "{color.data-track}",
+      "fill": "{color.data.6}",
+      "rule": "{color.rule-soft}",
+      "label": "{typography.fontFamily.mono}"
+    },
+    "constraints": [
+      "Fill from the data layer: viridis for ordered values, or the matching gray.",
+      "Show the number too; never color alone.",
+      "The width is the value, set on the fill as a percentage.",
+      "A number that updates keeps its place: IBM Plex Mono's figures are one width, and its column fits the longest value."
+    ],
+    "accessibility": {
+      "notes": "The number beside it is the accessible value."
+    },
+    "anatomy": {
+      "root": "<div class=\"ds-bar-row\">",
+      "slots": {
+        "what": "first: what the bar measures, in mono",
+        "bar": "<span class=\"ds-bar\"><span style=\"width: 47%; background: var(--ds-data-8)\"></span></span>",
+        "number": "last: the value, right-aligned in mono"
+      },
+      "validChildren": [
+        "span"
+      ],
+      "compositionNotes": "Rows of bars in a figure, one row per value."
+    },
+    "relationships": {
+      "parent": "figure",
+      "siblings": [],
+      "related": [
+        "table"
+      ],
+      "children": [],
+      "composedIn": [
+        "figure"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/reading/#bar"
+  },
+  "table": {
+    "name": "Table",
+    "description": "Rows to read: small gray labels for the header, hairlines between rows.",
+    "example": "<div class=\"ds-table-wrap\" tabindex=\"0\" role=\"region\" aria-label=\"Models\">\n  <table class=\"ds-table\">\n    <thead><tr><th>Model</th><th>Provider</th><th>Tokenizer</th><th>Completions</th></tr></thead>\n    <tbody>\n      <tr><td>Llama 3.1 8B Instruct</td><td>Novita</td><td>meta-llama-128k</td><td><span class=\"ds-tag ds-tag--ok\">Raw</span></td></tr>\n      <tr><td>GPT-OSS 120B</td><td>Novita</td><td>gpt-oss-199k</td><td><span class=\"ds-tag ds-tag--ok\">Raw</span></td></tr>\n      <tr><td>GLM 5.3</td><td>Together</td><td>glm-154k</td><td><span class=\"ds-tag ds-tag--warn\">Templated</span></td></tr>\n    </tbody>\n  </table>\n</div>",
+    "states": [
+      "default"
+    ],
+    "props": {
+      "class": {
+        "type": "string",
+        "values": [
+          "ds-table",
+          "ds-table-wrap"
+        ]
+      }
+    },
+    "tokens": {
+      "header": "{typography.fontSize.label}",
+      "rule": "{color.rule-soft}",
+      "headRule": "{color.rule-strong}"
+    },
+    "constraints": [
+      "Corners signal function: this is something you read, so it stays square (--ds-radius-read).",
+      "A table wider than a phone goes in .ds-table-wrap, which scrolls sideways so the page never does.",
+      "A value that updates keeps its column's width: IBM Plex Sans figures are one width, and a number that can gain a digit holds its widest form in a .ds-hold."
+    ],
+    "accessibility": {
+      "element": "<table> with <thead><th>",
+      "ariaRequired": [
+        "on .ds-table-wrap: tabindex=\"0\", role=\"region\" and an aria-label, so a keyboard can reach and scroll it"
+      ],
+      "notes": "Real header cells."
+    },
+    "anatomy": {
+      "root": "<div class=\"ds-table-wrap\" tabindex=\"0\" role=\"region\" aria-label=\"…\">",
+      "slots": {
+        "table": "<table class=\"ds-table\">",
+        "head": "<thead>",
+        "body": "<tbody>"
+      },
+      "validChildren": [
+        "table"
+      ],
+      "compositionNotes": "Leave out the wrap only when the table is narrow at every width."
+    },
+    "relationships": {
+      "parent": null,
+      "siblings": [
+        "figure"
+      ],
+      "related": [
+        "tag"
+      ],
+      "children": [
+        "tag"
+      ],
+      "composedIn": [
+        "pages"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/reading/#table"
+  },
+  "label": {
+    "name": "Label",
+    "description": "Metadata in sentence case, small and gray: a figure's number, a column, a field's name.",
+    "example": "<span class=\"ds-label\">Fig. 1.1 · One step of the loop</span>",
+    "states": [
+      "default"
+    ],
+    "props": {
+      "class": {
+        "type": "string",
+        "values": [
+          "ds-label"
+        ]
+      }
+    },
+    "tokens": {
+      "font": "{typography.fontFamily.label}",
+      "fontSize": "{typography.fontSize.label}",
+      "tracking": "{typography.letterSpacing.label}",
+      "color": "{color.text-2}"
+    },
+    "constraints": [
+      "Short noun phrases; a middle dot separates parts.",
+      "Sentence case, like everything else; the label roles (--ds-font-label, --ds-case-label) set the face and case."
+    ],
+    "accessibility": {
+      "notes": "Use <label for> when it names a field."
+    },
+    "anatomy": {
+      "root": "<span class=\"ds-label\">",
+      "slots": {},
+      "validChildren": [
+        "text"
+      ],
+      "compositionNotes": ""
+    },
+    "relationships": {
+      "parent": null,
+      "siblings": [],
+      "related": [
+        "running-head",
+        "figure"
+      ],
+      "children": [],
+      "composedIn": [
+        "figure",
+        "forms",
+        "running-head"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/reading/#label"
+  },
+  "running-head": {
+    "name": "Running head",
+    "description": "A row of labels over a strong rule at the top of a page: the area, and n of N.",
+    "example": "<div class=\"ds-running-head ds-label\"><span>Foundations</span><span>3 of 7</span></div>",
+    "props": {
+      "class": {
+        "type": "string",
+        "values": [
+          "ds-running-head ds-label"
+        ]
+      }
+    },
+    "tokens": {
+      "rule": "{color.rule-strong}"
+    },
+    "constraints": [
+      "Two parts, left and right."
+    ],
+    "accessibility": {
+      "element": "<div class=\"ds-running-head ds-label\">",
+      "notes": "Plain text; the area may be a link to its first page."
+    },
+    "anatomy": {
+      "root": "<div class=\"ds-running-head ds-label\">",
+      "slots": {
+        "left": "the area",
+        "right": "n of N"
+      },
+      "validChildren": [
+        "span",
+        "a"
+      ],
+      "compositionNotes": "Above the page title."
+    },
+    "relationships": {
+      "parent": null,
+      "siblings": [],
+      "related": [
+        "label"
+      ],
+      "children": [],
+      "composedIn": [
+        "pages"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/reading/#running-head"
+  },
+  "topbar": {
+    "name": "Top bar",
+    "description": "The top of every page: the mark (to aroughidea.com), the app's name (to its home), the app's areas, then its tools.",
+    "example": "<header class=\"ds-topbar\">\n  <a class=\"ds-brand\" href=\"https://aroughidea.com/\" aria-label=\"A Rough Idea\">\n    <svg class=\"ds-mark\" aria-hidden=\"true\" viewBox=\"0 0 64 64\"><rect class=\"ds-mark-paper\" x=\"3\" y=\"3\" width=\"58\" height=\"58\" stroke-width=\"4\"></rect><path class=\"ds-mark-ink\" d=\"M14 48L32 12L50 48H42L32 28L22 48H14Z\"></path><rect class=\"ds-mark-ink\" x=\"28\" y=\"31\" width=\"8\" height=\"17\"></rect></svg>\n    <span class=\"ds-brand-name\">A Rough Idea</span>\n  </a>\n  <span class=\"ds-crumb-sep\" aria-hidden=\"true\">/</span>\n  <a class=\"ds-crumb\" href=\"/\">App name</a>\n  <nav class=\"ds-topnav\" aria-label=\"Areas\">\n    <a href=\"/guides/\" aria-current=\"true\">Guides</a>\n    <a href=\"/tools/\">Tools</a>\n  </nav>\n  <div class=\"ds-tools\">\n    <!-- icon buttons: present, then light and dark -->\n  </div>\n</header>",
+    "specimenNote": "The top of this page is the specimen.",
+    "states": [
+      "default"
+    ],
+    "props": {
+      "class": {
+        "type": "string",
+        "values": [
+          "ds-topbar"
+        ]
+      }
+    },
+    "tokens": {
+      "height": "{size.topbar-height}",
+      "rule": "{color.rule}",
+      "background": "{color.bg}",
+      "fontSize": "{typography.fontSize.ui}"
+    },
+    "constraints": [
+      "The same areas on every page; the current area underlined (aria-current=\"true\").",
+      "Never lists a page's sections; those go in \"On this page\".",
+      "On a phone the mark stands for the name and the areas take a row of their own.",
+      "Corners signal function: this is something you read, so it stays square (--ds-radius-read)."
+    ],
+    "accessibility": {
+      "element": "<header class=\"ds-topbar\">",
+      "notes": "The areas are a <nav aria-label=\"Areas\">; the mark link has aria-label=\"A Rough Idea\"."
+    },
+    "anatomy": {
+      "root": "<header class=\"ds-topbar\">",
+      "slots": {
+        "brand": "<a class=\"ds-brand\" href=\"https://aroughidea.com/\">mark + <span class=\"ds-brand-name\">A Rough Idea</span></a>",
+        "crumb": "<span class=\"ds-crumb-sep\">/</span><a class=\"ds-crumb\" href=\"/\">App name</a>",
+        "areas": "<nav class=\"ds-topnav\" aria-label=\"Areas\">",
+        "tools": "<div class=\"ds-tools\">"
+      },
+      "validChildren": [
+        "a",
+        "span",
+        "nav",
+        "div"
+      ],
+      "compositionNotes": "Tools hold icon buttons: present, then light and dark."
+    },
+    "relationships": {
+      "parent": null,
+      "siblings": [],
+      "related": [
+        "rail",
+        "seq"
+      ],
+      "children": [
+        "mark",
+        "icon-button",
+        "theme-toggle"
+      ],
+      "composedIn": [
+        "every page"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/frame/#topbar"
+  },
+  "mark": {
+    "name": "Mark",
+    "description": "A Rough Idea's square A, inline SVG colored from roles so it follows light and dark.",
+    "example": "<svg class=\"ds-mark\" role=\"img\" aria-label=\"A Rough Idea\" viewBox=\"0 0 64 64\"><rect class=\"ds-mark-paper\" x=\"3\" y=\"3\" width=\"58\" height=\"58\" stroke-width=\"4\"></rect><path class=\"ds-mark-ink\" d=\"M14 48L32 12L50 48H42L32 28L22 48H14Z\"></path><rect class=\"ds-mark-ink\" x=\"28\" y=\"31\" width=\"8\" height=\"17\"></rect></svg>",
+    "sizes": [
+      "16",
+      "24",
+      "48",
+      "96"
+    ],
+    "props": {
+      "class": {
+        "type": "string",
+        "values": [
+          "ds-mark"
+        ]
+      }
+    },
+    "tokens": {
+      "paper": "{color.bg}",
+      "ink": "{color.ink}"
+    },
+    "constraints": [
+      "24 px in every top bar, linking to aroughidea.com.",
+      "An app keeps its own mark as its icon and favicon.",
+      "The full lockup (mark, bar, name in spaced capitals) only for big moments: the top of aroughidea.com, print covers, a deck's title slide."
+    ],
+    "accessibility": {
+      "notes": "aria-hidden inside a link labeled \"A Rough Idea\"; role=\"img\" with a label when it stands alone."
+    },
+    "anatomy": {
+      "root": "<svg class=\"ds-mark\" viewBox=\"0 0 64 64\">",
+      "slots": {
+        "paper": "rect.ds-mark-paper",
+        "ink": "path.ds-mark-ink and rect.ds-mark-ink"
+      },
+      "validChildren": [
+        "rect",
+        "path"
+      ],
+      "compositionNotes": ""
+    },
+    "relationships": {
+      "parent": "topbar",
+      "siblings": [],
+      "related": [],
+      "children": [],
+      "composedIn": [
+        "topbar",
+        "the lockup"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/frame/#mark"
+  },
+  "rail": {
+    "name": "Rail",
+    "description": "A vertical list of links: an area's pages, or \"On this page\". The current item has a rule in the margin.",
+    "example": "<nav aria-label=\"Guides\">\n  <ul class=\"ds-rail\">\n    <li><a href=\"#rail\" aria-current=\"page\">The next-token loop</a></li>\n    <li><a href=\"#rail\">Temperature and sampling</a></li>\n    <li><a href=\"#rail\">Tokens and vocabularies</a></li>\n  </ul>\n</nav>",
+    "props": {
+      "class": {
+        "type": "string",
+        "values": [
+          "ds-rail"
+        ]
+      }
+    },
+    "tokens": {
+      "marker": "{size.line-strong}",
+      "current": "{color.rule-strong}",
+      "text": "{color.text-2}"
+    },
+    "constraints": [
+      "aria-current=\"page\" for the current page; aria-current=\"true\" for the section in view.",
+      "Pages on the left from 960 px; sections on the right from 1280 px.",
+      "The current item is semibold, so keep each entry to one line: the heavier weight must not wrap it."
+    ],
+    "accessibility": {
+      "element": "<nav aria-label=\"…\"><ul class=\"ds-rail\">",
+      "notes": "Name the nav: the area, or \"On this page\"."
+    },
+    "anatomy": {
+      "root": "<ul class=\"ds-rail\">",
+      "slots": {
+        "item": "<li><a href>"
+      },
+      "validChildren": [
+        "li"
+      ],
+      "compositionNotes": ""
+    },
+    "relationships": {
+      "parent": null,
+      "siblings": [
+        "seq"
+      ],
+      "related": [
+        "topbar"
+      ],
+      "children": [],
+      "composedIn": [
+        "the page frame"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/reading/#rail"
+  },
+  "seq": {
+    "name": "Previous and next",
+    "description": "The foot of a page or guide: previous and next, each naming where it goes.",
+    "example": "<nav class=\"ds-seq\" aria-label=\"Previous and next guide\">\n  <a href=\"#seq\" rel=\"prev\"><span class=\"ds-label\">Previous</span>← The next-token loop</a>\n  <a href=\"#seq\" rel=\"next\"><span class=\"ds-label\">Next</span>Tokens and vocabularies →</a>\n</nav>",
+    "props": {
+      "class": {
+        "type": "string",
+        "values": [
+          "ds-seq"
+        ]
+      }
+    },
+    "tokens": {
+      "rule": "{color.rule-strong}",
+      "font": "{typography.fontFamily.display}",
+      "fontSize": "{typography.fontSize.lede}"
+    },
+    "constraints": [
+      "rel=\"prev\" and rel=\"next\".",
+      "Each names its page; never \"Next\" alone.",
+      "The browser's back is never overridden."
+    ],
+    "accessibility": {
+      "element": "<nav class=\"ds-seq\" aria-label=\"Previous and next\">"
+    },
+    "anatomy": {
+      "root": "<nav class=\"ds-seq\">",
+      "slots": {
+        "prev": "<a rel=\"prev\"><span class=\"ds-label\">Previous</span>← Title</a>",
+        "next": "<a rel=\"next\"><span class=\"ds-label\">Next</span>Title →</a>"
+      },
+      "validChildren": [
+        "a"
+      ],
+      "compositionNotes": ""
+    },
+    "relationships": {
+      "parent": null,
+      "siblings": [
+        "rail"
+      ],
+      "related": [
+        "present-bar"
+      ],
+      "children": [],
+      "composedIn": [
+        "pages"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/reading/#seq"
+  },
+  "note-number": {
+    "name": "Note number",
+    "description": "A numbered circle that marks a note on a drawing.",
+    "example": "<span class=\"ds-note-number\">1</span>\n<span class=\"ds-note-number\">2</span>",
+    "props": {
+      "class": {
+        "type": "string",
+        "values": [
+          "ds-note-number"
+        ]
+      }
+    },
+    "tokens": {
+      "radius": "{borderRadius.note}",
+      "background": "{color.ink}",
+      "text": "{color.on-ink}"
+    },
+    "constraints": [
+      "Circles, not squares."
+    ],
+    "accessibility": {
+      "element": "<span class=\"ds-note-number\">",
+      "notes": "Number the note in the text the same way, so the circle is never the only link between them."
+    },
+    "anatomy": {
+      "root": "<span class=\"ds-note-number\">1</span>",
+      "slots": {},
+      "validChildren": [
+        "text"
+      ],
+      "compositionNotes": ""
+    },
+    "relationships": {
+      "parent": null,
+      "siblings": [],
+      "related": [
+        "figure"
+      ],
+      "children": [],
+      "composedIn": [
+        "figure"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/reading/#note-number"
+  },
+  "present-bar": {
+    "name": "Presentation bar",
+    "description": "Presentation mode (/v2/present.js): a page's sections as slides, with a bar of previous and next as plain arrows, the caption, n / N, full screen and Exit.",
+    "example": "<main data-ds-slides data-ds-present-title=\"Color\" data-ds-present-prev=\"../type/\" data-ds-present-next=\"../layout/\">\n  <section><h2>A full-sentence headline</h2> … </section>\n</main>\n<button class=\"ds-icon-button\" type=\"button\" data-ds-present aria-label=\"Present as slides\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"13\" rx=\"1.5\"/><path d=\"M10.5 8.5v5l4-2.5z\"/><path d=\"M8 20.5h8\"/></svg></button>\n<script src=\"https://design-system.aroughidea.com/v2/present.js\"></script>",
+    "specimenNote": "Press Present in this page's top bar, or Ctrl+Alt+P, to see it.",
+    "states": [
+      "presenting",
+      "not presenting"
+    ],
+    "props": {
+      "data-ds-slides": {
+        "type": "boolean",
+        "description": "On the element that holds the sections."
+      },
+      "data-ds-present": {
+        "type": "boolean",
+        "description": "On the button that starts it."
+      },
+      "data-ds-present-title": {
+        "type": "string"
+      },
+      "data-ds-present-prev": {
+        "type": "string",
+        "description": "A page to continue to before the first slide."
+      },
+      "data-ds-present-next": {
+        "type": "string"
+      }
+    },
+    "tokens": {
+      "zIndex": "{layout.zIndex.present}",
+      "barZIndex": "{layout.zIndex.present-bar}",
+      "margin": "{layout.grid.slide-margin}",
+      "chrome": "{typography.fontSize.chrome}",
+      "arrows": "{typography.fontSize.arrow}"
+    },
+    "constraints": [
+      "Each <section> directly inside data-ds-slides is one slide; its <h2> is the headline, a full sentence.",
+      "Start with the button, Ctrl+Alt+P or ?mode=presentation.",
+      "Arrows are plain, never boxed.",
+      "A slide that does not fit scrolls; a real deck splits it.",
+      "The bar holds still from slide to slide: on a phone the caption keeps two lines (--ds-slot-caption)."
+    ],
+    "accessibility": {
+      "keyboard": [
+        "ArrowRight",
+        "ArrowLeft",
+        "Space",
+        "PageUp",
+        "PageDown",
+        "Home",
+        "End",
+        "Escape"
+      ],
+      "notes": "Everything outside the slides is made inert while presenting."
+    },
+    "anatomy": {
+      "root": "<div class=\"ds-present-bar\" role=\"toolbar\">",
+      "slots": {
+        "prev": ".ds-present-arrow",
+        "caption": ".ds-present-caption",
+        "count": ".ds-present-count",
+        "next": ".ds-present-arrow",
+        "full": ".ds-icon-button",
+        "exit": ".ds-button--ghost"
+      },
+      "validChildren": [
+        "button",
+        "span"
+      ],
+      "compositionNotes": "Built by present.js; do not write it by hand."
+    },
+    "relationships": {
+      "parent": null,
+      "siblings": [],
+      "related": [
+        "seq",
+        "icon-button"
+      ],
+      "children": [
+        "icon-button",
+        "button"
+      ],
+      "composedIn": [
+        "any page with data-ds-slides"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/frame/#present-bar"
+  },
+  "lockup": {
+    "name": "Lockup",
+    "description": "The full lockup: the mark, a bar and the name in spaced Archivo capitals, the only capitals in the system. Side by side, or stacked for the centered layout.",
+    "example": "<div class=\"ds-lockup\" role=\"img\" aria-label=\"A Rough Idea\">\n  <svg class=\"ds-mark\" aria-hidden=\"true\" viewBox=\"0 0 64 64\"><rect class=\"ds-mark-paper\" x=\"3\" y=\"3\" width=\"58\" height=\"58\" stroke-width=\"4\"></rect><path class=\"ds-mark-ink\" d=\"M14 48L32 12L50 48H42L32 28L22 48H14Z\"></path><rect class=\"ds-mark-ink\" x=\"28\" y=\"31\" width=\"8\" height=\"17\"></rect></svg>\n  <span class=\"ds-lockup-bar\"></span>\n  <span class=\"ds-lockup-name\">A Rough Idea</span>\n</div>",
+    "variants": [
+      "side by side",
+      "stacked"
+    ],
+    "variantGuidance": {
+      "side by side": "class=\"ds-lockup\": mark, bar, name in a row.",
+      "stacked": "class=\"ds-lockup ds-lockup--stacked\": mark above name, no bar (it only reads side by side). Use it in the centered layout."
+    },
+    "props": {
+      "class": {
+        "type": "string",
+        "values": [
+          "ds-lockup",
+          "ds-lockup ds-lockup--stacked"
+        ]
+      }
+    },
+    "tokens": {
+      "mark": "{size.lockup-mark}",
+      "markOnPhone": "{size.lockup-mark-sm}",
+      "bar": "{color.ink}",
+      "name": "{typography.fontFamily.display}",
+      "nameSize": "{typography.fontSize.h2}",
+      "tracking": "{typography.letterSpacing.wordmark}"
+    },
+    "constraints": [
+      "Only for big moments: the top of aroughidea.com, a print cover, a deck's title slide. Top bars use the mark and the name (topbar, .ds-brand).",
+      "One lockup per page.",
+      "The name in capitals here and nowhere else."
+    ],
+    "accessibility": {
+      "element": "<div class=\"ds-lockup\" role=\"img\" aria-label=\"A Rough Idea\">, or an <h1> when it is the page's title",
+      "notes": "The mark inside is aria-hidden; the label or heading carries the name."
+    },
+    "anatomy": {
+      "root": "<div class=\"ds-lockup\">",
+      "slots": {
+        "mark": "<svg class=\"ds-mark\">",
+        "bar": "<span class=\"ds-lockup-bar\">",
+        "name": "<span class=\"ds-lockup-name\">A Rough Idea</span>",
+        "words": "optional <span class=\"ds-lockup-words\"> holding the name and a .ds-label beneath it"
+      },
+      "validChildren": [
+        "svg",
+        "span"
+      ],
+      "compositionNotes": "Stacked inside .ds-centered; side by side elsewhere."
+    },
+    "relationships": {
+      "parent": null,
+      "siblings": [],
+      "related": [
+        "mark",
+        "centered-layout"
+      ],
+      "children": [
+        "mark"
+      ],
+      "composedIn": [
+        "centered-layout",
+        "title slides",
+        "print covers"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/frame/#lockup"
+  },
+  "centered-layout": {
+    "name": "Centered layout",
+    "description": "Everything centered on the reading column: for a page with one thing to say, such as a home page, a title slide or an exhibit's opening screen. aroughidea.com uses it.",
+    "example": "<div class=\"ds-centered\">\n  <div class=\"ds-lockup ds-lockup--stacked\" role=\"img\" aria-label=\"A Rough Idea\">\n    <svg class=\"ds-mark\" aria-hidden=\"true\" viewBox=\"0 0 64 64\"><rect class=\"ds-mark-paper\" x=\"3\" y=\"3\" width=\"58\" height=\"58\" stroke-width=\"4\"></rect><path class=\"ds-mark-ink\" d=\"M14 48L32 12L50 48H42L32 28L22 48H14Z\"></path><rect class=\"ds-mark-ink\" x=\"28\" y=\"31\" width=\"8\" height=\"17\"></rect></svg>\n    <span class=\"ds-lockup-bar\"></span>\n    <span class=\"ds-lockup-name\">A Rough Idea</span>\n  </div>\n  <p>A consultancy operating at the intersection of systems design and machine behavior.</p>\n</div>",
+    "props": {
+      "class": {
+        "type": "string",
+        "values": [
+          "ds-centered"
+        ]
+      }
+    },
+    "tokens": {
+      "column": "{layout.containerMaxWidth.measure}"
+    },
+    "constraints": [
+      "Put .ds-centered on the element that holds the page's content, one column at the reading measure.",
+      "Use the stacked lockup in it, never the side-by-side one.",
+      "Keep to short lines: running text longer than about three lines stays left-aligned.",
+      "A figure inside takes the column's full width; its drawing and caption center."
+    ],
+    "accessibility": {
+      "notes": "Centering changes nothing for a screen reader; keep the reading order the visual order."
+    },
+    "anatomy": {
+      "root": "<main class=\"ds-centered\">",
+      "slots": {
+        "lockup": ".ds-lockup.ds-lockup--stacked",
+        "lede": "one or two short lines",
+        "figure": ".ds-figure, full width",
+        "closing": "a short line"
+      },
+      "validChildren": [
+        "any"
+      ],
+      "compositionNotes": "One column at --ds-measure; gaps from the spacing scale."
+    },
+    "relationships": {
+      "parent": null,
+      "siblings": [],
+      "related": [
+        "lockup",
+        "figure"
+      ],
+      "children": [
+        "lockup",
+        "figure"
+      ],
+      "composedIn": [
+        "home pages",
+        "title slides",
+        "exhibit opening screens"
+      ]
+    },
+    "guide": "https://design-system.aroughidea.com/components/frame/#centered-layout"
+  }
+}

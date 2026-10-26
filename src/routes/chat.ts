@@ -169,7 +169,7 @@ function buildSamplingParams(runtime: AgentRuntimeSettings): { temperature?: num
 // treating the raw text as the message if JSON parsing fails, so a
 // non-compliant model reply still works rather than throwing.
 // ─────────────────────────────────────────────────────────────────────────
-function parseChatResponse(raw: string): { message: string; preview: string | null; metadata: Record<string, unknown> | null; schemaVersion: string } {
+export function parseChatResponse(raw: string): { message: string; preview: string | null; metadata: Record<string, unknown> | null; schemaVersion: string } {
   const text = raw.trim();
 
   // Attempt to extract a {message, preview} object from the text using several
@@ -718,7 +718,11 @@ router.post("/chat", async (req, res) => {
 
       // No tool calls — return the final answer
       const rawResponse = assistantTextContent ?? "";
+      console.log(`[chat:raw-response] iteration=${i} chars=${rawResponse.length}\n${rawResponse}`);
       const { message, preview, metadata, schemaVersion } = parseChatResponse(rawResponse);
+      if (schemaVersion === "fallback-text") {
+        console.warn(`[chat:parse-warn] parseChatResponse fell back to raw text (no valid JSON found). Raw response:\n${rawResponse}`);
+      }
       console.log("[chat:response]", message.slice(0, 300));
       console.log(`[chat:usage] prompt=${totalUsage.promptTokens} (cached=${totalUsage.cachedTokens} cacheWrite=${totalUsage.cacheWriteTokens}) completion=${totalUsage.completionTokens} (reasoning=${totalUsage.reasoningTokens}) total=${totalUsage.totalTokens} cost=${Number.isFinite(totalUsage.cost) ? totalUsage.cost.toFixed(6) : "n/a"} credits`);
       clearTimeout(chatTimer);
@@ -735,7 +739,11 @@ router.post("/chat", async (req, res) => {
     // Reached max iterations without a final text response
     const lastAssistant = [...loopMessages].reverse().find((m: OpenRouterMessage) => m.role === "assistant" && m.content);
     const rawLast = String(lastAssistant?.content ?? "");
+    console.log(`[chat:raw-response] max-iterations fallback chars=${rawLast.length}\n${rawLast}`);
     const { message: lastMessage, preview: lastPreview, metadata: lastMetadata, schemaVersion: lastSchemaVersion } = parseChatResponse(rawLast);
+    if (lastSchemaVersion === "fallback-text") {
+      console.warn(`[chat:parse-warn] parseChatResponse fell back to raw text at max-iterations. Raw response:\n${rawLast}`);
+    }
     clearTimeout(chatTimer);
     recordRouting(routedAgent);
     endWithDone({ message: lastMessage, preview: lastPreview, metadata: lastMetadata, schemaVersion: lastSchemaVersion, model: activeRuntime.model, routedAgent, toolCallsUsed, thinkingSteps, generatedDesignSystem: generatedDesignSystemData, usage: totalUsage });

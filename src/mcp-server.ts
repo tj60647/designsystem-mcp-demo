@@ -22,6 +22,7 @@ import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mc
 import { z } from "zod";
 import { getData } from "./dataStore.js";
 import { DATA_SCHEMAS } from "./schemas.js";
+import { componentNotFound, rankTokens, validateUsage, type PlannedComponents } from "./answers.js";
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -130,6 +131,8 @@ interface StyleGuideData {
   // describes the loaded system rather than the sample one.
   layoutGuidance?:     Record<string, unknown>;
   guidelines?:         Partial<Record<"accessibility" | "layout" | "content" | "motion", string>>;
+  // Optional: components the system plans but does not have yet, so an agent says "planned".
+  plannedComponents?:  PlannedComponents;
 }
 
 // ── Utilities ─────────────────────────────────────────────────────────────
@@ -504,7 +507,7 @@ export function createMcpServer(): McpServer {
       if (!spec) {
         log("error", "tool.error", { tool: "get_component", params: { componentName }, error_code: "NOT_FOUND", error_message: `Component "${componentName}" not found` });
         return {
-          content: [{ type: "text" as const, text: `Component "${componentName}" not found. Available components: ${Object.keys(components).join(", ")}` }],
+          content: [{ type: "text" as const, text: componentNotFound(componentName, components, styleGuide?.plannedComponents) }],
           isError: true,
         };
       }
@@ -532,7 +535,7 @@ export function createMcpServer(): McpServer {
       const spec = components[key];
       if (!spec) {
         return {
-          content: [{ type: "text" as const, text: `Component "${componentName}" not found. Available: ${Object.keys(components).join(", ")}` }],
+          content: [{ type: "text" as const, text: componentNotFound(componentName, components, styleGuide?.plannedComponents) }],
           isError: true,
         };
       }
@@ -593,7 +596,7 @@ export function createMcpServer(): McpServer {
       const spec = components[key];
       if (!spec) {
         return {
-          content: [{ type: "text" as const, text: `Component "${componentName}" not found. Available: ${Object.keys(components).join(", ")}` }],
+          content: [{ type: "text" as const, text: componentNotFound(componentName, components, styleGuide?.plannedComponents) }],
           isError: true,
         };
       }
@@ -621,54 +624,12 @@ export function createMcpServer(): McpServer {
       const spec = components[key];
       if (!spec) {
         return {
-          content: [{ type: "text" as const, text: `Component "${componentName}" not found. Available: ${Object.keys(components).join(", ")}` }],
+          content: [{ type: "text" as const, text: componentNotFound(componentName, components, styleGuide?.plannedComponents) }],
           isError: true,
         };
       }
 
-      const violations: Array<{ rule: string; suggestion: string }> = [];
-
-      if (config.variant !== undefined && spec.variants) {
-        if (!spec.variants.includes(String(config.variant))) {
-          const variantHint = spec.variantGuidance
-            ? Object.entries(spec.variantGuidance).map(([v, g]) => `"${v}": ${g.split(".")[0]}`).join("; ")
-            : "";
-          violations.push({
-            rule: `Variant "${config.variant}" is not valid for ${spec.name}. Allowed variants: ${spec.variants.join(", ")}.`,
-            suggestion: `Change variant to one of: ${spec.variants.join(", ")}.${variantHint ? ` Guidance: ${variantHint}.` : ""}`,
-          });
-        }
-      }
-
-      if (config.size !== undefined && spec.sizes) {
-        if (!spec.sizes.includes(String(config.size))) {
-          violations.push({
-            rule: `Size "${config.size}" is not valid for ${spec.name}. Allowed sizes: ${spec.sizes.join(", ")}.`,
-            suggestion: `Change size to one of: ${spec.sizes.join(", ")}.`,
-          });
-        }
-      }
-
-      if (config.state !== undefined && spec.states) {
-        if (!spec.states.includes(String(config.state))) {
-          violations.push({
-            rule: `State "${config.state}" is not valid for ${spec.name}. Allowed states: ${spec.states.join(", ")}.`,
-            suggestion: `Change state to one of: ${spec.states.join(", ")}.`,
-          });
-        }
-      }
-
-      if (spec.props) {
-        const reservedKeys = new Set(["variant", "size", "state"]);
-        for (const propKey of Object.keys(config)) {
-          if (!reservedKeys.has(propKey) && !(propKey in spec.props)) {
-            violations.push({
-              rule: `Unknown prop "${propKey}" - not defined in the ${spec.name} spec.`,
-              suggestion: `Remove "${propKey}" or replace with a valid prop. Valid props: ${Object.keys(spec.props).join(", ")}.`,
-            });
-          }
-        }
-      }
+      const violations = validateUsage(spec, config);
 
       if (violations.length > 0) {
         log("warning", "validation.failure", {
@@ -702,29 +663,10 @@ export function createMcpServer(): McpServer {
     },
     async ({ intent, category }, _extra) => {
       const start = Date.now();
-      const intentLower = intent.toLowerCase();
-      const intentWords = intentLower.split(/[\s\-_./]+/).filter(Boolean);
       const source: Record<string, unknown> = category
         ? { [category]: tokens[category] }
         : (tokens as unknown as Record<string, unknown>);
-      const flat = flattenAllTokens(source as Record<string, unknown>);
-      const scored = Object.entries(flat).map(([tokenPath, meta]) => {
-        const segments = tokenPath.toLowerCase().split(".");
-        let score = 0;
-        for (const word of intentWords) {
-          for (const seg of segments) {
-            if (seg.includes(word) || word.includes(seg)) score += 2;
-          }
-          if (meta.description) {
-            const descWords = meta.description.toLowerCase().split(/\W+/);
-            for (const dw of descWords) {
-              if (dw && (dw.includes(word) || word.includes(dw))) score += 3;
-            }
-          }
-        }
-        return { tokenPath, value: meta.value, type: meta.type, description: meta.description ?? null, score };
-      });
-      const top5 = scored.filter(r => r.score > 0).sort((a, b) => b.score - a.score).slice(0, 5);
+      const top5 = rankTokens(flattenAllTokens(source as Record<string, unknown>), intent);
       log("info", "tool.invoked", { tool: "suggest_token", params: { intent, category }, duration_ms: Date.now() - start, result_size: top5.length });
       if (top5.length === 0) {
         log("warning", "search.no_results", { query: intent, suggestions: [] });
@@ -1028,7 +970,7 @@ export function createMcpServer(): McpServer {
       const spec = components[key];
       if (!spec) {
         return {
-          content: [{ type: "text" as const, text: `Component "${componentName}" not found. Available: ${Object.keys(components).join(", ")}` }],
+          content: [{ type: "text" as const, text: componentNotFound(componentName, components, styleGuide?.plannedComponents) }],
           isError: true,
         };
       }
@@ -1061,7 +1003,7 @@ export function createMcpServer(): McpServer {
       const spec = components[key];
       if (!spec) {
         return {
-          content: [{ type: "text" as const, text: `Component "${componentName}" not found. Available: ${Object.keys(components).join(", ")}` }],
+          content: [{ type: "text" as const, text: componentNotFound(componentName, components, styleGuide?.plannedComponents) }],
           isError: true,
         };
       }
@@ -1092,7 +1034,7 @@ export function createMcpServer(): McpServer {
       const spec = components[key];
       if (!spec) {
         return {
-          content: [{ type: "text" as const, text: `Component "${componentName}" not found. Available: ${Object.keys(components).join(", ")}` }],
+          content: [{ type: "text" as const, text: componentNotFound(componentName, components, styleGuide?.plannedComponents) }],
           isError: true,
         };
       }
@@ -1121,7 +1063,7 @@ export function createMcpServer(): McpServer {
       const spec = components[key];
       if (!spec) {
         return {
-          content: [{ type: "text" as const, text: `Component "${componentName}" not found. Available: ${Object.keys(components).join(", ")}` }],
+          content: [{ type: "text" as const, text: componentNotFound(componentName, components, styleGuide?.plannedComponents) }],
           isError: true,
         };
       }
@@ -1440,7 +1382,7 @@ export function createMcpServer(): McpServer {
       log("info", "resource.accessed", { uri: uri.href, component: key });
       const spec = components[key];
       if (!spec) {
-        return { contents: [{ uri: uri.href, mimeType: "application/json", text: JSON.stringify({ error: `Component "${name}" not found. Available: ${Object.keys(components).join(", ")}` }) }] };
+        return { contents: [{ uri: uri.href, mimeType: "application/json", text: JSON.stringify({ error: componentNotFound(String(name), components, styleGuide?.plannedComponents) }) }] };
       }
       return { contents: [{ uri: uri.href, mimeType: "application/json", text: JSON.stringify(spec, null, 2) }] };
     }

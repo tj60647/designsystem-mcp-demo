@@ -535,7 +535,7 @@ Set `DESIGN_SYSTEM_DATA_URL` to an address that serves the seven data files (`to
 
 A style guide may also carry `layoutGuidance` (used by `get_layout_guidance`) and `guidelines` (`accessibility`, `layout`, `content`, `motion` as Markdown, used by the `design-system://guidelines/*` resources); a spacing token's `$description` becomes its usage hint. Without them, the built-in sample guidance is used.
 
-A Rough Idea's design system is served this way: its build publishes the files at `https://design-system.aroughidea.com/v2/mcp/`, and a second Vercel project from this repo sets `DESIGN_SYSTEM_DATA_URL` to that address. `npm run test:remote` tests the mode.
+A Rough Idea's design system is served this way: its build publishes the files at `https://design-system.aroughidea.com/v2/mcp/`, and a second Vercel project from this repo sets `DESIGN_SYSTEM_DATA_URL` to that address. `npm run test:remote` tests the mode. To use that design system, whether for a page, a slideshow or an AI assistant, start at [Get started](https://design-system.aroughidea.com/overview/use-it/).
 
 ---
 
